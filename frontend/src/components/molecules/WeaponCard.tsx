@@ -5,6 +5,7 @@ import { Crosshair, Zap, Weight, ImageOff } from 'lucide-react';
 
 export interface Weapon {
   id: number;
+  uniqueId?: string;
   name: string;
   type: 'WEAPON' | 'UTILITY';
   side: 'T' | 'CT' | 'ALL';
@@ -21,17 +22,18 @@ export interface Weapon {
 interface WeaponCardProps {
   weapon: Weapon;
   isDraggable?: boolean;
+  onRemove?: () => void;
+  isDisabled?: boolean;
 }
 
-const WeaponCard: React.FC<WeaponCardProps> = ({ weapon, isDraggable = true }) => {
+const WeaponCard: React.FC<WeaponCardProps> = ({ weapon, isDraggable = true, onRemove, isDisabled = false }) => {
   const [imageError, setImageError] = useState(false);
-  
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `weapon-${weapon.id}`,
-    data: weapon,
-    disabled: !isDraggable,
-  });
 
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: weapon.uniqueId || weapon.id.toString(), // Use uniqueId if available
+    data: weapon,
+    disabled: !isDraggable || isDisabled,
+  });
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
@@ -44,9 +46,17 @@ const WeaponCard: React.FC<WeaponCardProps> = ({ weapon, isDraggable = true }) =
       style={style}
       {...listeners}
       {...attributes}
-      className={`relative w-48 h-64 bg-tactical-gray rounded-lg border-2 ${sideColor} shadow-xl overflow-hidden flex flex-col cursor-grab active:cursor-grabbing transition-transform hover:scale-105 z-10 ${isDragging ? 'opacity-50 grayscale' : ''}`}
+      className={`relative w-48 h-64 bg-tactical-gray rounded-lg border-2 ${sideColor} shadow-xl overflow-hidden flex flex-col ${isDraggable && !isDisabled ? 'cursor-grab active:cursor-grabbing' : ''} z-10 ${isDragging ? 'opacity-50' : ''} ${isDisabled ? 'opacity-30 grayscale' : ''}`}
     >
-      <div className="absolute top-2 right-2 z-20">
+      <div className="absolute top-2 right-2 z-20 flex gap-2">
+        {onRemove && (
+          <button 
+            onClick={onRemove}
+            className="bg-red-600 text-white w-6 h-6 rounded flex items-center justify-center font-bold text-sm hover:bg-red-500"
+          >
+            X
+          </button>
+        )}
         <div className="bg-tactical-dark/80 px-2 py-1 rounded text-[10px] font-bold border border-white/10">
           {weapon.side}
         </div>

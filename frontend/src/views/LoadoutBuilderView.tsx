@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import { DndContext, PointerSensor, DragOverlay, useSensor, useSensors } from '@dnd-kit/core';
+import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import Armory from '../components/organisms/Armory';
 import LoadoutZone from '../components/organisms/LoadoutZone';
+import WeaponCard from '../components/molecules/WeaponCard';
 import type { Weapon } from '../components/molecules/WeaponCard';
 import { ShieldAlert, Info, Loader2 } from 'lucide-react';
 import { api } from '../utils/api';
 
+type LoadoutItem = Weapon & { uniqueId: string };
+
 const LoadoutBuilderView: React.FC = () => {
   const [armoryWeapons, setArmoryWeapons] = useState<Weapon[]>([]);
-  const [tLoadout, setTLoadout] = useState<Weapon[]>([]);
-  const [ctLoadout, setCtLoadout] = useState<Weapon[]>([]);
+  const [tLoadout, setTLoadout] = useState<LoadoutItem[]>([]);
+  const [ctLoadout, setCtLoadout] = useState<LoadoutItem[]>([]);
+  const [activeWeapon, setActiveWeapon] = useState<Weapon | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
   useEffect(() => {
@@ -36,7 +40,12 @@ const LoadoutBuilderView: React.FC = () => {
     fetchWeapons();
   }, []);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveWeapon(event.active.data.current as Weapon);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveWeapon(null);
     const { active, over } = event;
     if (!over) return;
 
@@ -44,13 +53,11 @@ const LoadoutBuilderView: React.FC = () => {
     const targetZone = over.id as string;
     const targetSide = over.data.current?.side as 'T' | 'CT';
 
-    // 1. Enforce Side Restrictions
     if (weapon.side !== 'ALL' && weapon.side !== targetSide) {
       showError(`Cannot add ${weapon.side} weapon to ${targetSide} loadout!`);
       return;
     }
 
-    // 2. Enforce Loadout Limits (3 Weapons, 2 Utility)
     const currentLoadout = targetSide === 'T' ? tLoadout : ctLoadout;
     const weaponCount = currentLoadout.filter(i => i.type === 'WEAPON').length;
     const utilityCount = currentLoadout.filter(i => i.type === 'UTILITY').length;
@@ -64,11 +71,32 @@ const LoadoutBuilderView: React.FC = () => {
       return;
     }
 
-    // 3. Add to loadout
+    const newItem: LoadoutItem = { ...weapon, uniqueId: `${weapon.id}-${crypto.randomUUID()}` };
+
     if (targetZone === 't-loadout') {
-      setTLoadout(prev => [...prev, weapon]);
+      setTLoadout(prev => [...prev, newItem]);
     } else if (targetZone === 'ct-loadout') {
-      setCtLoadout(prev => [...prev, weapon]);
+      setCtLoadout(prev => [...prev, newItem]);
+    }
+  };
+
+  const handleRemoveItem = (uniqueId: string) => {
+    setTLoadout(prev => prev.filter(item => item.uniqueId !== uniqueId));
+    setCtLoadout(prev => prev.filter(item => item.uniqueId !== uniqueId));
+  };
+
+  const handleSave = async () => {
+    setSaveStatus('saving');
+    try {
+      await api.saveLoadouts([
+        { side: 'T', items: tLoadout },
+        { side: 'CT', items: ctLoadout }
+      ]);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (err) {
+      showError("Failed to save loadouts.");
+      setSaveStatus('idle');
     }
   };
 
@@ -90,7 +118,7 @@ const LoadoutBuilderView: React.FC = () => {
       </header>
 
       {error && (
-        <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-bounce z-50">
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded shadow-2xl flex items-center gap-3 z-50">
           <ShieldAlert size={20} />
           <span className="font-bold text-sm uppercase">{error}</span>
         </div>
@@ -99,22 +127,29 @@ const LoadoutBuilderView: React.FC = () => {
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-tactical-accent">
           <Loader2 size={48} className="animate-spin" />
-          <span className="font-bold uppercase tracking-widest animate-pulse">Synchronizing Armory...</span>
+          <span className="font-bold uppercase tracking-widest">Synchronizing Armory...</span>
         </div>
       ) : (
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="grid lg:grid-cols-2 gap-8">
-            <LoadoutZone id="t-loadout" title="T-Side Loadout" side="T" items={tLoadout} />
-            <LoadoutZone id="ct-loadout" title="CT-Side Loadout" side="CT" items={ctLoadout} />
+            <LoadoutZone id="t-loadout" title="T-Side Loadout" side="T" items={tLoadout} onRemoveItem={handleRemoveItem} />
+            <LoadoutZone id="ct-loadout" title="CT-Side Loadout" side="CT" items={ctLoadout} onRemoveItem={handleRemoveItem} />
           </div>
 
-          <Armory weapons={armoryWeapons} />
+          <Armory weapons={armoryWeapons} tLoadout={tLoadout} ctLoadout={ctLoadout} />
+          <DragOverlay>
+            {activeWeapon ? <WeaponCard weapon={activeWeapon} /> : null}
+          </DragOverlay>
         </DndContext>
       )}
       
       <footer className="mt-auto pt-8 border-t border-white/5 flex justify-end">
-        <button className="bg-tactical-accent hover:bg-tactical-accent/80 text-black font-black px-12 py-4 rounded uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(197,160,89,0.2)]">
-          Save Loadouts
+        <button 
+          onClick={handleSave}
+          disabled={saveStatus !== 'idle'}
+          className="bg-tactical-accent text-black font-black px-12 py-4 rounded uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(197,160,89,0.2)] disabled:opacity-50"
+        >
+          {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Loadouts'}
         </button>
       </footer>
     </div>

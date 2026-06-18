@@ -71,6 +71,15 @@ export const api = {
   getWeapons: () => apiFetch<Weapon[]>('/api/weapons'),
 
   /**
+   * Loadout
+   */
+  saveLoadouts: (loadouts: { side: 'T' | 'CT', items: Weapon[] }[]) =>
+    apiFetch<any>('/api/loadout/save', {
+      method: 'POST',
+      body: JSON.stringify(loadouts),
+    }),
+
+  /**
    * Matches
    */
   queueMatch: (playerA: string, playerB: string) => 

@@ -7,10 +7,11 @@ interface LoadoutZoneProps {
   id: string;
   title: string;
   side: 'T' | 'CT';
-  items: Weapon[];
+  items: (Weapon & { uniqueId: string })[]; // Assuming uniqueId is added
+  onRemoveItem: (uniqueId: string) => void;
 }
 
-const LoadoutZone: React.FC<LoadoutZoneProps> = ({ id, title, side, items }) => {
+const LoadoutZone: React.FC<LoadoutZoneProps> = ({ id, title, side, items, onRemoveItem }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: id,
     data: { side },
@@ -43,15 +44,13 @@ const LoadoutZone: React.FC<LoadoutZoneProps> = ({ id, title, side, items }) => 
             Drag items here to build your loadout
           </div>
         ) : (
-          items.map((item, index) => (
-            <div key={`${item.id}-${index}`} className="relative group">
-              <WeaponCard weapon={item} isDraggable={false} />
-              <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/20 transition-colors flex items-center justify-center pointer-events-none rounded-lg">
-                <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                  CLICK TO REMOVE
-                </span>
-              </div>
-            </div>
+          items.map((item) => (
+            <WeaponCard 
+              key={item.uniqueId} 
+              weapon={item} 
+              isDraggable={false} 
+              onRemove={() => onRemoveItem(item.uniqueId)} 
+            />
           ))
         )}
       </div>
