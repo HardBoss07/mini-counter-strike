@@ -37,7 +37,8 @@ public class AuthServiceImpl implements AuthService {
         user = userRepository.save(user);
 
         // 2. Provision Starter Weapons
-        provisionStarterLoadout(user, "T", List.of("Glock-18", "MAC-10", "Galil_AR", "Flashbang", "Smoke Grenade"));
+        // Note: Using exact names from data.sql
+        provisionStarterLoadout(user, "T", List.of("Glock-18", "MAC-10", "Galil AR", "Flashbang", "Smoke Grenade"));
         provisionStarterLoadout(user, "CT", List.of("USP-S", "MP9", "FAMAS", "HE Grenade", "Flashbang"));
 
         return jwtUtil.generateToken(user.getId(), user.getUsername());
@@ -63,7 +64,12 @@ public class AuthServiceImpl implements AuthService {
 
         for (String name : itemNames) {
             WeaponTemplate template = templateRepository.findByName(name)
-                    .orElseThrow(() -> new RuntimeException("Starter item not found: " + name));
+                    .orElseThrow(() -> {
+                        String errorMessage = "Starter item not found: " + name;
+                        // Assuming a logger is not easily available, using System.err for now
+                        System.err.println(errorMessage);
+                        return new RuntimeException(errorMessage);
+                    });
             
             UserWeaponInstance instance = new UserWeaponInstance();
             instance.setUser(user);
