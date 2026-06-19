@@ -1,43 +1,61 @@
 package dev.m4tt3o.mini_cs.controller;
 
-import dev.m4tt3o.mini_cs.dto.CombatRoundRecord;
-import dev.m4tt3o.mini_cs.entity.Match;
+import dev.m4tt3o.mini_cs.dto.match.MatchStateResponse;
+import dev.m4tt3o.mini_cs.entity.User;
+import dev.m4tt3o.mini_cs.repository.UserRepository;
 import dev.m4tt3o.mini_cs.service.MatchService;
+import dev.m4tt3o.mini_cs.service.MatchmakingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
-/**
- * REST controller for match operations.
- */
 @RestController
 @RequestMapping("/api/match")
 @RequiredArgsConstructor
 public class MatchController {
 
     private final MatchService matchService;
+    private final MatchmakingService matchmakingService;
+    private final UserRepository userRepository;
 
-    /**
-     * Initializes a match between two players.
-     */
     @PostMapping("/queue")
-    public ResponseEntity<?> queueMatch(@RequestBody Map<String, String> request) {
-        String playerA = request.get("playerA");
-        String playerB = request.get("playerB");
-        return ResponseEntity.ok(matchService.createMatch(playerA, playerB));
+    public ResponseEntity<Map<String, Long>> queue() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username).orElseThrow();
+        Long ticketId = matchmakingService.queueUser(user.getId());
+        matchmakingService.tryMatchmaking(); // Attempt to match immediately
+        return ResponseEntity.ok(Map.of("ticketId", ticketId));
     }
 
-    /**
-     * Submits a turn for a player and returns the result.
-     */
-    @PostMapping("/{matchId}/turn")
-    public ResponseEntity<CombatRoundRecord> submitTurn(
-            @PathVariable Long matchId,
-            @RequestBody Map<String, Long> request) {
-        Long playerId = request.get("playerId");
-        Long actionId = request.get("actionId");
-        return ResponseEntity.ok(matchService.executeTurn(matchId, playerId, actionId));
+    @GetMapping("/queue/status")
+    public ResponseEntity<Map<String, Object>> status(@RequestParam Long ticketId) {
+        String status = matchmakingService.getStatus(ticketId);
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("status", status);
+        if ("MATCH_FOUND".equals(status)) {
+            response.put("matchId", matchmakingService.getMatchId(ticketId));
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{matchId}/state")
+    public ResponseEntity<MatchStateResponse> state(@PathVariable Long matchId) {
+        return ResponseEntity.ok(matchService.getMatchState(matchId));
+    }
+
+    @PostMapping("/{matchId}/action")
+    public ResponseEntity<Void> action(@PathVariable Long matchId, @RequestBody Map<String, Long> request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        matchService.submitAction(matchId, username, request.get("weaponId"));
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{matchId}/logs")
+    public ResponseEntity<List<String>> logs(@PathVariable Long matchId) {
+        return ResponseEntity.ok(matchService.getMatchLogs(matchId));
     }
 }
