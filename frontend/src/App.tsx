@@ -1,50 +1,51 @@
-import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import Layout from './Layout';
 import AuthView from './views/AuthView';
 import LoadoutBuilderView from './views/LoadoutBuilderView';
-import { LogOut, User } from 'lucide-react';
+import DashboardView from './views/DashboardView';
+import InventoryView from './views/InventoryView';
+import CasesView from './views/CasesView';
+import LeaderboardView from './views/LeaderboardView';
+import MatchmakingView from './views/MatchmakingView';
+import BattleView from './views/BattleView';
+import { AuthProvider } from './contexts/AuthContext';
+
+const AuthWrapper: React.FC<{ mode: 'login' | 'register' }> = ({ mode }) => {
+  const navigate = useNavigate();
+  return <AuthView mode={mode} onSwitchMode={() => navigate(mode === 'login' ? '/register' : '/login')} />;
+};
 
 const AppContent: React.FC = () => {
-  const { isAuthenticated, logout, user } = useAuth();
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
-
-  if (!isAuthenticated) {
-    return (
-      <AuthView 
-        mode={authMode} 
-        onSwitchMode={() => setAuthMode(prev => prev === 'login' ? 'register' : 'login')} 
-      />
-    );
-  }
-
   return (
-    <div className="relative">
-      <nav className="fixed top-8 right-8 z-50 flex items-center gap-4 bg-tactical-gray/80 backdrop-blur-md p-2 pl-6 rounded-full border border-white/5 shadow-2xl">
-        <div className="flex items-center gap-2">
-          <User size={16} className="text-tactical-accent" />
-          <span className="text-xs font-black uppercase tracking-widest text-white">
-            {user?.username || 'OPERATOR'}
-          </span>
-        </div>
-        <button 
-          onClick={logout}
-          className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full transition-colors shadow-lg"
-          title="Sign Out"
-        >
-          <LogOut size={16} />
-        </button>
-      </nav>
-      <LoadoutBuilderView />
-    </div>
+    <Routes>
+      <Route path="/login" element={<AuthWrapper mode="login" />} />
+      <Route path="/register" element={<AuthWrapper mode="register" />} />
+      
+      <Route path="/" element={<Layout />}>
+        <Route index element={<DashboardView />} />
+        <Route path="loadout" element={<LoadoutBuilderView />} />
+        <Route path="inventory" element={<InventoryView />} />
+        <Route path="cases" element={<CasesView />} />
+        <Route path="leaderboard" element={<LeaderboardView />} />
+      </Route>
+
+      <Route path="/matchmaking" element={<MatchmakingView />} />
+      <Route path="/battle/:matchId" element={<BattleView />} />
+      
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
   );
 };
 
-function App() {
+const App: React.FC = () => {
   return (
     <AuthProvider>
-      <AppContent />
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
     </AuthProvider>
   );
-}
+};
 
 export default App;
