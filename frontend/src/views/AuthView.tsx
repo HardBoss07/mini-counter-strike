@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn, UserPlus, ShieldAlert, Loader2 } from 'lucide-react';
 
@@ -9,6 +10,7 @@ interface AuthViewProps {
 
 const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
   const { login, register } = useAuth();
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,6 +26,7 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
       } else {
         await register(username, password);
       }
+      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {

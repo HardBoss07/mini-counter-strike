@@ -4,6 +4,7 @@ import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import Armory from '../components/organisms/Armory';
 import LoadoutZone from '../components/organisms/LoadoutZone';
 import WeaponCard from '../components/molecules/WeaponCard';
+import { mapBackendWeapon } from '../components/molecules/WeaponCard';
 import type { Weapon } from '../components/molecules/WeaponCard';
 import { ShieldAlert, Info, Loader2 } from 'lucide-react';
 import { api } from '../utils/api';
@@ -28,7 +29,7 @@ const LoadoutBuilderView: React.FC = () => {
       try {
         setLoading(true);
         const data = await api.getWeapons();
-        setArmoryWeapons(data);
+        setArmoryWeapons(data.map(mapBackendWeapon));
       } catch (err) {
         showError("Failed to connect to the tactical armory database.");
         console.error(err);
