@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +15,42 @@ public class LoadoutServiceImpl implements LoadoutService {
     private final LoadoutRepository loadoutRepository;
     private final UserRepository userRepository;
     private final UserWeaponInstanceRepository weaponInstanceRepository;
+
+    @Override
+    @Transactional
+    public void saveFullLoadout(String username, List<Long> tLoadoutIds, List<Long> ctLoadoutIds) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        updateSideLoadout(user, "T", tLoadoutIds);
+        updateSideLoadout(user, "CT", ctLoadoutIds);
+    }
+
+    private void updateSideLoadout(User user, String side, List<Long> weaponInstanceIds) {
+        if (weaponInstanceIds.size() != 5) throw new RuntimeException("Loadout must have exactly 5 items.");
+        
+        Loadout loadout = loadoutRepository.findByUserAndSide(user, side.toUpperCase())
+            .orElseGet(() -> {
+                Loadout l = new Loadout();
+                l.setUser(user);
+                l.setSide(side.toUpperCase());
+                return loadoutRepository.save(l);
+            });
+        
+        List<UserWeaponInstance> instances = weaponInstanceRepository.findAllById(weaponInstanceIds);
+        if (instances.size() != 5) throw new RuntimeException("Some weapon instances not found.");
+        
+        for (UserWeaponInstance inst : instances) {
+            String weaponSide = inst.getTemplate().getSide();
+            if (!"ALL".equalsIgnoreCase(weaponSide) && !side.equalsIgnoreCase(weaponSide)) {
+                throw new RuntimeException("Weapon " + inst.getTemplate().getName() + " cannot be used on " + side + " side.");
+            }
+        }
+
+        loadout.getItems().clear();
+        loadout.getItems().addAll(instances);
+        loadoutRepository.save(loadout);
+    }
 
     @Override
     @Transactional
@@ -40,17 +76,9 @@ public class LoadoutServiceImpl implements LoadoutService {
                     return newLoadout;
                 });
 
-        // Ensure exactly 5 slots or handle as a list. 
-        // For now, if it's a specific slot, we might need to handle it differently.
-        // But the schema doesn't support slots, just a collection.
-        // Let's just add it to the list for now to fix compilation.
         if (loadout.getItems().size() < 5) {
             loadout.getItems().add(weaponInstance);
         } else {
-            // Replace if we wanted specific slot logic, but junction table doesn't have slot info.
-            // For now, let's just clear and add if we're "assigning" to a slot? No, that's not right.
-            // If the schema is 3NF junction table, it doesn't have 'slot'.
-            // To support 'slot', we'd need a column in the junction table.
             loadout.getItems().add(weaponInstance);
         }
 

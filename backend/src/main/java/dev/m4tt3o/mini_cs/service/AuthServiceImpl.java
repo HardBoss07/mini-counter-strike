@@ -37,9 +37,10 @@ public class AuthServiceImpl implements AuthService {
         user = userRepository.save(user);
 
         // 2. Provision Starter Weapons
-        // Note: Using exact names from data.sql
-        provisionStarterLoadout(user, "T", List.of("Glock-18", "MAC-10", "Galil AR", "Flashbang", "Smoke Grenade"));
-        provisionStarterLoadout(user, "CT", List.of("USP-S", "MP9", "FAMAS", "HE Grenade", "Flashbang"));
+        if (loadoutRepository.findByUser_Id(user.getId()).isEmpty()) {
+            provisionStarterLoadout(user, "T", List.of("Glock-18", "MAC-10", "Galil AR", "Flashbang", "Smoke Grenade"));
+            provisionStarterLoadout(user, "CT", List.of("USP-S", "MP9", "FAMAS", "HE Grenade", "Flashbang"));
+        }
 
         return jwtUtil.generateToken(user.getId(), user.getUsername());
     }
