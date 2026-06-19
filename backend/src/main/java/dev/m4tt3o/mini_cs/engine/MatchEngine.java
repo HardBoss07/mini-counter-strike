@@ -1,8 +1,10 @@
 package dev.m4tt3o.mini_cs.engine;
 
 import dev.m4tt3o.mini_cs.dto.*;
+import dev.m4tt3o.mini_cs.entity.WeaponTemplate;
 import org.springframework.stereotype.Component;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +17,7 @@ import java.util.Set;
 @Component
 public class MatchEngine {
 
-    private final Random random = new Random();
+    private final Random random = new SecureRandom();
 
     /**
      * Draws exactly 3 items from a 5-item loadout based on their draw weights.
@@ -47,7 +49,7 @@ public class MatchEngine {
         
         int attackerHp = attacker.hp();
         int defenderHp = defender.hp();
-        int energySpent = 0;
+        int energySpent = action.energyCost();
 
         // 1. Start of Turn: Check for BURN_15
         if (attackerEffects.contains(StatusEffect.BURN_15)) {
@@ -59,12 +61,11 @@ public class MatchEngine {
         // 2. Check for SKIP_TURN
         if (attackerEffects.contains(StatusEffect.SKIP_TURN)) {
             attackerEffects.remove(StatusEffect.SKIP_TURN);
-            log.append(String.format("%s's turn was skipped due to smoke!", attacker.username()));
+            log.append(String.format("%s's turn was skipped!", attacker.username()));
             return createRecord(turnNumber, attacker, defender, attackerHp, defenderHp, 0, attackerEffects, defenderEffects, log.toString());
         }
 
         // 3. Process Action
-        energySpent = action.energyCost();
         if (action.type() == ItemType.WEAPON) {
             int damage = action.damage();
             
@@ -94,7 +95,7 @@ public class MatchEngine {
             }
 
             // Apply Status Effect to Defender
-            if (!"NONE".equals(action.statusEffect())) {
+            if (action.statusEffect() != null && !"NONE".equalsIgnoreCase(action.statusEffect())) {
                 try {
                     StatusEffect effect = StatusEffect.valueOf(action.statusEffect());
                     defenderEffects.add(effect);
@@ -115,6 +116,8 @@ public class MatchEngine {
 
     private WeaponArchetype selectByWeight(List<WeaponArchetype> pool) {
         int totalWeight = pool.stream().mapToInt(WeaponArchetype::drawWeight).sum();
+        if (totalWeight == 0) return pool.get(random.nextInt(pool.size()));
+        
         int r = random.nextInt(totalWeight);
         int current = 0;
 
@@ -124,6 +127,6 @@ public class MatchEngine {
                 return item;
             }
         }
-        return pool.get(0);
+        return pool.get(pool.size() - 1);
     }
 }
