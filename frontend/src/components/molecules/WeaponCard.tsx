@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import StatBadge from '../atoms/StatBadge';
 import { Crosshair, Zap, Weight, ImageOff } from 'lucide-react';
+import { useWeaponData } from '../../hooks/useWeaponData';
 
 export interface Weapon {
   id: number;
@@ -19,24 +20,60 @@ export interface Weapon {
   description: string;
 }
 
+export const mapBackendWeapon = (raw: any): Weapon => {
+  const template = raw.template || raw; 
+
+  const getField = (camel: string, snake: string, fallback: any = null) => {
+    return template[camel] ?? template[snake] ?? fallback;
+  };
+
+  return {
+    id: raw.id,
+    name: template.name || 'Unknown Weapon',
+    type: template.type || 'WEAPON',
+    side: template.side || 'ALL',
+    energyCost: getField('energyCost', 'energy_cost', 0),
+    damage: template.damage || 0,
+    drawWeight: getField('drawWeight', 'draw_weight', 0),
+    critChance: getField('critChance', 'crit_chance', 0),
+    critMultiplier: getField('critMultiplier', 'crit_multiplier', 1.0),
+    statusEffect: getField('statusEffect', 'status_effect', 'NONE'),
+    imageUrl: getField('imageUrl', 'image_url', '/assets/placeholder-weapon.png'),
+    description: template.description || 'No description available',
+  };
+};
+
 interface WeaponCardProps {
-  weapon: Weapon;
+  weapon?: Weapon;
+  weaponId?: number;
   isDraggable?: boolean;
   onRemove?: () => void;
   isDisabled?: boolean;
 }
 
-const WeaponCard: React.FC<WeaponCardProps> = ({ weapon, isDraggable = true, onRemove, isDisabled = false }) => {
+const WeaponCard: React.FC<WeaponCardProps> = ({ weapon: initialWeapon, weaponId, isDraggable = true, onRemove, isDisabled = false }) => {
+  const fetchedWeapon = useWeaponData(weaponId);
+  const weapon = initialWeapon || fetchedWeapon;
   const [imageError, setImageError] = useState(false);
 
+  if (!weapon) {
+    return <div className="w-48 h-64 bg-tactical-gray rounded-lg border-2 border-white/5 animate-pulse" />;
+  }
+
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: weapon.uniqueId || weapon.id.toString(), // Use uniqueId if available
+    id: weapon.uniqueId || weapon.id.toString(),
     data: weapon,
     disabled: !isDraggable || isDisabled,
   });
+  
   const style = transform ? {
     transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
   } : undefined;
+
+  const imageUrl = weapon?.imageUrl?.startsWith('/') 
+    ? `${window.location.origin}${weapon.imageUrl}` 
+    : weapon?.imageUrl;
 
   const sideColor = weapon.side === 'T' ? 'border-tactical-t' : weapon.side === 'CT' ? 'border-tactical-ct' : 'border-tactical-accent';
 
@@ -65,7 +102,7 @@ const WeaponCard: React.FC<WeaponCardProps> = ({ weapon, isDraggable = true, onR
       <div className="h-32 w-full bg-tactical-dark flex items-center justify-center p-4">
         {!imageError ? (
           <img 
-            src={weapon.imageUrl} 
+            src={imageUrl} 
             alt={weapon.name}
             className="max-h-full max-w-full object-contain drop-shadow-[0_0_8px_rgba(197,160,89,0.3)]"
             onError={() => setImageError(true)}

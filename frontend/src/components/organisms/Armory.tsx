@@ -16,7 +16,7 @@ const Armory: React.FC<ArmoryProps> = ({ weapons, tLoadout, ctLoadout }) => {
         <span className="text-xs text-gray-500 font-mono">{weapons.length} ITEMS AVAILABLE</span>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
         {weapons.map((weapon) => {
           const isEquipped = tLoadout.some(w => w.id === weapon.id) || ctLoadout.some(w => w.id === weapon.id);
           return (

@@ -15,16 +15,21 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
     headers.set('Content-Type', 'application/json');
   }
 
-  // 2. Add JWT token if it exists in localStorage
+  // 2. Add JWT token from localStorage
   const token = localStorage.getItem('token');
+  
   if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
+    headers.set('Authorization', 'Bearer ' + token);
   }
 
   const response = await fetch(url, {
     ...options,
     headers,
   });
+
+  if (response.status === 403) {
+    throw new Error('Unauthorized: 403 Forbidden');
+  }
 
   if (!response.ok) {
     const errorBody = await response.text();
@@ -68,29 +73,19 @@ export const api = {
   /**
    * Catalog
    */
-  getWeapons: () => apiFetch<Weapon[]>('/api/weapons'),
+  getWeapons: () => apiFetch<Weapon[]>('/api/inventory/weapons', { method: 'GET' }),
 
-  /**
-   * Loadout
-   */
+  getUserProfile: () => apiFetch<{id: number, username: string, elo: number, credits: number, caseCount: number}>('/api/user/me', { method: 'GET' }),
+  getLeaderboard: () => apiFetch<{username: string, elo: number}[]>('/api/leaderboard', { method: 'GET' }),
+  openCase: () => apiFetch<{weaponName: string, rarity: string, imageUrl: string}>('/api/economy/cases/open', { method: 'POST' }),
+  queueMatch: () => apiFetch<{ticketId: number}>('/api/match/queue', { method: 'POST' }),
+  getQueueStatus: (ticketId: number) => apiFetch<{status: string, matchId?: number}>(`/api/match/queue/status?ticketId=${ticketId}`, { method: 'GET' }),
+  getMatchState: (matchId: number) => apiFetch<any>(`/api/match/${matchId}/state`, { method: 'GET' }),
+  submitAction: (matchId: number, weaponId: number) => apiFetch<void>(`/api/match/${matchId}/action`, { method: 'POST', body: JSON.stringify({ weaponId }) }),
+  getMatchLogs: (matchId: number) => apiFetch<string[]>(`/api/match/${matchId}/logs`, { method: 'GET' }),
   saveLoadouts: (loadouts: { side: 'T' | 'CT', items: Weapon[] }[]) =>
-    apiFetch<any>('/api/loadout/save', {
+    apiFetch<any>('/api/inventory/loadouts/save', {
       method: 'POST',
       body: JSON.stringify(loadouts),
-    }),
-
-  /**
-   * Matches
-   */
-  queueMatch: (playerA: string, playerB: string) => 
-    apiFetch<any>('/api/match/queue', {
-      method: 'POST',
-      body: JSON.stringify({ playerA, playerB }),
-    }),
-
-  submitTurn: (matchId: number, playerId: number, actionId: number) =>
-    apiFetch<any>(`/api/match/${matchId}/turn`, {
-      method: 'POST',
-      body: JSON.stringify({ playerId, actionId }),
     }),
 };
