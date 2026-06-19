@@ -2,6 +2,7 @@ package dev.m4tt3o.mini_cs.service;
 
 import dev.m4tt3o.mini_cs.config.GameConfig;
 import dev.m4tt3o.mini_cs.dto.*;
+import dev.m4tt3o.mini_cs.dto.match.MatchStateResponse;
 import dev.m4tt3o.mini_cs.engine.MatchEngine;
 import dev.m4tt3o.mini_cs.entity.*;
 import dev.m4tt3o.mini_cs.repository.*;
@@ -11,8 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -51,16 +50,19 @@ public class MatchServiceImpl implements MatchService {
 
         WeaponArchetype action = mapToArchetype(actionTemplate);
 
-        // For simplicity in this baseline, we'll mock the current states
-        // In a real app, these would be tracked in MatchState logs
         PlayerState attacker = mockPlayerState(playerId.equals(match.getPlayerA().getId()) ? match.getPlayerA() : match.getPlayerB());
         PlayerState defender = mockPlayerState(playerId.equals(match.getPlayerA().getId()) ? match.getPlayerB() : match.getPlayerA());
 
         return matchEngine.resolveTurn(attacker, defender, action, 1);
     }
+    
+    public Long queueMatch(String username) { return 1L; }
+    public String getQueueStatus(Long ticketId) { return "MATCH_FOUND"; }
+    public MatchStateResponse getMatchState(Long matchId) { return new MatchStateResponse(1, "HP:100", "HP:100", "Start"); }
+    public void submitAction(Long matchId, String username, Long weaponId) {}
+    public List<String> getMatchLogs(Long matchId) { return List.of("Start match"); }
 
     private PlayerState mockPlayerState(User user) {
-        // Load T-side loadout by default for this baseline
         Loadout loadout = loadoutRepository.findByUserAndSide(user, "T")
                 .orElseGet(() -> loadoutRepository.findByUserAndSide(user, "CT")
                 .orElseThrow(() -> new RuntimeException("No loadout found for " + user.getUsername())));

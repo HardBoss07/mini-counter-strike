@@ -1,19 +1,18 @@
 package dev.m4tt3o.mini_cs.service;
 
 import dev.m4tt3o.mini_cs.dto.CombatRoundRecord;
+import dev.m4tt3o.mini_cs.dto.match.MatchStateResponse;
 import dev.m4tt3o.mini_cs.entity.Match;
+import org.springframework.stereotype.Service;
 
-/**
- * Service for managing matches.
- */
+import java.util.List;
+
 public interface MatchService {
-    /**
-     * Initializes a new match between two players.
-     */
     Match createMatch(String playerAUsername, String playerBUsername);
-
-    /**
-     * Executes a turn in an existing match.
-     */
     CombatRoundRecord executeTurn(Long matchId, Long playerId, Long actionId);
+    Long queueMatch(String username);
+    String getQueueStatus(Long ticketId);
+    MatchStateResponse getMatchState(Long matchId);
+    void submitAction(Long matchId, String username, Long weaponId);
+    List<String> getMatchLogs(Long matchId);
 }
