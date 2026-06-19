@@ -35,8 +35,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers("/api/weapons/**").permitAll() // Allow catalog viewing
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/weapons/**").permitAll()
+                .requestMatchers("/api/user/**", "/api/inventory/**", "/api/economy/**", "/api/match/**", "/api/leaderboard/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
