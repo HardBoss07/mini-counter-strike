@@ -32,5 +32,9 @@ public class Match {
     @JoinColumn(name = "winner_id")
     private User winner;
 
+    @Lob
+    @Column(name = "logs_json", columnDefinition = "TEXT")
+    private String logsJson;
+
     private LocalDateTime createdAt = LocalDateTime.now();
 }

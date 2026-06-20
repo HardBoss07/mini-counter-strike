@@ -56,5 +56,6 @@ CREATE TABLE IF NOT EXISTS match_state (
     player_b_id INTEGER REFERENCES app_user(id),
     status VARCHAR(50) DEFAULT 'IN_PROGRESS',
     winner_id INTEGER REFERENCES app_user(id),
+    logs_json TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
