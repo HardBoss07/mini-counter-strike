@@ -37,18 +37,23 @@ public class LoadoutServiceImpl implements LoadoutService {
                 return loadoutRepository.save(l);
             });
         
-        List<UserWeaponInstance> instances = weaponInstanceRepository.findAllById(weaponInstanceIds);
-        if (instances.size() != 5) throw new RuntimeException("Some weapon instances not found.");
+        List<UserWeaponInstance> distinctInstances = weaponInstanceRepository.findAllById(weaponInstanceIds);
         
-        for (UserWeaponInstance inst : instances) {
+        loadout.getItems().clear();
+        for (Long weaponId : weaponInstanceIds) {
+            UserWeaponInstance inst = distinctInstances.stream()
+                .filter(i -> i.getId().equals(weaponId))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Weapon instance " + weaponId + " not found."));
+
             String weaponSide = inst.getTemplate().getSide();
             if (!"ALL".equalsIgnoreCase(weaponSide) && !side.equalsIgnoreCase(weaponSide)) {
                 throw new RuntimeException("Weapon " + inst.getTemplate().getName() + " cannot be used on " + side + " side.");
             }
+            
+            loadout.getItems().add(inst);
         }
 
-        loadout.getItems().clear();
-        loadout.getItems().addAll(instances);
         loadoutRepository.save(loadout);
     }
 

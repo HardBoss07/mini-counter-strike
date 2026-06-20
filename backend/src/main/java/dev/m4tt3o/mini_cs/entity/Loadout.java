@@ -31,6 +31,7 @@ public class Loadout {
         joinColumns = @JoinColumn(name = "loadout_id"),
         inverseJoinColumns = @JoinColumn(name = "user_weapon_instance_id")
     )
+    @OrderColumn(name = "slot_index")
     private List<UserWeaponInstance> items = new ArrayList<>();
 
     public List<UserWeaponInstance> getItems() {
