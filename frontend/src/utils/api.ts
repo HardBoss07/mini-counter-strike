@@ -82,10 +82,13 @@ export const api = {
   getQueueStatus: (ticketId: number) => apiFetch<{status: string, matchId?: number}>(`/api/match/queue/status?ticketId=${ticketId}`, { method: 'GET' }),
   getMatchState: (matchId: number) => apiFetch<any>(`/api/match/${matchId}/state`, { method: 'GET' }),
   submitAction: (matchId: number, weaponId: number) => apiFetch<void>(`/api/match/${matchId}/action`, { method: 'POST', body: JSON.stringify({ weaponId }) }),
-  getMatchLogs: (matchId: number) => apiFetch<string[]>(`/api/match/${matchId}/logs`, { method: 'GET' }),
-  saveLoadouts: (loadouts: { side: 'T' | 'CT', items: Weapon[] }[]) =>
+  getMatchLogs: (matchId: number) => apiFetch<any[]>(`/api/match/${matchId}/logs`, { method: 'GET' }),
+  saveLoadouts: (tLoadout: Weapon[], ctLoadout: Weapon[]) =>
     apiFetch<any>('/api/inventory/loadouts/save', {
       method: 'POST',
-      body: JSON.stringify(loadouts),
+      body: JSON.stringify({
+        tLoadoutIds: tLoadout.map(w => w.id),
+        ctLoadoutIds: ctLoadout.map(w => w.id),
+      }),
     }),
 };
