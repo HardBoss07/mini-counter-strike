@@ -14,5 +14,6 @@ public interface MatchService {
     String getQueueStatus(Long ticketId);
     MatchStateResponse getMatchState(Long matchId);
     void submitAction(Long matchId, String username, Long weaponId);
-    List<String> getMatchLogs(Long matchId);
+    List<CombatRoundRecord> getMatchLogs(Long matchId);
+    void simulateAndSaveMatch(Match match);
 }

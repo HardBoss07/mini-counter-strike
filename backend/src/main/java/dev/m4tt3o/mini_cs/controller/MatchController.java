@@ -1,5 +1,6 @@
 package dev.m4tt3o.mini_cs.controller;
 
+import dev.m4tt3o.mini_cs.dto.CombatRoundRecord;
 import dev.m4tt3o.mini_cs.dto.match.MatchStateResponse;
 import dev.m4tt3o.mini_cs.entity.User;
 import dev.m4tt3o.mini_cs.repository.UserRepository;
@@ -55,7 +56,7 @@ public class MatchController {
     }
 
     @GetMapping("/{matchId}/logs")
-    public ResponseEntity<List<String>> logs(@PathVariable Long matchId) {
+    public ResponseEntity<List<CombatRoundRecord>> logs(@PathVariable Long matchId) {
         return ResponseEntity.ok(matchService.getMatchLogs(matchId));
     }
 }

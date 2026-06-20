@@ -40,6 +40,61 @@ public class MatchEngine {
     }
 
     /**
+     * Simulates a full round between two players until one reaches 0 HP.
+     */
+    public List<CombatRoundRecord> simulateMatch(PlayerState p1, List<WeaponArchetype> p1Loadout, PlayerState p2, List<WeaponArchetype> p2Loadout) {
+        List<CombatRoundRecord> logs = new ArrayList<>();
+        int turnNumber = 1;
+        
+        PlayerState attacker = p1;
+        List<WeaponArchetype> attackerLoadout = p1Loadout;
+        
+        PlayerState defender = p2;
+        List<WeaponArchetype> defenderLoadout = p2Loadout;
+
+        while (attacker.hp() > 0 && defender.hp() > 0 && turnNumber <= 100) {
+            int playerTurn = (turnNumber + 1) / 2;
+            int energyToAdd = Math.min(playerTurn + 1, 10);
+            int currentEnergy = Math.min(attacker.energy() + energyToAdd, 10);
+            
+            // Draw Hand
+            List<WeaponArchetype> hand = drawHand(attackerLoadout);
+            attacker = new PlayerState(attacker.playerId(), attacker.username(), attacker.hp(), currentEnergy, hand, attacker.activeEffects());
+            
+            // Simple AI: Pick highest damage weapon we can afford.
+            final int currentEnergyForFilter = attacker.energy();
+            WeaponArchetype selectedAction = hand.stream()
+                .filter(w -> w.energyCost() <= currentEnergyForFilter)
+                .max((w1, w2) -> Integer.compare(w1.damage(), w2.damage()))
+                .orElse(null);
+                
+            if (selectedAction == null) {
+                CombatRoundRecord record = new CombatRoundRecord(turnNumber, attacker, defender, String.format("%s saved energy.", attacker.username()), attacker.playerId());
+                logs.add(record);
+            } else {
+                CombatRoundRecord record = resolveTurn(attacker, defender, selectedAction, turnNumber);
+                logs.add(record);
+                attacker = record.playerA();
+                defender = record.playerB();
+            }
+
+            // Swap roles
+            PlayerState temp = attacker;
+            attacker = defender;
+            defender = temp;
+            
+            List<WeaponArchetype> tempLoadout = attackerLoadout;
+            attackerLoadout = defenderLoadout;
+            defenderLoadout = tempLoadout;
+            
+            turnNumber++;
+        }
+        
+        return logs;
+    }
+
+
+    /**
      * Resolves a single combat turn including status effects and critical hits.
      */
     public CombatRoundRecord resolveTurn(PlayerState attacker, PlayerState defender, WeaponArchetype action, int turnNumber) {

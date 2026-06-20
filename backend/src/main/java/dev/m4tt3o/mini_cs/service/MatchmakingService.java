@@ -19,9 +19,12 @@ public class MatchmakingService {
     private final Map<Long, Long> ticketToMatch = new ConcurrentHashMap<>();
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
+    private final MatchService matchService;
 
     public Long queueUser(Long userId) {
-        matchmakingQueue.add(userId);
+        if (!matchmakingQueue.contains(userId) && !ticketToMatch.containsKey(userId)) {
+            matchmakingQueue.add(userId);
+        }
         return userId; // Using userId as ticketId for simplicity
     }
 
@@ -37,16 +40,33 @@ public class MatchmakingService {
     }
 
     // This would be called by a background task or in status check
-    public void tryMatchmaking() {
-        if (matchmakingQueue.size() >= 2) {
+    // Synchronized to prevent race conditions when multiple users hit /queue concurrently
+    public synchronized void tryMatchmaking() {
+        while (matchmakingQueue.size() >= 2) {
             Long playerAId = matchmakingQueue.poll();
             Long playerBId = matchmakingQueue.poll();
+
+            // Safety check in case the queue state changes unexpectedly
+            if (playerAId == null || playerBId == null) {
+                if (playerAId != null) matchmakingQueue.add(playerAId);
+                if (playerBId != null) matchmakingQueue.add(playerBId);
+                break;
+            }
+
+            // Prevent self-matching
+            if (playerAId.equals(playerBId)) {
+                matchmakingQueue.add(playerAId);
+                continue;
+            }
             
             Match match = new Match();
             match.setPlayerA(userRepository.findById(playerAId).orElseThrow());
             match.setPlayerB(userRepository.findById(playerBId).orElseThrow());
             match.setStatus("ACTIVE");
             Match savedMatch = matchRepository.save(match);
+
+            // Run simulation
+            matchService.simulateAndSaveMatch(savedMatch);
             
             ticketToMatch.put(playerAId, savedMatch.getId());
             ticketToMatch.put(playerBId, savedMatch.getId());
