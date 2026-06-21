@@ -17,7 +17,7 @@ const DashboardView: React.FC = () => {
     <div className="flex flex-col items-center justify-center gap-8 py-16">
       <div className="text-center">
         <h2 className="text-sm text-gray-500 uppercase tracking-widest font-bold">Current Rank</h2>
-        <div className="text-8xl font-black text-tactical-accent drop-shadow-[0_0_15px_rgba(197,160,89,0.5)]">
+        <div className="text-8xl font-black text-tactical-accent drop-shadow-[0_0_15px_rgba(125,1,227,0.5)]">
           {profile.elo >= 1500 ? 'GLOBAL ELITE' : profile.elo >= 1200 ? 'GOLD' : 'SILVER'}
         </div>
         <p className="text-2xl font-mono text-white mt-2">{profile.elo} ELO</p>
@@ -25,7 +25,7 @@ const DashboardView: React.FC = () => {
 
       <button 
         onClick={() => navigate('/matchmaking')}
-        className="bg-tactical-accent text-black font-black text-xl px-16 py-6 rounded-lg uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_30px_rgba(197,160,89,0.3)]"
+        className="bg-tactical-accent text-black font-black text-xl px-16 py-6 rounded-lg uppercase tracking-widest hover:scale-105 transition-transform shadow-[0_0_30px_rgba(125,1,227,0.3)]"
       >
         Find Match
       </button>

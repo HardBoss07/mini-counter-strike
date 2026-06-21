@@ -84,7 +84,7 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 bg-tactical-accent hover:bg-tactical-accent/80 disabled:opacity-50 text-black font-black py-4 rounded-lg uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(197,160,89,0.1)] flex items-center justify-center gap-2"
+            className="mt-4 bg-tactical-accent hover:bg-tactical-accent/80 disabled:opacity-50 text-black font-black py-4 rounded-lg uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(125,1,227,0.1)] flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

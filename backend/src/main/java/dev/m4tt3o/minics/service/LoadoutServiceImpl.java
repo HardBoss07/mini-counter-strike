@@ -118,4 +118,26 @@ public class LoadoutServiceImpl implements LoadoutService {
         loadout.getItems().add(weaponInstance);
         return loadoutRepository.save(loadout);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, java.util.Set<UserWeaponInstance>> getFullLoadout(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Fetch T side loadout items (defaulting to empty Set if none exists yet)
+        java.util.Set<UserWeaponInstance> tItems = loadoutRepository.findByUserAndSide(user, "T")
+                .map(Loadout::getItems)
+                .orElse(java.util.Collections.emptySet());
+
+        // Fetch CT side loadout items
+        java.util.Set<UserWeaponInstance> ctItems = loadoutRepository.findByUserAndSide(user, "CT")
+                .map(Loadout::getItems)
+                .orElse(java.util.Collections.emptySet());
+
+        return Map.of(
+            "tLoadout", tItems,
+            "ctLoadout", ctItems
+        );
+    }
 }

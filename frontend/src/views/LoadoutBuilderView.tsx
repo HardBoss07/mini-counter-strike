@@ -25,11 +25,39 @@ const LoadoutBuilderView: React.FC = () => {
   );
 
   useEffect(() => {
-    const fetchWeapons = async () => {
+    const initializeBuilder = async () => {
       try {
         setLoading(true);
-        const data = await api.getWeapons();
-        setArmoryWeapons(data.map(mapBackendWeapon));
+
+        // Fetch both catalog weapons and active loadout states concurrently
+        const [weaponsData, loadoutData] = await Promise.all([
+          api.getWeapons(),
+          api.getLoadouts()
+        ]);
+
+        // 1. Set catalog armory data
+        setArmoryWeapons(weaponsData.map(mapBackendWeapon));
+
+        // 2. Map and set Terrorist Loadout with required uniqueIds for drag and drop
+        if (loadoutData.tLoadout) {
+          setTLoadout(
+            loadoutData.tLoadout.map(w => ({
+              ...mapBackendWeapon(w),
+              uniqueId: `${w.id}-${crypto.randomUUID()}`
+            }))
+          );
+        }
+
+        // 3. Map and set Counter-Terrorist Loadout
+        if (loadoutData.ctLoadout) {
+          setCtLoadout(
+            loadoutData.ctLoadout.map(w => ({
+              ...mapBackendWeapon(w),
+              uniqueId: `${w.id}-${crypto.randomUUID()}`
+            }))
+          );
+        }
+
       } catch (err) {
         showError("Failed to connect to the tactical armory database.");
         console.error(err);
@@ -38,7 +66,7 @@ const LoadoutBuilderView: React.FC = () => {
       }
     };
 
-    fetchWeapons();
+    initializeBuilder();
   }, []);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -90,7 +118,7 @@ const LoadoutBuilderView: React.FC = () => {
     setSaveStatus('saving');
     try {
       await api.saveLoadouts(tLoadout, ctLoadout);
-      
+
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (err) {
@@ -141,12 +169,12 @@ const LoadoutBuilderView: React.FC = () => {
           </DragOverlay>
         </DndContext>
       )}
-      
+
       <footer className="mt-auto pt-8 border-t border-white/5 flex justify-end">
-        <button 
+        <button
           onClick={handleSave}
           disabled={saveStatus !== 'idle'}
-          className="bg-tactical-accent text-black font-black px-12 py-4 rounded uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(197,160,89,0.2)] disabled:opacity-50"
+          className="bg-tactical-accent text-black font-black px-12 py-4 rounded uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(125,1,227,0.2)] disabled:opacity-50"
         >
           {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Loadouts'}
         </button>

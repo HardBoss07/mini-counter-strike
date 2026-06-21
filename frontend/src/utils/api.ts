@@ -91,4 +91,5 @@ export const api = {
         ctLoadoutIds: ctLoadout.map(w => w.id),
       }),
     }),
+  getLoadouts: () => apiFetch<{ tLoadout: Weapon[]; ctLoadout: Weapon[] }>('/api/loadout', { method: 'GET' }),
 };
