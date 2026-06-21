@@ -7,9 +7,9 @@ const BASE_URL = ''; // Proxied by Vite in development
  */
 async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
-  
+
   const headers = new Headers(options.headers || {});
-  
+
   // 1. Add Content-Type if body exists
   if (options.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
@@ -17,7 +17,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 
   // 2. Add JWT token from localStorage
   const token = localStorage.getItem('token');
-  
+
   if (token) {
     headers.set('Authorization', 'Bearer ' + token);
   }
@@ -51,6 +51,16 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
   return response.json();
 }
 
+export interface MatchStateResponse {
+  round: number;
+  playerAStatus: string; // e.g., "HP:100"
+  playerBStatus: string; // e.g., "HP:100"
+  lastLog: string;
+  status: 'IN_PROGRESS' | 'COMPLETED';
+  playerHand?: any[]; // Holds the current live hand if ongoing
+  isMyTurn?: boolean;
+}
+
 /**
  * Service functions for specific API endpoints.
  */
@@ -58,7 +68,7 @@ export const api = {
   /**
    * Auth Endpoints
    */
-  login: (username: string, password: string) => 
+  login: (username: string, password: string) =>
     apiFetch<{ token: string }>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
@@ -75,14 +85,16 @@ export const api = {
    */
   getWeapons: () => apiFetch<Weapon[]>('/api/inventory/weapons', { method: 'GET' }),
 
-  getUserProfile: () => apiFetch<{id: number, username: string, elo: number, credits: number, caseCount: number}>('/api/user/me', { method: 'GET' }),
-  getLeaderboard: () => apiFetch<{username: string, elo: number}[]>('/api/leaderboard', { method: 'GET' }),
-  openCase: () => apiFetch<{weaponName: string, rarity: string, imageUrl: string}>('/api/economy/cases/open', { method: 'POST' }),
-  queueMatch: () => apiFetch<{ticketId: number}>('/api/match/queue', { method: 'POST' }),
-  getQueueStatus: (ticketId: number) => apiFetch<{status: string, matchId?: number}>(`/api/match/queue/status?ticketId=${ticketId}`, { method: 'GET' }),
+  getUserProfile: () => apiFetch<{ id: number, username: string, elo: number, credits: number, caseCount: number }>('/api/user/me', { method: 'GET' }),
+  getLeaderboard: () => apiFetch<{ username: string, elo: number }[]>('/api/leaderboard', { method: 'GET' }),
+  openCase: () => apiFetch<{ weaponName: string, rarity: string, imageUrl: string }>('/api/economy/cases/open', { method: 'POST' }),
+  queueMatch: () => apiFetch<{ ticketId: number }>('/api/match/queue', { method: 'POST' }),
+  getQueueStatus: (ticketId: number) => apiFetch<{ status: string, matchId?: number }>(`/api/match/queue/status?ticketId=${ticketId}`, { method: 'GET' }),
   getMatchState: (matchId: number) => apiFetch<any>(`/api/match/${matchId}/state`, { method: 'GET' }),
   submitAction: (matchId: number, weaponId: number) => apiFetch<void>(`/api/match/${matchId}/action`, { method: 'POST', body: JSON.stringify({ weaponId }) }),
   getMatchLogs: (matchId: number) => apiFetch<any[]>(`/api/match/${matchId}/logs`, { method: 'GET' }),
+
+  getLoadouts: () => apiFetch<{ tLoadout: Weapon[]; ctLoadout: Weapon[] }>('/api/loadout', { method: 'GET' }),
   saveLoadouts: (tLoadout: Weapon[], ctLoadout: Weapon[]) =>
     apiFetch<any>('/api/loadout/save', {
       method: 'POST',
@@ -91,5 +103,4 @@ export const api = {
         ctLoadoutIds: ctLoadout.map(w => w.id),
       }),
     }),
-  getLoadouts: () => apiFetch<{ tLoadout: Weapon[]; ctLoadout: Weapon[] }>('/api/loadout', { method: 'GET' }),
-};
+  };

@@ -48,15 +48,22 @@ public class MatchServiceImpl implements MatchService {
         User playerA = match.getPlayerA();
         User playerB = match.getPlayerB();
 
-        // 1. Get loadouts for both players
+        // 1. Get loadouts for both players with defensive fallbacks to avoid queue freezes
         Loadout playerATLoadoutEntity = loadoutRepository.findByUserAndSide(playerA, "T")
-                .orElseThrow(() -> new RuntimeException("T Loadout not found for user: " + playerA.getUsername()));
+                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerA, "t")
+                .orElseThrow(() -> new RuntimeException("T Loadout not found for user: " + playerA.getUsername())));
+        
         Loadout playerACTLoadoutEntity = loadoutRepository.findByUserAndSide(playerA, "CT")
-                .orElseThrow(() -> new RuntimeException("CT Loadout not found for user: " + playerA.getUsername()));
+                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerA, "ct")
+                .orElseThrow(() -> new RuntimeException("CT Loadout not found for user: " + playerA.getUsername())));
+        
         Loadout playerBTLoadoutEntity = loadoutRepository.findByUserAndSide(playerB, "T")
-                .orElseThrow(() -> new RuntimeException("T Loadout not found for user: " + playerB.getUsername()));
+                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerB, "t")
+                .orElseThrow(() -> new RuntimeException("T Loadout not found for user: " + playerB.getUsername())));
+        
         Loadout playerBCTLoadoutEntity = loadoutRepository.findByUserAndSide(playerB, "CT")
-                .orElseThrow(() -> new RuntimeException("CT Loadout not found for user: " + playerB.getUsername()));
+                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerB, "ct")
+                .orElseThrow(() -> new RuntimeException("CT Loadout not found for user: " + playerB.getUsername())));
 
         List<WeaponArchetype> playerATLoadout = mapLoadoutToArchetypes(playerATLoadoutEntity);
         List<WeaponArchetype> playerACTLoadout = mapLoadoutToArchetypes(playerACTLoadoutEntity);
@@ -80,7 +87,6 @@ public class MatchServiceImpl implements MatchService {
         }
 
         // 4. Simulate Round 2 (Player A is CT, Player B is T)
-        // Here, Player B is T (attacker, 1st param) and Player A is CT (defender, 2nd param)
         List<CombatRoundRecord> round2Records = matchEngine.simulateMatch(pBStart, playerBTLoadout, pAStart, playerACTLoadout);
 
         // Winner of Round 2
@@ -189,8 +195,10 @@ public class MatchServiceImpl implements MatchService {
 
     private PlayerState mockPlayerState(User user) {
         Loadout loadout = loadoutRepository.findByUserAndSide(user, "T")
+                .orElseGet(() -> loadoutRepository.findByUserAndSide(user, "t")
                 .orElseGet(() -> loadoutRepository.findByUserAndSide(user, "CT")
-                .orElseThrow(() -> new RuntimeException("No loadout found for " + user.getUsername())));
+                .orElseGet(() -> loadoutRepository.findByUserAndSide(user, "ct")
+                .orElseThrow(() -> new RuntimeException("No loadout found for " + user.getUsername())))));
 
         List<WeaponArchetype> items = loadout.getItems().stream()
                 .map(this::mapInstanceToArchetype).toList();
