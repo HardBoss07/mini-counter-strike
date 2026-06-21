@@ -84,7 +84,7 @@ export const api = {
   submitAction: (matchId: number, weaponId: number) => apiFetch<void>(`/api/match/${matchId}/action`, { method: 'POST', body: JSON.stringify({ weaponId }) }),
   getMatchLogs: (matchId: number) => apiFetch<any[]>(`/api/match/${matchId}/logs`, { method: 'GET' }),
   saveLoadouts: (tLoadout: Weapon[], ctLoadout: Weapon[]) =>
-    apiFetch<any>('/api/inventory/loadouts/save', {
+    apiFetch<any>('/api/loadout/save', {
       method: 'POST',
       body: JSON.stringify({
         tLoadoutIds: tLoadout.map(w => w.id),

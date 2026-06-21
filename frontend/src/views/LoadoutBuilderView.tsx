@@ -89,10 +89,8 @@ const LoadoutBuilderView: React.FC = () => {
   const handleSave = async () => {
     setSaveStatus('saving');
     try {
-      await api.saveLoadouts([
-        { side: 'T', items: tLoadout },
-        { side: 'CT', items: ctLoadout }
-      ]);
+      await api.saveLoadouts(tLoadout, ctLoadout);
+      
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (err) {

@@ -1,5 +1,6 @@
 package dev.m4tt3o.minics.service;
 
+import dev.m4tt3o.minics.dto.ItemType;
 import dev.m4tt3o.minics.entity.*;
 import dev.m4tt3o.minics.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +31,10 @@ public class LoadoutServiceImpl implements LoadoutService {
     }
 
     private void updateSideLoadout(User user, String side, List<Long> weaponInstanceIds) {
-        if (weaponInstanceIds.size() != 5) throw new RuntimeException("Loadout must have exactly 5 items.");
+        // Validation: Frontend sends up to 5 items total
+        if (weaponInstanceIds.size() > 5) {
+            throw new RuntimeException("Loadout cannot exceed 5 items total.");
+        }
         
         Loadout loadout = loadoutRepository.findByUserAndSide(user, side.toUpperCase())
             .orElseGet(() -> {
@@ -37,21 +44,49 @@ public class LoadoutServiceImpl implements LoadoutService {
                 return loadoutRepository.save(l);
             });
         
-        List<UserWeaponInstance> distinctInstances = weaponInstanceRepository.findAllById(weaponInstanceIds);
+        // Fetch all distinct records from the DB matching requested IDs
+        List<UserWeaponInstance> fetchedInstances = weaponInstanceRepository.findAllById(weaponInstanceIds);
         
-        loadout.getItems().clear();
-        for (Long weaponId : weaponInstanceIds) {
-            UserWeaponInstance inst = distinctInstances.stream()
-                .filter(i -> i.getId().equals(weaponId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Weapon instance " + weaponId + " not found."));
+        // Map them by ID for O(1) matching inside loops
+        Map<Long, UserWeaponInstance> instanceMap = fetchedInstances.stream()
+                .collect(Collectors.toMap(UserWeaponInstance::getId, Function.identity()));
 
+        long weaponCount = 0;
+        long utilityCount = 0;
+
+        // Clear existing database junction items cleanly
+        loadout.getItems().clear();
+        
+        for (Long weaponId : weaponInstanceIds) {
+            UserWeaponInstance inst = instanceMap.get(weaponId);
+            if (inst == null) {
+                throw new RuntimeException("Weapon instance " + weaponId + " not found.");
+            }
+
+            // Faction Validation
             String weaponSide = inst.getTemplate().getSide();
             if (!"ALL".equalsIgnoreCase(weaponSide) && !side.equalsIgnoreCase(weaponSide)) {
                 throw new RuntimeException("Weapon " + inst.getTemplate().getName() + " cannot be used on " + side + " side.");
             }
-            
+
+            // Type Counting Logic (Fixed to use your ItemType Enum)
+            ItemType type = inst.getTemplate().getType();
+            if (type == ItemType.WEAPON) {
+                weaponCount++;
+            } else if (type == ItemType.UTILITY) {
+                utilityCount++;
+            }
+
+            // Safe add to Hibernate Set
             loadout.getItems().add(inst);
+        }
+
+        // Validate final slots arrangement matches game design rules
+        if (weaponCount > 3) {
+            throw new RuntimeException("Validation Error: Maximum of 3 primary weapons allowed.");
+        }
+        if (utilityCount > 2) {
+            throw new RuntimeException("Validation Error: Maximum of 2 utility items allowed.");
         }
 
         loadoutRepository.save(loadout);
@@ -66,7 +101,6 @@ public class LoadoutServiceImpl implements LoadoutService {
         UserWeaponInstance weaponInstance = weaponInstanceRepository.findById(userWeaponInstanceId)
                 .orElseThrow(() -> new RuntimeException("Weapon instance not found"));
 
-        // Validation: Side Restrictions
         String weaponSide = weaponInstance.getTemplate().getSide();
         if (!"ALL".equalsIgnoreCase(weaponSide) && !side.equalsIgnoreCase(weaponSide)) {
             throw new RuntimeException(String.format("Cannot add %s weapon (%s) to %s loadout", 
@@ -81,12 +115,7 @@ public class LoadoutServiceImpl implements LoadoutService {
                     return newLoadout;
                 });
 
-        if (loadout.getItems().size() < 5) {
-            loadout.getItems().add(weaponInstance);
-        } else {
-            loadout.getItems().add(weaponInstance);
-        }
-
+        loadout.getItems().add(weaponInstance);
         return loadoutRepository.save(loadout);
     }
 }

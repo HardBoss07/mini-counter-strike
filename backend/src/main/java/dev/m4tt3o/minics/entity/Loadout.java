@@ -3,11 +3,12 @@ package dev.m4tt3o.minics.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * User loadout for a specific side (T or CT) with exactly 5 items.
+ * Rules (3 guns, 2 utilities) are enforced via business logic.
  */
 @Entity
 @Table(name = "loadout")
@@ -31,10 +32,10 @@ public class Loadout {
         joinColumns = @JoinColumn(name = "loadout_id"),
         inverseJoinColumns = @JoinColumn(name = "user_weapon_instance_id")
     )
-    @OrderColumn(name = "slot_index")
-    private List<UserWeaponInstance> items = new ArrayList<>();
+    // Replaced List + @OrderColumn with a Set to match the composite PK schema
+    private Set<UserWeaponInstance> items = new HashSet<>();
 
-    public List<UserWeaponInstance> getItems() {
+    public Set<UserWeaponInstance> getItems() {
         return items;
     }
 }
