@@ -1,7 +1,7 @@
 # Read Me First
 The following was discovered as part of building this project:
 
-* The original package name 'dev.m4tt3o.mini-cs' is invalid and this project uses 'dev.m4tt3o.mini_cs' instead.
+* The original package name 'dev.m4tt3o.mini-cs' is invalid and this project uses 'dev.m4tt3o.minics' instead.
 
 # Getting Started
 
