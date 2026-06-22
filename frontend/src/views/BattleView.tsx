@@ -59,6 +59,27 @@ const BattleView: React.FC = () => {
     return () => clearInterval(interval);
   }, [matchId]);
 
+  // Tab Closure Surrender Safety Net
+  useEffect(() => {
+    if (!matchId || !matchState || matchState.status === 'COMPLETED') return;
+
+    const handleTabCloseSurrender = () => {
+      const token = localStorage.getItem('token');
+      const url = `/api/match/${matchId}/surrender`;
+      const headers = {
+        'type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+      const blob = new Blob([JSON.stringify({})], headers);
+      navigator.sendBeacon(url, blob);
+    };
+
+    window.addEventListener('beforeunload', handleTabCloseSurrender);
+    return () => {
+      window.removeEventListener('beforeunload', handleTabCloseSurrender);
+    };
+  }, [matchId, matchState]);
+
   const handleActionSubmit = async (weaponId: number) => {
     if (!matchId || submitting) return;
     try {
@@ -94,14 +115,18 @@ const BattleView: React.FC = () => {
     );
   }
 
-  const hpA = matchState?.playerAStatus?.split(':')[1] || '100';
-  const hpB = matchState?.playerBStatus?.split(':')[1] || '100';
+  // CRASH PROTECTION: Safe string split lookups with fallback defaults
+  const hpA = matchState?.playerAStatus?.includes(':') ? matchState.playerAStatus.split(':')[1] : '100';
+  const hpB = matchState?.playerBStatus?.includes(':') ? matchState.playerBStatus.split(':')[1] : '100';
   const isCompleted = matchState?.status === 'COMPLETED';
 
-  const isUserPlayerA = matchState?.playerAUsername.toLowerCase() === profileUsername.toLowerCase();
+  // CRASH PROTECTION: Fail-safe fallbacks for missing properties on immediate load
+  const playerAUser = matchState?.playerAUsername || 'Player A';
+  const playerBUser = matchState?.playerBUsername || 'Player B';
+  const isUserPlayerA = playerAUser.toLowerCase() === profileUsername.toLowerCase();
 
-  const labelA = isUserPlayerA ? `${matchState?.playerAUsername} (You)` : `${matchState?.playerAUsername} (Opponent)`;
-  const labelB = !isUserPlayerA ? `${matchState?.playerBUsername} (You)` : `${matchState?.playerBUsername} (Opponent)`;
+  const labelA = isUserPlayerA ? `${playerAUser} (You)` : `${playerAUser} (Opponent)`;
+  const labelB = !isUserPlayerA ? `${playerBUser} (You)` : `${playerBUser} (Opponent)`;
 
   return (
     <div className="min-h-screen bg-tactical-dark text-white flex flex-col font-sans select-none animate-fade-in duration-500">
@@ -227,7 +252,6 @@ const BattleView: React.FC = () => {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-tactical-accent/20 rounded-full blur-3xl opacity-60 pointer-events-none animate-pulse" />
 
             <div className="relative inline-flex items-center justify-center mb-4">
-              {/* Removed the bounce animation framework completely from the icon element */}
               <Trophy className="text-tactical-accent relative z-10" size={72} />
               <div className="absolute inset-0 bg-tactical-accent/20 blur-xl rounded-full scale-125 animate-ping opacity-40" />
             </div>
