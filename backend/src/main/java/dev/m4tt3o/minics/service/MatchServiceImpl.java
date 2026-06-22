@@ -3,7 +3,7 @@ package dev.m4tt3o.minics.service;
 import dev.m4tt3o.minics.config.GameConfig;
 import dev.m4tt3o.minics.dto.*;
 import dev.m4tt3o.minics.dto.match.MatchStateResponse;
-import dev.m4tt3o.minics.dto.match.LiveMatchState; // Clean record definition wrapping live payloads
+import dev.m4tt3o.minics.dto.match.LiveMatchState;
 import dev.m4tt3o.minics.engine.MatchEngine;
 import dev.m4tt3o.minics.entity.*;
 import dev.m4tt3o.minics.repository.*;
@@ -41,7 +41,6 @@ public class MatchServiceImpl implements MatchService {
         match.setPlayerB(playerB);
         match.setStatus("IN_PROGRESS");
 
-        // Bug Fix: Randomly assign starting sides (True = A is T / B is CT, False = A is CT / B is T)
         boolean playerAIsT = new java.security.SecureRandom().nextBoolean();
 
         Loadout loadoutA = loadoutRepository.findByUserAndSide(playerA, playerAIsT ? "T" : "CT")
@@ -55,14 +54,13 @@ public class MatchServiceImpl implements MatchService {
         List<WeaponArchetype> itemsA = loadoutA.getItems().stream().map(this::mapInstanceToArchetype).toList();
         List<WeaponArchetype> itemsB = loadoutB.getItems().stream().map(this::mapInstanceToArchetype).toList();
 
-        // Lock in the original drew hands inside a tracking JSON blob payload state container
         PlayerState stateA = new PlayerState(playerA.getId(), playerA.getUsername(), gameConfig.getStartingHp(), gameConfig.getBaseEnergy(), matchEngine.drawHand(itemsA), Collections.emptySet());
         PlayerState stateB = new PlayerState(playerB.getId(), playerB.getUsername(), gameConfig.getStartingHp(), gameConfig.getBaseEnergy(), matchEngine.drawHand(itemsB), Collections.emptySet());
 
         try {
             LiveMatchState initialState = new LiveMatchState(
                 1, 
-                playerA.getId(), // Player A gets first turn priority by default
+                playerA.getId(), 
                 stateA, 
                 stateB, 
                 new ArrayList<>(List.of("Match started! Factions deployed."))
@@ -93,15 +91,17 @@ public class MatchServiceImpl implements MatchService {
             boolean isMyTurn = live.activePlayerId().equals(isPlayerA ? match.getPlayerA().getId() : match.getPlayerB().getId());
             String lastLog = live.textLogs().isEmpty() ? "Encounter ongoing." : live.textLogs().get(live.textLogs().size() - 1);
 
-            // Bug Fix: Explicitly sort drawn card collection using weapon template ID 
-            // to make sure position renders identically across sequential HTTP view poll cycles
             List<WeaponArchetype> stableHand = new java.util.ArrayList<>(myState.hand());
             stableHand.sort((w1, w2) -> Long.compare(w1.id(), w2.id()));
 
+            // Fixed: Return authentic ending state metrics directly from live payload layout mapping
+            String playerAStatus = "HP:" + live.playerAState().hp();
+            String playerBStatus = "HP:" + live.playerBState().hp();
+
             return new MatchStateResponse(
                     live.round(),
-                    "HP:" + live.playerAState().hp(),
-                    "HP:" + live.playerBState().hp(),
+                    playerAStatus,
+                    playerBStatus,
                     lastLog,
                     match.getStatus(),
                     stableHand, 
@@ -110,11 +110,11 @@ public class MatchServiceImpl implements MatchService {
                     match.getPlayerB().getUsername()
             );
         } catch (Exception e) {
-            // Failsafe fallback handling for surrenders or disrupted JSON payloads
+            boolean iAmWinner = match.getWinner() != null && match.getWinner().getUsername().equalsIgnoreCase(currentUsername);
             return new MatchStateResponse(
                 1, 
-                match.getWinner() != null && match.getWinner().getId().equals(match.getPlayerA().getId()) ? "HP:100" : "HP:0", 
-                match.getWinner() != null && match.getWinner().getId().equals(match.getPlayerB().getId()) ? "HP:100" : "HP:0", 
+                iAmWinner ? "HP:100" : "HP:0", 
+                !iAmWinner ? "HP:100" : "HP:0", 
                 "Combat terminated.", 
                 match.getStatus(), 
                 Collections.emptyList(), 
@@ -147,22 +147,18 @@ public class MatchServiceImpl implements MatchService {
             PlayerState attacker = isPlayerA ? live.playerAState() : live.playerBState();
             PlayerState defender = isPlayerA ? live.playerBState() : live.playerAState();
 
-            // Locate active card matching structural criteria straight out of locked stable hand list
             WeaponArchetype action = attacker.hand().stream()
                     .filter(w -> w.id().equals(weaponId))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Selected action weapon not found in deck hand."));
 
-            // Resolve tactical exchange parameters inside engine core
             CombatRoundRecord result = matchEngine.resolveTurn(attacker, defender, action, 1);
             
-            // Re-fetch original full loadout profile dynamically to safely generate cards for next loop
             Loadout userLoadout = loadoutRepository.findByUserAndSide(actingUser, action.side())
                     .orElseGet(() -> loadoutRepository.findByUserAndSide(actingUser, action.side().toLowerCase())
                     .orElseThrow(() -> new RuntimeException("Loadout composition structure trace failed.")));
             List<WeaponArchetype> loadoutItems = userLoadout.getItems().stream().map(this::mapInstanceToArchetype).toList();
             
-            // Re-populate and shift values
             PlayerState newAttacker = new PlayerState(
                     attacker.playerId(), attacker.username(), 
                     result.playerA().hp(), result.playerA().energy(), 
@@ -184,7 +180,7 @@ public class MatchServiceImpl implements MatchService {
 
             LiveMatchState updatedState = new LiveMatchState(
                     live.round(),
-                    defender.playerId(), // Toggle perspective focus turn indicator block to opponent target
+                    defender.playerId(), 
                     isPlayerA ? newAttacker : newDefender,
                     isPlayerA ? newDefender : newAttacker,
                     live.textLogs()
@@ -214,7 +210,6 @@ public class MatchServiceImpl implements MatchService {
         match.setWinner(winner);
         match.setStatus("COMPLETED");
         
-        // Setup final traces so user gets accurate reports
         try {
             LiveMatchState current = objectMapper.readValue(match.getLogsJson(), LiveMatchState.class);
             LiveMatchState finalState = new LiveMatchState(

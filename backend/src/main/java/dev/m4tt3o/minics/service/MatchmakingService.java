@@ -22,7 +22,9 @@ public class MatchmakingService {
     private final MatchService matchService;
 
     public Long queueUser(Long userId) {
-        if (!matchmakingQueue.contains(userId) && !ticketToMatch.containsKey(userId)) {
+        ticketToMatch.remove(userId); 
+    
+        if (!matchmakingQueue.contains(userId)) {
             matchmakingQueue.add(userId);
         }
         return userId;
