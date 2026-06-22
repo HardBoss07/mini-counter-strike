@@ -16,4 +16,5 @@ public interface MatchService {
     void submitAction(Long matchId, String username, Long weaponId);
     List<CombatRoundRecord> getMatchLogs(Long matchId);
     void simulateAndSaveMatch(Match match);
+    void surrenderMatch(Long matchId, String username);
 }

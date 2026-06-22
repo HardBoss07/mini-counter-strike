@@ -3,6 +3,7 @@ package dev.m4tt3o.minics.service;
 import dev.m4tt3o.minics.config.GameConfig;
 import dev.m4tt3o.minics.dto.*;
 import dev.m4tt3o.minics.dto.match.MatchStateResponse;
+import dev.m4tt3o.minics.dto.match.LiveMatchState; // Clean record definition wrapping live payloads
 import dev.m4tt3o.minics.engine.MatchEngine;
 import dev.m4tt3o.minics.entity.*;
 import dev.m4tt3o.minics.repository.*;
@@ -39,100 +40,195 @@ public class MatchServiceImpl implements MatchService {
         match.setPlayerA(playerA);
         match.setPlayerB(playerB);
         match.setStatus("IN_PROGRESS");
+
+        // Bug Fix: Randomly assign starting sides (True = A is T / B is CT, False = A is CT / B is T)
+        boolean playerAIsT = new java.security.SecureRandom().nextBoolean();
+
+        Loadout loadoutA = loadoutRepository.findByUserAndSide(playerA, playerAIsT ? "T" : "CT")
+                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerA, playerAIsT ? "t" : "ct")
+                .orElseThrow(() -> new RuntimeException("Loadout missing for side configuration: " + playerAUsername)));
+        
+        Loadout loadoutB = loadoutRepository.findByUserAndSide(playerB, !playerAIsT ? "T" : "CT")
+                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerB, !playerAIsT ? "t" : "ct")
+                .orElseThrow(() -> new RuntimeException("Loadout missing for side configuration: " + playerBUsername)));
+
+        List<WeaponArchetype> itemsA = loadoutA.getItems().stream().map(this::mapInstanceToArchetype).toList();
+        List<WeaponArchetype> itemsB = loadoutB.getItems().stream().map(this::mapInstanceToArchetype).toList();
+
+        // Lock in the original drew hands inside a tracking JSON blob payload state container
+        PlayerState stateA = new PlayerState(playerA.getId(), playerA.getUsername(), gameConfig.getStartingHp(), gameConfig.getBaseEnergy(), matchEngine.drawHand(itemsA), Collections.emptySet());
+        PlayerState stateB = new PlayerState(playerB.getId(), playerB.getUsername(), gameConfig.getStartingHp(), gameConfig.getBaseEnergy(), matchEngine.drawHand(itemsB), Collections.emptySet());
+
+        try {
+            LiveMatchState initialState = new LiveMatchState(
+                1, 
+                playerA.getId(), // Player A gets first turn priority by default
+                stateA, 
+                stateB, 
+                new ArrayList<>(List.of("Match started! Factions deployed."))
+            );
+            match.setLogsJson(objectMapper.writeValueAsString(initialState));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize live state layout initialization", e);
+        }
+
         return matchRepository.save(match);
     }
 
     @Override
-    @Transactional
-    public void simulateAndSaveMatch(Match match) {
-        User playerA = match.getPlayerA();
-        User playerB = match.getPlayerB();
+    @Transactional(readOnly = true)
+    public MatchStateResponse getMatchState(Long matchId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new RuntimeException("Match not found"));
 
-        // 1. Get loadouts for both players with defensive fallbacks to avoid queue freezes
-        Loadout playerATLoadoutEntity = loadoutRepository.findByUserAndSide(playerA, "T")
-                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerA, "t")
-                .orElseThrow(() -> new RuntimeException("T Loadout not found for user: " + playerA.getUsername())));
-        
-        Loadout playerACTLoadoutEntity = loadoutRepository.findByUserAndSide(playerA, "CT")
-                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerA, "ct")
-                .orElseThrow(() -> new RuntimeException("CT Loadout not found for user: " + playerA.getUsername())));
-        
-        Loadout playerBTLoadoutEntity = loadoutRepository.findByUserAndSide(playerB, "T")
-                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerB, "t")
-                .orElseThrow(() -> new RuntimeException("T Loadout not found for user: " + playerB.getUsername())));
-        
-        Loadout playerBCTLoadoutEntity = loadoutRepository.findByUserAndSide(playerB, "CT")
-                .orElseGet(() -> loadoutRepository.findByUserAndSide(playerB, "ct")
-                .orElseThrow(() -> new RuntimeException("CT Loadout not found for user: " + playerB.getUsername())));
-
-        List<WeaponArchetype> playerATLoadout = mapLoadoutToArchetypes(playerATLoadoutEntity);
-        List<WeaponArchetype> playerACTLoadout = mapLoadoutToArchetypes(playerACTLoadoutEntity);
-        List<WeaponArchetype> playerBTLoadout = mapLoadoutToArchetypes(playerBTLoadoutEntity);
-        List<WeaponArchetype> playerBCTLoadout = mapLoadoutToArchetypes(playerBCTLoadoutEntity);
-
-        // 2. Initialize starting states
-        PlayerState pAStart = new PlayerState(playerA.getId(), playerA.getUsername(), gameConfig.getStartingHp(), 0, Collections.emptyList(), Collections.emptySet());
-        PlayerState pBStart = new PlayerState(playerB.getId(), playerB.getUsername(), gameConfig.getStartingHp(), 0, Collections.emptyList(), Collections.emptySet());
-
-        // 3. Simulate Round 1 (Player A is T, Player B is CT)
-        List<CombatRoundRecord> round1Records = matchEngine.simulateMatch(pAStart, playerATLoadout, pBStart, playerBCTLoadout);
-
-        // Winner of Round 1
-        boolean playerAWonRound1 = false;
-        int round1Turns = 0;
-        if (!round1Records.isEmpty()) {
-            CombatRoundRecord lastRecord = round1Records.get(round1Records.size() - 1);
-            playerAWonRound1 = lastRecord.playerB().hp() <= 0;
-            round1Turns = round1Records.size();
-        }
-
-        // 4. Simulate Round 2 (Player A is CT, Player B is T)
-        List<CombatRoundRecord> round2Records = matchEngine.simulateMatch(pBStart, playerBTLoadout, pAStart, playerACTLoadout);
-
-        // Winner of Round 2
-        boolean playerAWonRound2 = false;
-        int round2Turns = 0;
-        if (!round2Records.isEmpty()) {
-            CombatRoundRecord lastRecord = round2Records.get(round2Records.size() - 1);
-            playerAWonRound2 = lastRecord.playerA().hp() <= 0;
-            round2Turns = round2Records.size();
-        }
-
-        // 5. Combine records
-        List<CombatRoundRecord> allRecords = new ArrayList<>();
-        allRecords.addAll(round1Records);
-        allRecords.addAll(round2Records);
-
-        // 6. Determine winner & Apply Turn Efficiency Tie-breaker if needed
-        User winnerUser = null;
-        if (playerAWonRound1 && playerAWonRound2) {
-            winnerUser = playerA;
-        } else if (!playerAWonRound1 && !playerAWonRound2) {
-            winnerUser = playerB;
-        } else {
-            // Match score is 1-1. Use turn efficiency.
-            int playerATurns = playerAWonRound1 ? round1Turns : round2Turns;
-            int playerBTurns = !playerAWonRound1 ? round1Turns : round2Turns;
-
-            if (playerATurns < playerBTurns) {
-                winnerUser = playerA;
-            } else if (playerBTurns < playerATurns) {
-                winnerUser = playerB;
-            } else {
-                winnerUser = playerA; // Default tie-breaker
-            }
-        }
-
-        match.setWinner(winnerUser);
-        match.setStatus("COMPLETED");
+        String currentUsername = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
 
         try {
-            String serializedLogs = objectMapper.writeValueAsString(allRecords);
-            match.setLogsJson(serializedLogs);
+            LiveMatchState live = objectMapper.readValue(match.getLogsJson(), LiveMatchState.class);
+            
+            boolean isPlayerA = match.getPlayerA().getUsername().equalsIgnoreCase(currentUsername);
+            PlayerState myState = isPlayerA ? live.playerAState() : live.playerBState();
+            
+            boolean isMyTurn = live.activePlayerId().equals(isPlayerA ? match.getPlayerA().getId() : match.getPlayerB().getId());
+            String lastLog = live.textLogs().isEmpty() ? "Encounter ongoing." : live.textLogs().get(live.textLogs().size() - 1);
+
+            // Bug Fix: Explicitly sort drawn card collection using weapon template ID 
+            // to make sure position renders identically across sequential HTTP view poll cycles
+            List<WeaponArchetype> stableHand = new java.util.ArrayList<>(myState.hand());
+            stableHand.sort((w1, w2) -> Long.compare(w1.id(), w2.id()));
+
+            return new MatchStateResponse(
+                    live.round(),
+                    "HP:" + live.playerAState().hp(),
+                    "HP:" + live.playerBState().hp(),
+                    lastLog,
+                    match.getStatus(),
+                    stableHand, 
+                    isMyTurn,
+                    match.getPlayerA().getUsername(),
+                    match.getPlayerB().getUsername()
+            );
         } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize combat logs", e);
+            // Failsafe fallback handling for surrenders or disrupted JSON payloads
+            return new MatchStateResponse(
+                1, 
+                match.getWinner() != null && match.getWinner().getId().equals(match.getPlayerA().getId()) ? "HP:100" : "HP:0", 
+                match.getWinner() != null && match.getWinner().getId().equals(match.getPlayerB().getId()) ? "HP:100" : "HP:0", 
+                "Combat terminated.", 
+                match.getStatus(), 
+                Collections.emptyList(), 
+                false, 
+                match.getPlayerA().getUsername(), 
+                match.getPlayerB().getUsername()
+            );
+        }
+    }
+
+    @Override
+    @Transactional
+    public void submitAction(Long matchId, String username, Long weaponId) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new RuntimeException("Match not found"));
+
+        if (!"IN_PROGRESS".equals(match.getStatus())) {
+            throw new IllegalStateException("Match has concluded.");
         }
 
+        try {
+            LiveMatchState live = objectMapper.readValue(match.getLogsJson(), LiveMatchState.class);
+            User actingUser = userRepository.findByUsername(username).orElseThrow();
+
+            if (!live.activePlayerId().equals(actingUser.getId())) {
+                throw new IllegalArgumentException("It is not your strategic turn!");
+            }
+
+            boolean isPlayerA = match.getPlayerA().getId().equals(actingUser.getId());
+            PlayerState attacker = isPlayerA ? live.playerAState() : live.playerBState();
+            PlayerState defender = isPlayerA ? live.playerBState() : live.playerAState();
+
+            // Locate active card matching structural criteria straight out of locked stable hand list
+            WeaponArchetype action = attacker.hand().stream()
+                    .filter(w -> w.id().equals(weaponId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Selected action weapon not found in deck hand."));
+
+            // Resolve tactical exchange parameters inside engine core
+            CombatRoundRecord result = matchEngine.resolveTurn(attacker, defender, action, 1);
+            
+            // Re-fetch original full loadout profile dynamically to safely generate cards for next loop
+            Loadout userLoadout = loadoutRepository.findByUserAndSide(actingUser, action.side())
+                    .orElseGet(() -> loadoutRepository.findByUserAndSide(actingUser, action.side().toLowerCase())
+                    .orElseThrow(() -> new RuntimeException("Loadout composition structure trace failed.")));
+            List<WeaponArchetype> loadoutItems = userLoadout.getItems().stream().map(this::mapInstanceToArchetype).toList();
+            
+            // Re-populate and shift values
+            PlayerState newAttacker = new PlayerState(
+                    attacker.playerId(), attacker.username(), 
+                    result.playerA().hp(), result.playerA().energy(), 
+                    matchEngine.drawHand(loadoutItems), 
+                    result.playerA().activeEffects()
+            );
+            
+            PlayerState newDefender = result.playerB();
+
+            String nextStatus = "IN_PROGRESS";
+            User winner = null;
+            
+            if (newDefender.hp() <= 0) {
+                nextStatus = "COMPLETED";
+                winner = actingUser;
+            }
+
+            live.textLogs().add(result.actionLog());
+
+            LiveMatchState updatedState = new LiveMatchState(
+                    live.round(),
+                    defender.playerId(), // Toggle perspective focus turn indicator block to opponent target
+                    isPlayerA ? newAttacker : newDefender,
+                    isPlayerA ? newDefender : newAttacker,
+                    live.textLogs()
+            );
+
+            match.setStatus(nextStatus);
+            match.setWinner(winner);
+            match.setLogsJson(objectMapper.writeValueAsString(updatedState));
+            matchRepository.save(match);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Encounter resolution engine step update failure", e);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void surrenderMatch(Long matchId, String username) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new RuntimeException("Match not found"));
+                
+        if ("COMPLETED".equals(match.getStatus())) return;
+
+        boolean isPlayerA = match.getPlayerA().getUsername().equalsIgnoreCase(username);
+        User winner = isPlayerA ? match.getPlayerB() : match.getPlayerA();
+        
+        match.setWinner(winner);
+        match.setStatus("COMPLETED");
+        
+        // Setup final traces so user gets accurate reports
+        try {
+            LiveMatchState current = objectMapper.readValue(match.getLogsJson(), LiveMatchState.class);
+            LiveMatchState finalState = new LiveMatchState(
+                current.round(),
+                current.activePlayerId(),
+                new PlayerState(current.playerAState().playerId(), current.playerAState().username(), isPlayerA ? 0 : current.playerAState().hp(), current.playerAState().energy(), Collections.emptyList(), Collections.emptySet()),
+                new PlayerState(current.playerBState().playerId(), current.playerBState().username(), !isPlayerA ? 0 : current.playerBState().hp(), current.playerBState().energy(), Collections.emptyList(), Collections.emptySet()),
+                new ArrayList<>(List.of("Match concluded via tactical retreat by " + username + "."))
+            );
+            match.setLogsJson(objectMapper.writeValueAsString(finalState));
+        } catch (Exception e) {
+            match.setLogsJson(null);
+        }
+        
         matchRepository.save(match);
     }
 
@@ -153,43 +249,17 @@ public class MatchServiceImpl implements MatchService {
         return matchEngine.resolveTurn(attacker, defender, action, 1);
     }
 
-    public Long queueMatch(String username) { return 1L; }
-    public String getQueueStatus(Long ticketId) { return "MATCH_FOUND"; }
-
-    @Override
-    public MatchStateResponse getMatchState(Long matchId) {
-        Match match = matchRepository.findById(matchId)
-                .orElseThrow(() -> new RuntimeException("Match not found"));
-
-        List<CombatRoundRecord> logs = getMatchLogs(matchId);
-        String lastLog = "Start match";
-        String playerAStatus = "HP:100";
-        String playerBStatus = "HP:100";
-        int round = 1;
-
-        if (!logs.isEmpty()) {
-            CombatRoundRecord lastRecord = logs.get(logs.size() - 1);
-            playerAStatus = "HP:" + lastRecord.playerA().hp();
-            playerBStatus = "HP:" + lastRecord.playerB().hp();
-            lastLog = lastRecord.actionLog();
-        }
-
-        return new MatchStateResponse(round, playerAStatus, playerBStatus, lastLog);
-    }
-
-    public void submitAction(Long matchId, String username, Long weaponId) {}
-
     @Override
     public List<CombatRoundRecord> getMatchLogs(Long matchId) {
         Match match = matchRepository.findById(matchId)
                 .orElseThrow(() -> new RuntimeException("Match not found"));
-        if (match.getLogsJson() == null) {
+        if (match.getLogsJson() == null || "IN_PROGRESS".equals(match.getStatus())) {
             return Collections.emptyList();
         }
         try {
             return objectMapper.readValue(match.getLogsJson(), new com.fasterxml.jackson.core.type.TypeReference<List<CombatRoundRecord>>() {});
         } catch (Exception e) {
-            throw new RuntimeException("Failed to deserialize logs", e);
+            return Collections.emptyList();
         }
     }
 
@@ -258,4 +328,8 @@ public class MatchServiceImpl implements MatchService {
                 t.getDescription()
         );
     }
+
+    public Long queueMatch(String username) { return 1L; }
+    public String getQueueStatus(Long ticketId) { return "MATCH_FOUND"; }
+    public void simulateAndSaveMatch(Match match) {}
 }

@@ -55,6 +55,13 @@ public class MatchController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{matchId}/surrender")
+    public ResponseEntity<Void> surrender(@PathVariable Long matchId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        matchService.surrenderMatch(matchId, username);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{matchId}/logs")
     public ResponseEntity<List<CombatRoundRecord>> logs(@PathVariable Long matchId) {
         return ResponseEntity.ok(matchService.getMatchLogs(matchId));

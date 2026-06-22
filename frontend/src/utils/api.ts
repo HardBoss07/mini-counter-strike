@@ -59,6 +59,8 @@ export interface MatchStateResponse {
   status: 'IN_PROGRESS' | 'COMPLETED';
   playerHand?: any[]; // Holds the current live hand if ongoing
   isMyTurn?: boolean;
+  playerAUsername: string; // Added field
+  playerBUsername: string; // Added field
 }
 
 /**
@@ -103,4 +105,9 @@ export const api = {
         ctLoadoutIds: ctLoadout.map(w => w.id),
       }),
     }),
-  };
+
+  surrenderMatch: (matchId: number) =>
+    apiFetch<void>(`/api/match/${matchId}/surrender`, {
+      method: 'POST'
+    }),
+};
