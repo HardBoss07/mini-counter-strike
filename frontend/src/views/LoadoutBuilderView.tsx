@@ -6,6 +6,7 @@ import LoadoutZone from '../components/organisms/LoadoutZone';
 import WeaponCard from '../components/molecules/WeaponCard';
 import { mapBackendWeapon } from '../components/molecules/WeaponCard';
 import type { Weapon } from '../components/molecules/WeaponCard';
+import CardSorter from '../components/organisms/CardSorter'; // Imported filter component
 import { ShieldAlert, Info, Loader2 } from 'lucide-react';
 import { api } from '../utils/api';
 
@@ -29,16 +30,13 @@ const LoadoutBuilderView: React.FC = () => {
       try {
         setLoading(true);
 
-        // Fetch both catalog weapons and active loadout states concurrently
         const [weaponsData, loadoutData] = await Promise.all([
           api.getWeapons(),
           api.getLoadouts()
         ]);
 
-        // 1. Set catalog armory data
         setArmoryWeapons(weaponsData.map(mapBackendWeapon));
 
-        // 2. Map and set Terrorist Loadout with required uniqueIds for drag and drop
         if (loadoutData.tLoadout) {
           setTLoadout(
             loadoutData.tLoadout.map(w => ({
@@ -48,7 +46,6 @@ const LoadoutBuilderView: React.FC = () => {
           );
         }
 
-        // 3. Map and set Counter-Terrorist Loadout
         if (loadoutData.ctLoadout) {
           setCtLoadout(
             loadoutData.ctLoadout.map(w => ({
@@ -118,7 +115,6 @@ const LoadoutBuilderView: React.FC = () => {
     setSaveStatus('saving');
     try {
       await api.saveLoadouts(tLoadout, ctLoadout);
-
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (err) {
@@ -163,7 +159,12 @@ const LoadoutBuilderView: React.FC = () => {
             <LoadoutZone id="ct-loadout" title="CT-Side Loadout" side="CT" items={ctLoadout} onRemoveItem={handleRemoveItem} />
           </div>
 
-          <Armory weapons={armoryWeapons} tLoadout={tLoadout} ctLoadout={ctLoadout} />
+          <CardSorter items={armoryWeapons}>
+            {(filteredWeapons) => (
+              <Armory weapons={filteredWeapons} tLoadout={tLoadout} ctLoadout={ctLoadout} />
+            )}
+          </CardSorter>
+
           <DragOverlay>
             {activeWeapon ? <WeaponCard weapon={activeWeapon} /> : null}
           </DragOverlay>
