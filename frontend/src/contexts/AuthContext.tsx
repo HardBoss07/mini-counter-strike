@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../utils/api';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { api } from "../utils/api";
 
 interface AuthContextType {
   token: string | null;
@@ -12,17 +12,21 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [token, setToken] = useState<string | null>(
+    localStorage.getItem("token"),
+  );
   const [user, setUser] = useState<{ username: string } | null>(null);
 
   useEffect(() => {
     if (token) {
       // In a real app, we might decode the JWT or call /api/auth/me
       // For now, we'll just assume valid if present
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
     } else {
-      localStorage.removeItem('token');
+      localStorage.removeItem("token");
       setUser(null);
     }
   }, [token]);
@@ -44,7 +48,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider
+      value={{ token, user, login, register, logout, isAuthenticated: !!token }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -53,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

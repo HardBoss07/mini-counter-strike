@@ -4,26 +4,26 @@ import dev.m4tt3o.minics.entity.Match;
 import dev.m4tt3o.minics.entity.User;
 import dev.m4tt3o.minics.repository.MatchRepository;
 import dev.m4tt3o.minics.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class MatchmakingService {
 
-    private final ConcurrentLinkedQueue<Long> matchmakingQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Long> matchmakingQueue =
+        new ConcurrentLinkedQueue<>();
     private final Map<Long, Long> ticketToMatch = new ConcurrentHashMap<>();
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
     private final MatchService matchService;
 
     public Long queueUser(Long userId) {
-        ticketToMatch.remove(userId); 
-    
+        ticketToMatch.remove(userId);
+
         if (!matchmakingQueue.contains(userId)) {
             matchmakingQueue.add(userId);
         }
@@ -56,14 +56,14 @@ public class MatchmakingService {
                 matchmakingQueue.add(playerAId);
                 continue;
             }
-            
+
             // Generate the live match state using MatchService
             // instead of simulating the whole match to the end instantly
             Match liveMatch = matchService.createMatch(
                 userRepository.findById(playerAId).orElseThrow().getUsername(),
                 userRepository.findById(playerBId).orElseThrow().getUsername()
             );
-            
+
             ticketToMatch.put(playerAId, liveMatch.getId());
             ticketToMatch.put(playerBId, liveMatch.getId());
         }

@@ -5,5 +5,5 @@ package dev.m4tt3o.minics.dto;
  */
 public enum ItemType {
     WEAPON,
-    UTILITY
+    UTILITY,
 }

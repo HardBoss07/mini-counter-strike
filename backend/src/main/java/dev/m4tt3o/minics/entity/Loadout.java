@@ -1,10 +1,10 @@
 package dev.m4tt3o.minics.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * User loadout for a specific side (T or CT) with exactly 5 items.
@@ -15,6 +15,7 @@ import java.util.Set;
 @Getter
 @Setter
 public class Loadout {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

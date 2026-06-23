@@ -13,7 +13,7 @@ services:
     restart: unless-stopped
 
   backend:
-    build: 
+    build:
       context: ./backend
     container_name: minics-backend
     ports:
@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: 
+    build:
       context: ./frontend
     container_name: minics-frontend
     ports:

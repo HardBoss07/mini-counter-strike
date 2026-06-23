@@ -19,12 +19,22 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getMe() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
+        String username = SecurityContextHolder.getContext()
+            .getAuthentication()
+            .getName();
+        User user = userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+
         // Assuming user entity has these fields
-        return ResponseEntity.ok(new UserProfileResponse(
-                user.getId(), user.getUsername(), 1000, 100, 5));
+        return ResponseEntity.ok(
+            new UserProfileResponse(
+                user.getId(),
+                user.getUsername(),
+                1000,
+                100,
+                5
+            )
+        );
     }
 }

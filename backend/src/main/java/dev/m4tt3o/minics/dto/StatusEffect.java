@@ -7,5 +7,5 @@ public enum StatusEffect {
     NONE,
     BLIND_50,
     SKIP_TURN,
-    BURN_15
+    BURN_15,
 }

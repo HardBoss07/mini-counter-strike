@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { DndContext, PointerSensor, DragOverlay, useSensor, useSensors } from '@dnd-kit/core';
-import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
-import Armory from '../components/organisms/Armory';
-import LoadoutZone from '../components/organisms/LoadoutZone';
-import WeaponCard from '../components/molecules/WeaponCard';
-import { mapBackendWeapon } from '../components/molecules/WeaponCard';
-import type { Weapon } from '../components/molecules/WeaponCard';
-import CardSorter from '../components/organisms/CardSorter'; // Imported filter component
-import { ShieldAlert, Info, Loader2 } from 'lucide-react';
-import { api } from '../utils/api';
+import React, { useState, useEffect } from "react";
+import {
+  DndContext,
+  PointerSensor,
+  DragOverlay,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
+import Armory from "../components/organisms/Armory";
+import LoadoutZone from "../components/organisms/LoadoutZone";
+import WeaponCard from "../components/molecules/WeaponCard";
+import { mapBackendWeapon } from "../components/molecules/WeaponCard";
+import type { Weapon } from "../components/molecules/WeaponCard";
+import CardSorter from "../components/organisms/CardSorter"; // Imported filter component
+import { ShieldAlert, Info, Loader2 } from "lucide-react";
+import { api } from "../utils/api";
 
 type LoadoutItem = Weapon & { uniqueId: string };
 
@@ -19,10 +25,12 @@ const LoadoutBuilderView: React.FC = () => {
   const [activeWeapon, setActiveWeapon] = useState<Weapon | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle",
+  );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
   useEffect(() => {
@@ -32,29 +40,28 @@ const LoadoutBuilderView: React.FC = () => {
 
         const [weaponsData, loadoutData] = await Promise.all([
           api.getWeapons(),
-          api.getLoadouts()
+          api.getLoadouts(),
         ]);
 
         setArmoryWeapons(weaponsData.map(mapBackendWeapon));
 
         if (loadoutData.tLoadout) {
           setTLoadout(
-            loadoutData.tLoadout.map(w => ({
+            loadoutData.tLoadout.map((w) => ({
               ...mapBackendWeapon(w),
-              uniqueId: `${w.id}-${crypto.randomUUID()}`
-            }))
+              uniqueId: `${w.id}-${crypto.randomUUID()}`,
+            })),
           );
         }
 
         if (loadoutData.ctLoadout) {
           setCtLoadout(
-            loadoutData.ctLoadout.map(w => ({
+            loadoutData.ctLoadout.map((w) => ({
               ...mapBackendWeapon(w),
-              uniqueId: `${w.id}-${crypto.randomUUID()}`
-            }))
+              uniqueId: `${w.id}-${crypto.randomUUID()}`,
+            })),
           );
         }
-
       } catch (err) {
         showError("Failed to connect to the tactical armory database.");
         console.error(err);
@@ -77,49 +84,56 @@ const LoadoutBuilderView: React.FC = () => {
 
     const weapon = active.data.current as Weapon;
     const targetZone = over.id as string;
-    const targetSide = over.data.current?.side as 'T' | 'CT';
+    const targetSide = over.data.current?.side as "T" | "CT";
 
-    if (weapon.side !== 'ALL' && weapon.side !== targetSide) {
+    if (weapon.side !== "ALL" && weapon.side !== targetSide) {
       showError(`Cannot add ${weapon.side} weapon to ${targetSide} loadout!`);
       return;
     }
 
-    const currentLoadout = targetSide === 'T' ? tLoadout : ctLoadout;
-    const weaponCount = currentLoadout.filter(i => i.type === 'WEAPON').length;
-    const utilityCount = currentLoadout.filter(i => i.type === 'UTILITY').length;
+    const currentLoadout = targetSide === "T" ? tLoadout : ctLoadout;
+    const weaponCount = currentLoadout.filter(
+      (i) => i.type === "WEAPON",
+    ).length;
+    const utilityCount = currentLoadout.filter(
+      (i) => i.type === "UTILITY",
+    ).length;
 
-    if (weapon.type === 'WEAPON' && weaponCount >= 3) {
+    if (weapon.type === "WEAPON" && weaponCount >= 3) {
       showError("Maximum 3 Weapons allowed per loadout!");
       return;
     }
-    if (weapon.type === 'UTILITY' && utilityCount >= 2) {
+    if (weapon.type === "UTILITY" && utilityCount >= 2) {
       showError("Maximum 2 Utility items allowed per loadout!");
       return;
     }
 
-    const newItem: LoadoutItem = { ...weapon, uniqueId: `${weapon.id}-${crypto.randomUUID()}` };
+    const newItem: LoadoutItem = {
+      ...weapon,
+      uniqueId: `${weapon.id}-${crypto.randomUUID()}`,
+    };
 
-    if (targetZone === 't-loadout') {
-      setTLoadout(prev => [...prev, newItem]);
-    } else if (targetZone === 'ct-loadout') {
-      setCtLoadout(prev => [...prev, newItem]);
+    if (targetZone === "t-loadout") {
+      setTLoadout((prev) => [...prev, newItem]);
+    } else if (targetZone === "ct-loadout") {
+      setCtLoadout((prev) => [...prev, newItem]);
     }
   };
 
   const handleRemoveItem = (uniqueId: string) => {
-    setTLoadout(prev => prev.filter(item => item.uniqueId !== uniqueId));
-    setCtLoadout(prev => prev.filter(item => item.uniqueId !== uniqueId));
+    setTLoadout((prev) => prev.filter((item) => item.uniqueId !== uniqueId));
+    setCtLoadout((prev) => prev.filter((item) => item.uniqueId !== uniqueId));
   };
 
   const handleSave = async () => {
-    setSaveStatus('saving');
+    setSaveStatus("saving");
     try {
       await api.saveLoadouts(tLoadout, ctLoadout);
-      setSaveStatus('saved');
-      setTimeout(() => setSaveStatus('idle'), 2000);
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
       showError("Failed to save loadouts.");
-      setSaveStatus('idle');
+      setSaveStatus("idle");
     }
   };
 
@@ -150,18 +164,40 @@ const LoadoutBuilderView: React.FC = () => {
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-tactical-accent">
           <Loader2 size={48} className="animate-spin" />
-          <span className="font-bold uppercase tracking-widest">Synchronizing Armory...</span>
+          <span className="font-bold uppercase tracking-widest">
+            Synchronizing Armory...
+          </span>
         </div>
       ) : (
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
           <div className="grid lg:grid-cols-2 gap-8">
-            <LoadoutZone id="t-loadout" title="T-Side Loadout" side="T" items={tLoadout} onRemoveItem={handleRemoveItem} />
-            <LoadoutZone id="ct-loadout" title="CT-Side Loadout" side="CT" items={ctLoadout} onRemoveItem={handleRemoveItem} />
+            <LoadoutZone
+              id="t-loadout"
+              title="T-Side Loadout"
+              side="T"
+              items={tLoadout}
+              onRemoveItem={handleRemoveItem}
+            />
+            <LoadoutZone
+              id="ct-loadout"
+              title="CT-Side Loadout"
+              side="CT"
+              items={ctLoadout}
+              onRemoveItem={handleRemoveItem}
+            />
           </div>
 
           <CardSorter items={armoryWeapons}>
             {(filteredWeapons) => (
-              <Armory weapons={filteredWeapons} tLoadout={tLoadout} ctLoadout={ctLoadout} />
+              <Armory
+                weapons={filteredWeapons}
+                tLoadout={tLoadout}
+                ctLoadout={ctLoadout}
+              />
             )}
           </CardSorter>
 
@@ -174,10 +210,14 @@ const LoadoutBuilderView: React.FC = () => {
       <footer className="mt-auto pt-8 border-t border-white/5 flex justify-end">
         <button
           onClick={handleSave}
-          disabled={saveStatus !== 'idle'}
+          disabled={saveStatus !== "idle"}
           className="bg-tactical-accent text-black font-black px-12 py-4 rounded uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(125,1,227,0.2)] disabled:opacity-50"
         >
-          {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved!' : 'Save Loadouts'}
+          {saveStatus === "saving"
+            ? "Saving..."
+            : saveStatus === "saved"
+              ? "Saved!"
+              : "Save Loadouts"}
         </button>
       </footer>
     </div>

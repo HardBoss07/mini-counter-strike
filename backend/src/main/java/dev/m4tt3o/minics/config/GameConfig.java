@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class GameConfig {
+
     private int startingHp = 100;
     private int baseEnergy = 2;
     private int maxEnergy = 10;

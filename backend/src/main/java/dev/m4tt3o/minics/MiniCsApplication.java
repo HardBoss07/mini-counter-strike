@@ -13,5 +13,4 @@ public class MiniCsApplication {
     public static void main(String[] args) {
         SpringApplication.run(MiniCsApplication.class, args);
     }
-
 }

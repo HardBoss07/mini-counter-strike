@@ -13,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class WeaponTemplate {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

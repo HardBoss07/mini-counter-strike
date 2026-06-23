@@ -4,10 +4,9 @@ import dev.m4tt3o.minics.dto.inventory.WeaponInstanceDTO;
 import dev.m4tt3o.minics.entity.User;
 import dev.m4tt3o.minics.repository.UserRepository;
 import dev.m4tt3o.minics.repository.UserWeaponInstanceRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * Handles inventory-related operations such as fetching a user's weapon instances
@@ -27,11 +26,16 @@ public class InventoryService {
      * @return list of {@link WeaponInstanceDTO} with full weapon details and applied modifiers
      */
     public List<WeaponInstanceDTO> getWeaponsForUser(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        User user = userRepository
+            .findByUsername(username)
+            .orElseThrow(() ->
+                new RuntimeException("User not found: " + username)
+            );
 
-        return weaponInstanceRepository.findByUser(user).stream()
-                .map(WeaponInstanceDTO::fromEntity)
-                .toList();
+        return weaponInstanceRepository
+            .findByUser(user)
+            .stream()
+            .map(WeaponInstanceDTO::fromEntity)
+            .toList();
     }
 }

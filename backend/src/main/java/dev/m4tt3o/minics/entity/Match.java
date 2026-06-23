@@ -1,9 +1,9 @@
 package dev.m4tt3o.minics.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 /**
  * State of a match between two users.
@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class Match {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

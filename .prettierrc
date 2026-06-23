@@ -1,0 +1,13 @@
+{
+  "tabWidth": 2,
+  "endOfLine": "crlf",
+  "plugins": ["prettier-plugin-java"],
+  "overrides": [
+    {
+      "files": ["*.java", "*.sql", "*.xml"],
+      "options": {
+        "tabWidth": 4
+      }
+    }
+  ]
+}

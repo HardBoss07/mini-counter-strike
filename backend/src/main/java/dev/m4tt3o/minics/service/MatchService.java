@@ -3,9 +3,8 @@ package dev.m4tt3o.minics.service;
 import dev.m4tt3o.minics.dto.CombatRoundRecord;
 import dev.m4tt3o.minics.dto.match.MatchStateResponse;
 import dev.m4tt3o.minics.entity.Match;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
+import org.springframework.stereotype.Service;
 
 public interface MatchService {
     Match createMatch(String playerAUsername, String playerBUsername);

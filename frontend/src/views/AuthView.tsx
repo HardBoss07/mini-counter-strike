@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { LogIn, UserPlus, ShieldAlert, Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { LogIn, UserPlus, ShieldAlert, Loader2 } from "lucide-react";
 
 interface AuthViewProps {
-  mode: 'login' | 'register';
+  mode: "login" | "register";
   onSwitchMode: () => void;
 }
 
 const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
   const { login, register } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,14 +21,14 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
     setLoading(true);
     setError(null);
     try {
-      if (mode === 'login') {
+      if (mode === "login") {
         await login(username, password);
       } else {
         await register(username, password);
       }
-      navigate('/');
+      navigate("/");
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      setError(err.message || "Authentication failed");
     } finally {
       setLoading(false);
     }
@@ -39,13 +39,15 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
       <div className="w-full max-w-md bg-tactical-gray p-8 rounded-2xl border border-white/5 shadow-2xl">
         <div className="flex flex-col items-center gap-2 mb-8">
           <div className="w-16 h-16 bg-tactical-accent/10 rounded-full flex items-center justify-center text-tactical-accent mb-2">
-            {mode === 'login' ? <LogIn size={32} /> : <UserPlus size={32} />}
+            {mode === "login" ? <LogIn size={32} /> : <UserPlus size={32} />}
           </div>
           <h1 className="text-3xl font-black italic tracking-tighter text-white uppercase">
             Mini<span className="text-tactical-accent">-CS</span>
           </h1>
           <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">
-            {mode === 'login' ? 'Mission Authorization' : 'New Recruit Enrollment'}
+            {mode === "login"
+              ? "Mission Authorization"
+              : "New Recruit Enrollment"}
           </p>
         </div>
 
@@ -58,7 +60,9 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Username</label>
+            <label className="text-[10px] font-black uppercase text-gray-500 ml-1">
+              Username
+            </label>
             <input
               type="text"
               value={username}
@@ -70,7 +74,9 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-black uppercase text-gray-500 ml-1">Password</label>
+            <label className="text-[10px] font-black uppercase text-gray-500 ml-1">
+              Password
+            </label>
             <input
               type="password"
               value={password}
@@ -91,8 +97,10 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
                 <Loader2 size={20} className="animate-spin" />
                 Processing...
               </>
+            ) : mode === "login" ? (
+              "Authenticate"
             ) : (
-              mode === 'login' ? 'Authenticate' : 'Complete Registration'
+              "Complete Registration"
             )}
           </button>
         </form>
@@ -102,7 +110,9 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
             onClick={onSwitchMode}
             className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest"
           >
-            {mode === 'login' ? "Don't have an account? Register" : "Already registered? Login"}
+            {mode === "login"
+              ? "Don't have an account? Register"
+              : "Already registered? Login"}
           </button>
         </div>
       </div>

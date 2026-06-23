@@ -15,6 +15,8 @@ public class EconomyController {
     @PostMapping("/cases/open")
     public ResponseEntity<OpenCaseResponse> openCase() {
         // Mocked unboxing logic
-        return ResponseEntity.ok(new OpenCaseResponse("AK-47", "LEGENDARY", "/images/AK-47.png"));
+        return ResponseEntity.ok(
+            new OpenCaseResponse("AK-47", "LEGENDARY", "/images/AK-47.png")
+        );
     }
 }

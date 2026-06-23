@@ -13,12 +13,21 @@ public interface LoadoutService {
     /**
      * Assigns a weapon to a specific slot in a user's loadout with validation.
      */
-    Loadout assignWeapon(Long userId, String side, int slot, Long userWeaponInstanceId);
+    Loadout assignWeapon(
+        Long userId,
+        String side,
+        int slot,
+        Long userWeaponInstanceId
+    );
 
     /**
      * Replaces user's full loadout items.
      */
-    void saveFullLoadout(String username, List<Long> tLoadoutIds, List<Long> ctLoadoutIds);
+    void saveFullLoadout(
+        String username,
+        List<Long> tLoadoutIds,
+        List<Long> ctLoadoutIds
+    );
 
     /**
      * Retrieves the complete T and CT loadouts for a user.

@@ -1,30 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { api } from '../utils/api';
-import { WeaponCard, mapBackendWeapon } from '../components/molecules/WeaponCard';
-import type { Weapon } from '../components/molecules/WeaponCard';
-import { Loader2 } from 'lucide-react';
-import { CardSorter } from '../components/organisms/CardSorter';
+import React, { useEffect, useState } from "react";
+import { api } from "../utils/api";
+import {
+  WeaponCard,
+  mapBackendWeapon,
+} from "../components/molecules/WeaponCard";
+import type { Weapon } from "../components/molecules/WeaponCard";
+import { Loader2 } from "lucide-react";
+import { CardSorter } from "../components/organisms/CardSorter";
 
 const InventoryView: React.FC = () => {
   const [weapons, setWeapons] = useState<Weapon[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getWeapons()
-      .then(data => setWeapons(data.map(mapBackendWeapon)))
-      .catch(err => {
-        console.error('API Error:', err);
+    api
+      .getWeapons()
+      .then((data) => setWeapons(data.map(mapBackendWeapon)))
+      .catch((err) => {
+        console.error("API Error:", err);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <Loader2 className="animate-spin text-tactical-accent mx-auto" size={48} />;
+  if (loading)
+    return (
+      <Loader2
+        className="animate-spin text-tactical-accent mx-auto"
+        size={48}
+      />
+    );
 
   return (
     <CardSorter items={weapons}>
       {(filteredWeapons) => (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(12rem,1fr))] gap-6">
-          {filteredWeapons.map(weapon => (
+          {filteredWeapons.map((weapon) => (
             <WeaponCard
               key={weapon.id}
               weapon={weapon}
