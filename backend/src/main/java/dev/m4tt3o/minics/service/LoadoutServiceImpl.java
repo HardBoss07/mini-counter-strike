@@ -3,8 +3,10 @@ package dev.m4tt3o.minics.service;
 import dev.m4tt3o.minics.dto.ItemType;
 import dev.m4tt3o.minics.entity.*;
 import dev.m4tt3o.minics.repository.*;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +68,9 @@ public class LoadoutServiceImpl implements LoadoutService {
 
         long weaponCount = 0;
         long utilityCount = 0;
+        
+        // Track unique base weapon names (e.g., "AK-47") to block multi-rarity duplicates
+        Set<String> equippedBaseWeapons = new HashSet<>();
 
         // Clear existing database junction items cleanly
         loadout.getItems().clear();
@@ -90,6 +95,16 @@ public class LoadoutServiceImpl implements LoadoutService {
                         " cannot be used on " +
                         side +
                         " side."
+                );
+            }
+
+            // Base Weapon Type Validation (Blocks stacking multiple skin variations)
+            String fullName = inst.getTemplate().getName();
+            String baseName = fullName.split(" \\| ")[0]; // Extracts "AK-47" from "AK-47 | Slate"
+            
+            if (!equippedBaseWeapons.add(baseName)) {
+                throw new RuntimeException(
+                    "Validation Error: You can only equip one variant of " + baseName + " per loadout."
                 );
             }
 
