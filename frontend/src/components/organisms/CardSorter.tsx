@@ -7,8 +7,25 @@ interface CardSorterProps {
   children: (filteredItems: Weapon[]) => React.ReactNode;
 }
 
-type SortOption = "name" | "cost-asc" | "cost-desc" | "dmg-desc";
+type SortOption =
+  | "name"
+  | "cost-asc"
+  | "cost-desc"
+  | "dmg-desc"
+  | "rarity-desc"
+  | "rarity-asc";
 type SideFilter = "ALL" | "T" | "CT";
+
+const RARITY_WEIGHT: Record<Weapon["rarity"], number> = {
+  BASE_GRADE: 0,
+  CONSUMER_GRADE: 1,
+  INDUSTRIAL_GRADE: 2,
+  MIL_SPEC: 3,
+  RESTRICTED: 4,
+  CLASSIFIED: 5,
+  COVERT: 6,
+  CONTRABAND: 7,
+};
 
 export const CardSorter: React.FC<CardSorterProps> = ({ items, children }) => {
   const [search, setSearch] = useState("");
@@ -35,6 +52,10 @@ export const CardSorter: React.FC<CardSorterProps> = ({ items, children }) => {
           return b.energyCost - a.energyCost;
         case "dmg-desc":
           return b.damage - a.damage;
+        case "rarity-desc":
+          return RARITY_WEIGHT[b.rarity] - RARITY_WEIGHT[a.rarity];
+        case "rarity-asc":
+          return RARITY_WEIGHT[a.rarity] - RARITY_WEIGHT[b.rarity];
         case "name":
         default:
           return a.name.localeCompare(b.name);
@@ -86,6 +107,8 @@ export const CardSorter: React.FC<CardSorterProps> = ({ items, children }) => {
             className="appearance-none bg-tactical-dark border border-white/10 rounded pl-3 pr-8 py-1.5 text-sm text-white focus:outline-none focus:border-tactical-accent cursor-pointer min-w-[150px]"
           >
             <option value="name">Alphabetical</option>
+            <option value="rarity-desc">Rarity: High to Low</option>
+            <option value="rarity-asc">Rarity: Low to High</option>
             <option value="cost-asc">Cost: Low to High</option>
             <option value="cost-desc">Cost: High to Low</option>
             <option value="dmg-desc">Damage: High to Low</option>

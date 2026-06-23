@@ -11,6 +11,16 @@ export default {
           t: "#d9a34a", // T-side Orange/Yellow
           ct: "#5d79ae", // CT-side Blue
         },
+        rarity: {
+          base: "#5E574F",
+          consumer: "#B0C3D9",
+          industrial: "#5E98D9",
+          milspec: "#4B69FF",
+          restricted: "#8847FF",
+          classified: "#D32CE6",
+          covert: "#EB4B4B",
+          contraband: "#E4AE39",
+        },
       },
     },
   },

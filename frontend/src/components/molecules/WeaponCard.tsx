@@ -67,6 +67,35 @@ interface WeaponCardProps {
   backContent?: React.ReactNode;
 }
 
+// Maps your Weapon rarity strings directly to your custom Tailwind config utility keys
+const RARITY_COLOR_MAP: Record<Weapon["rarity"], string> = {
+  BASE_GRADE: "bg-rarity-base text-rarity-base border-rarity-base",
+  CONSUMER_GRADE:
+    "bg-rarity-consumer text-rarity-consumer border-rarity-consumer",
+  INDUSTRIAL_GRADE:
+    "bg-rarity-industrial text-rarity-industrial border-rarity-industrial",
+  MIL_SPEC: "bg-rarity-milspec text-rarity-milspec border-rarity-milspec",
+  RESTRICTED:
+    "bg-rarity-restricted text-rarity-restricted border-rarity-restricted",
+  CLASSIFIED:
+    "bg-rarity-classified text-rarity-classified border-rarity-classified",
+  COVERT: "bg-rarity-covert text-rarity-covert border-rarity-covert",
+  CONTRABAND:
+    "bg-rarity-contraband text-rarity-contraband border-rarity-contraband",
+};
+
+// Maps inline drop-shadow filters dynamically since Tailwind standard class builds don't support custom arbitrary values cleanly
+const RARITY_GLOW_MAP: Record<Weapon["rarity"], string> = {
+  BASE_GRADE: "drop-shadow-[0_0_12px_rgba(94,87,79,0.2)]",
+  CONSUMER_GRADE: "drop-shadow-[0_0_12px_rgba(176,195,217,0.2)]",
+  INDUSTRIAL_GRADE: "drop-shadow-[0_0_12px_rgba(94,152,217,0.3)]",
+  MIL_SPEC: "drop-shadow-[0_0_12px_rgba(75,105,255,0.4)]",
+  RESTRICTED: "drop-shadow-[0_0_12px_rgba(136,71,255,0.4)]",
+  CLASSIFIED: "drop-shadow-[0_0_14px_rgba(211,44,230,0.45)]",
+  COVERT: "drop-shadow-[0_0_16px_rgba(235,75,75,0.5)]",
+  CONTRABAND: "drop-shadow-[0_0_16px_rgba(228,174,57,0.5)]",
+};
+
 export const WeaponCard: React.FC<WeaponCardProps> = ({
   weapon: initialWeapon,
   weaponId,
@@ -99,6 +128,12 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
         ? "border-tactical-ct"
         : "border-tactical-accent";
 
+  // Safeguard utility lookup mapping to protect rendering states
+  const rarityClasses =
+    RARITY_COLOR_MAP[weapon.rarity] || RARITY_COLOR_MAP.BASE_GRADE;
+  const glowClass =
+    RARITY_GLOW_MAP[weapon.rarity] || RARITY_GLOW_MAP.BASE_GRADE;
+
   const cardContent = (
     <div
       ref={setNodeRef}
@@ -124,22 +159,40 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
           {weapon.side}
         </div>
       </div>
-      <div className="h-32 w-full bg-tactical-dark flex items-center justify-center p-4">
+
+      {/* Weapon Image Wrapper Box */}
+      <div className="relative h-32 w-full bg-tactical-dark flex items-center justify-center p-4">
         {!imageError ? (
           <img
             src={weapon.imageUrl}
             alt={weapon.name}
-            className="max-h-full max-w-full object-contain"
+            className={`max-h-full max-w-full object-contain transition-all duration-300 ${glowClass}`}
             onError={() => setImageError(true)}
           />
         ) : (
-          <ImageOff size={32} />
+          <ImageOff size={32} className="text-gray-600" />
         )}
+
+        {/* Visual Element 1: Dynamic rarity stripe accent alignment pinning item category tiers */}
+        <div
+          className={`absolute bottom-0 left-0 right-0 h-1 ${rarityClasses.split(" ")[0]}`}
+        />
       </div>
+
+      {/* Item text metadata panel area details layout mapping */}
       <div className="flex-1 p-3 flex flex-col justify-between bg-gradient-to-b from-tactical-gray to-tactical-dark">
-        <h3 className="text-sm font-bold truncate text-white uppercase">
-          {weapon.name}
-        </h3>
+        <div>
+          {/* Visual Element 2: Small micro rarity tier indicator layout name */}
+          <span
+            className={`text-[8px] font-bold uppercase tracking-wider ${rarityClasses.split(" ")[1]}`}
+          >
+            {weapon.rarity.replace("_", " ")}
+          </span>
+          <h3 className="text-sm font-bold truncate text-white uppercase tracking-wide mt-0.5">
+            {weapon.name}
+          </h3>
+        </div>
+
         <div className="grid grid-cols-3 gap-1">
           <StatBadge
             label="Cost"
@@ -169,6 +222,7 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
         <div className="absolute inset-0 [backface-visibility:hidden]">
           {cardContent}
         </div>
+        {/* Matches the front face's external framework precisely mapping container details */}
         <div
           className={`absolute inset-0 w-full h-full bg-tactical-gray rounded-lg border-2 ${sideColor} p-4 flex flex-col items-center justify-center [transform:rotateY(180deg)] [backface-visibility:hidden]`}
         >
