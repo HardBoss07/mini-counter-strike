@@ -159,7 +159,6 @@ public class MatchServiceImpl implements MatchService {
             );
             stableHand.sort((w1, w2) -> Long.compare(w1.id(), w2.id()));
 
-            // Fixed: Return authentic ending state metrics directly from live payload layout mapping
             String playerAStatus = "HP:" + live.playerAState().hp();
             String playerBStatus = "HP:" + live.playerBState().hp();
 
@@ -270,12 +269,59 @@ public class MatchServiceImpl implements MatchService {
                 .map(this::mapInstanceToArchetype)
                 .toList();
 
+            // Perform an in-place swap to replace only the single spent item
+            List<WeaponArchetype> currentHand = new ArrayList<>(
+                attacker.hand()
+            );
+            currentHand.removeIf(w -> w.id().equals(weaponId));
+
+            List<WeaponArchetype> remainingPool = loadoutItems
+                .stream()
+                .filter(item ->
+                    currentHand
+                        .stream()
+                        .noneMatch(handItem -> handItem.id().equals(item.id()))
+                )
+                .toList();
+
+            if (!remainingPool.isEmpty()) {
+                int totalWeight = remainingPool
+                    .stream()
+                    .mapToInt(WeaponArchetype::drawWeight)
+                    .sum();
+                WeaponArchetype replacementCard;
+                if (totalWeight == 0) {
+                    replacementCard = remainingPool.get(
+                        new java.security.SecureRandom().nextInt(
+                            remainingPool.size()
+                        )
+                    );
+                } else {
+                    int r = new java.security.SecureRandom().nextInt(
+                        totalWeight
+                    );
+                    int current = 0;
+                    WeaponArchetype selected = remainingPool.get(
+                        remainingPool.size() - 1
+                    );
+                    for (WeaponArchetype item : remainingPool) {
+                        current += item.drawWeight();
+                        if (r < current) {
+                            selected = item;
+                            break;
+                        }
+                    }
+                    replacementCard = selected;
+                }
+                currentHand.add(replacementCard);
+            }
+
             PlayerState newAttacker = new PlayerState(
                 attacker.playerId(),
                 attacker.username(),
                 result.playerA().hp(),
                 result.playerA().energy(),
-                matchEngine.drawHand(loadoutItems),
+                currentHand,
                 result.playerA().activeEffects()
             );
 
