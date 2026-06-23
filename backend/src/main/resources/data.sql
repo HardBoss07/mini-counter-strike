@@ -30,6 +30,14 @@ INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight,
 ('SSG 08', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'BASE_GRADE', '/images/base/SSG_08.png', 'The Wildcard. 40% chance to hit for 40 HP.'),
 ('AWP', 'WEAPON', 'ALL', 8, 80, 15, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/base/AWP.png', 'Massive damage, rare draw.');
 
+-- 6. Custom Skinned Weapons
+INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight, crit_chance, crit_multiplier, status_effect, rarity, image_url, description) VALUES
+('AK-47 | Safari Mesh', 'WEAPON', 'T', 5, 35, 52, 0.15, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/AK-47/Safari_Mesh.png', 'A reliable fallback spray-painted using mesh packaging as a stencil. Cheap and practical.'),
+('AK-47 | Elite Build', 'WEAPON', 'T', 5, 35, 50, 0.18, 1.5, 'NONE', 'MIL_SPEC', '/images/AK-47/Elite_Build.png', 'Custom-painted with a sleek black and gold hydrographic design. Crafted for the tactical vanguard.'),
+('AK-47 | Slate', 'WEAPON', 'T', 5, 35, 48, 0.20, 1.5, 'NONE', 'RESTRICTED', '/images/AK-47/Slate.png', 'Black on black. Unforgiving, exceptionally clean, and highly customizable.'),
+('AK-47 | Redline', 'WEAPON', 'T', 5, 36, 45, 0.22, 2.0, 'NONE', 'CLASSIFIED', '/images/AK-47/Redline.png', 'Carbon fiber pattern accented with clean, striking red pinstripes. Lethal elegance.'),
+('AK-47 | Gold Arabesque', 'WEAPON', 'T', 5, 38, 42, 0.25, 2.0, 'NONE', 'COVERT', '/images/AK-47/Gold_Arabesque.png', 'An opulent masterpiece entirely filigreed with gold plating. A breathtaking display of tactical luxury.');
+
 -- Users
 INSERT INTO app_user (username, password_hash, elo, credits) 
 VALUES
