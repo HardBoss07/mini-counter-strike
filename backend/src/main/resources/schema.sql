@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS weapon_template (
     crit_chance DECIMAL(5,2) DEFAULT 0,
     crit_multiplier DECIMAL(5,2) DEFAULT 1.0,
     status_effect VARCHAR(50) DEFAULT 'NONE',
+    rarity VARCHAR(50) DEFAULT 'BASE_GRADE' NOT NULL,
     image_url VARCHAR(255),
     description TEXT
 );

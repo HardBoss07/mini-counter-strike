@@ -14,6 +14,7 @@ public record WeaponArchetype(
     double critChance,
     double critMultiplier,
     String statusEffect,
+    ItemRarity rarity,
     String imageUrl,
     String description
 ) {}

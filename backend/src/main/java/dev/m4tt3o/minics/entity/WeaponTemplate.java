@@ -1,5 +1,6 @@
 package dev.m4tt3o.minics.entity;
 
+import dev.m4tt3o.minics.dto.ItemRarity;
 import dev.m4tt3o.minics.dto.ItemType;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -42,6 +43,10 @@ public class WeaponTemplate {
     private Double critMultiplier;
 
     private String statusEffect;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ItemRarity rarity = ItemRarity.BASE_GRADE;
 
     private String imageUrl;
 

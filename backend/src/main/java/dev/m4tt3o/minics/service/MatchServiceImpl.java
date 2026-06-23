@@ -496,6 +496,7 @@ public class MatchServiceImpl implements MatchService {
             t.getCritChance() != null ? t.getCritChance() : 0.0,
             t.getCritMultiplier() != null ? t.getCritMultiplier() : 1.0,
             t.getStatusEffect() != null ? t.getStatusEffect() : "NONE",
+            t.getRarity(),
             t.getImageUrl(),
             t.getDescription()
         );
@@ -513,6 +514,7 @@ public class MatchServiceImpl implements MatchService {
             t.getCritChance() != null ? t.getCritChance() : 0.0,
             t.getCritMultiplier() != null ? t.getCritMultiplier() : 1.0,
             t.getStatusEffect() != null ? t.getStatusEffect() : "NONE",
+            t.getRarity(),
             t.getImageUrl(),
             t.getDescription()
         );

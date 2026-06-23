@@ -16,6 +16,15 @@ export interface Weapon {
   critChance: number;
   critMultiplier: number;
   statusEffect: string;
+  rarity:
+    | "BASE_GRADE"
+    | "CONSUMER_GRADE"
+    | "INDUSTRIAL_GRADE"
+    | "MIL_SPEC"
+    | "RESTRICTED"
+    | "CLASSIFIED"
+    | "COVERT"
+    | "CONTRABAND";
   imageUrl: string;
   description: string;
 }
@@ -38,6 +47,7 @@ export const mapBackendWeapon = (raw: any): Weapon => {
     critChance: getField("critChance", "crit_chance", 0),
     critMultiplier: getField("critMultiplier", "crit_multiplier", 1.0),
     statusEffect: getField("statusEffect", "status_effect", "NONE"),
+    rarity: getField("rarity", "rarity", "BASE_GRADE"),
     imageUrl: getField(
       "imageUrl",
       "image_url",
