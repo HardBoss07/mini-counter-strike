@@ -8,7 +8,7 @@ import dev.m4tt3o.minics.entity.WeaponTemplate;
  * Eliminates JPA entity serialization and prevents leaking internal entities (e.g. User).
  */
 public record WeaponInstanceDTO(
-Long id,
+    Long id,
     String name,
     String type,
     String side,

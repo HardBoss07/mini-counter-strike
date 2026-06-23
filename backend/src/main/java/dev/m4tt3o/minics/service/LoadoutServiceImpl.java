@@ -68,7 +68,7 @@ public class LoadoutServiceImpl implements LoadoutService {
 
         long weaponCount = 0;
         long utilityCount = 0;
-        
+
         // Track unique base weapon names (e.g., "AK-47") to block multi-rarity duplicates
         Set<String> equippedBaseWeapons = new HashSet<>();
 
@@ -101,10 +101,12 @@ public class LoadoutServiceImpl implements LoadoutService {
             // Base Weapon Type Validation (Blocks stacking multiple skin variations)
             String fullName = inst.getTemplate().getName();
             String baseName = fullName.split(" \\| ")[0]; // Extracts "AK-47" from "AK-47 | Slate"
-            
+
             if (!equippedBaseWeapons.add(baseName)) {
                 throw new RuntimeException(
-                    "Validation Error: You can only equip one variant of " + baseName + " per loadout."
+                    "Validation Error: You can only equip one variant of " +
+                        baseName +
+                        " per loadout."
                 );
             }
 

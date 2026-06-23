@@ -40,18 +40,15 @@ async function apiFetch<T>(
     try {
       const json = JSON.parse(errorBody);
       if (json.message) message = json.message;
+      else if (json.error) message = json.error;
     } catch (e) {
       if (errorBody) message = errorBody;
     }
     throw new Error(message);
   }
 
-  // Handle empty responses
-  if (response.status === 204) {
-    return {} as T;
-  }
-
-  return response.json();
+  const text = await response.text();
+  return text ? (JSON.parse(text) as T) : ({} as T);
 }
 
 export interface MatchStateResponse {

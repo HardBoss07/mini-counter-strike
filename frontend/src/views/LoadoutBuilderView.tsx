@@ -12,7 +12,7 @@ import LoadoutZone from "../components/organisms/LoadoutZone";
 import WeaponCard from "../components/molecules/WeaponCard";
 import { mapBackendWeapon } from "../components/molecules/WeaponCard";
 import type { Weapon } from "../components/molecules/WeaponCard";
-import CardSorter from "../components/organisms/CardSorter"; 
+import CardSorter from "../components/organisms/CardSorter";
 import { ShieldAlert, Info, Loader2 } from "lucide-react";
 import { api } from "../utils/api";
 
@@ -97,11 +97,13 @@ const LoadoutBuilderView: React.FC = () => {
     const incomingBaseName = getBaseWeaponName(weapon.name);
 
     const holdsBaseDuplicate = currentLoadout.some(
-      (item) => getBaseWeaponName(item.name) === incomingBaseName
+      (item) => getBaseWeaponName(item.name) === incomingBaseName,
     );
 
     if (holdsBaseDuplicate) {
-      showError(`You already have a variant of ${incomingBaseName} equipped in this loadout!`);
+      showError(
+        `You already have a variant of ${incomingBaseName} equipped in this loadout!`,
+      );
       return;
     }
 

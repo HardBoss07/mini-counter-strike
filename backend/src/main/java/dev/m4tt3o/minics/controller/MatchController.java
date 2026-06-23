@@ -34,7 +34,7 @@ public class MatchController {
     }
 
     @GetMapping("/queue/status")
-    public ResponseEntity<Map<String, Object>> status(
+    public ResponseEntity<Map<String, Object>> queueStatus(
         @RequestParam Long ticketId
     ) {
         String status = matchmakingService.getStatus(ticketId);
@@ -79,5 +79,23 @@ public class MatchController {
         @PathVariable Long matchId
     ) {
         return ResponseEntity.ok(matchService.getMatchLogs(matchId));
+    }
+
+    /**
+     * Local Controller Exception Handler Shield.
+     * Intercepts unhandled tactical rule calculation breakdowns from MatchEngine
+     * and reports them as clean bad requests instead of defaulting to a 403 Forbidden.
+     */
+    @ExceptionHandler({
+        RuntimeException.class,
+        IllegalArgumentException.class,
+        IllegalStateException.class,
+    })
+    public ResponseEntity<Map<String, String>> handleMatchEngineExceptions(
+        Exception ex
+    ) {
+        return ResponseEntity.badRequest().body(
+            Map.of("message", ex.getMessage())
+        );
     }
 }
