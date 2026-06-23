@@ -272,17 +272,17 @@ const BattleView: React.FC = () => {
           </div>
 
           {matchState?.playerHand && matchState.playerHand.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-4">
               {matchState.playerHand.map((w: any) => (
                 <button
                   key={w.id}
                   disabled={!matchState.isMyTurn || submitting || isCompleted}
                   onClick={() => handleActionSubmit(w.id)}
-                  className="group relative transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] text-left disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:scale-100"
+                  className="group relative w-48 h-64 block text-left transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:scale-100 focus:outline-none"
                 >
                   <WeaponCard weapon={w as Weapon} />
                   {matchState.isMyTurn && !isCompleted && (
-                    <div className="absolute inset-0 bg-tactical-accent/10 opacity-0 group-hover:opacity-100 transition-all duration-300 border-2 border-tactical-accent rounded-lg pointer-events-none shadow-[0_0_20px_rgba(197,160,89,0.2)]" />
+                    <div className="absolute inset-0 bg-tactical-accent/10 opacity-0 group-hover:opacity-100 transition-all duration-300 border-2 border-tactical-accent rounded-lg pointer-events-none shadow-[0_0_20px_rgba(125,1,227,0.2)]" />
                   )}
                 </button>
               ))}
