@@ -38,6 +38,75 @@ INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight,
 ('AK-47 | Redline', 'WEAPON', 'T', 5, 36, 45, 0.22, 2.0, 'NONE', 'CLASSIFIED', '/images/weapons/AK-47/Redline.png', 'Carbon fiber pattern accented with clean, striking red pinstripes. Lethal elegance.'),
 ('AK-47 | Gold Arabesque', 'WEAPON', 'T', 5, 38, 42, 0.25, 2.0, 'NONE', 'COVERT', '/images/weapons/AK-47/Gold_Arabesque.png', 'An opulent masterpiece entirely filigreed with gold plating. A breathtaking display of tactical luxury.');
 
+-- 7. Additional Skinned Weapons
+INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight, crit_chance, crit_multiplier, status_effect, rarity, image_url, description) VALUES
+-- AWP Skins
+('AWP | Sun in Leo', 'WEAPON', 'ALL', 8, 80, 15, 0.10, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/AWP/Sun_in_Leo.png', 'Celestial precision.'),
+('AWP | Capillary', 'WEAPON', 'ALL', 8, 80, 15, 0.10, 1.5, 'NONE', 'MIL_SPEC', '/images/weapons/AWP/Capillary.png', 'Blood-red patterns.'),
+('AWP | Atheris', 'WEAPON', 'ALL', 8, 80, 15, 0.10, 1.5, 'NONE', 'RESTRICTED', '/images/weapons/AWP/Atheris.png', 'Viper-inspired skin.'),
+('AWP | Crakow!', 'WEAPON', 'ALL', 8, 80, 15, 0.10, 1.5, 'NONE', 'CLASSIFIED', '/images/weapons/AWP/Crakow!.png', 'Comic-book style strike.'),
+('AWP | Dragon Lore', 'WEAPON', 'ALL', 8, 80, 15, 0.10, 1.5, 'NONE', 'COVERT', '/images/weapons/AWP/Dragon_Lore.png', 'The legendary sniper skin.'),
+
+-- M4A1-S Skins
+('M4A1-S | Wash me plz', 'WEAPON', 'CT', 5, 30, 50, 0.20, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/M4A1-S/Wash_me_plz.png', 'Gritty, combat-worn look.'),
+('M4A1-S | VariCamo', 'WEAPON', 'CT', 5, 30, 50, 0.20, 1.5, 'NONE', 'MIL_SPEC', '/images/weapons/M4A1-S/VariCamo.png', 'Urban camouflage pattern.'),
+('M4A1-S | Nitro', 'WEAPON', 'CT', 5, 30, 50, 0.20, 1.5, 'NONE', 'RESTRICTED', '/images/weapons/M4A1-S/Nitro.png', 'Sleek black with orange highlights.'),
+('M4A1-S | Hot Rod', 'WEAPON', 'CT', 5, 30, 50, 0.20, 1.5, 'NONE', 'CLASSIFIED', '/images/weapons/M4A1-S/Hot_Rod.png', 'Striking fire-engine red.'),
+('M4A1-S | Fade', 'WEAPON', 'CT', 5, 30, 50, 0.20, 1.5, 'NONE', 'COVERT', '/images/weapons/M4A1-S/Fade.png', 'A beautiful color gradient.'),
+
+-- M4A4 Skins
+('M4A4 | Tornado', 'WEAPON', 'CT', 5, 30, 60, 0.10, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/M4A4/Tornado.png', 'Stormy grey texture.'),
+('M4A4 | Radiation Hazard', 'WEAPON', 'CT', 5, 30, 60, 0.10, 1.5, 'NONE', 'MIL_SPEC', '/images/weapons/M4A4/Radiation_Hazard.png', 'Warning: High hazard.'),
+('M4A4 | Spider Lily', 'WEAPON', 'CT', 5, 30, 60, 0.10, 1.5, 'NONE', 'RESTRICTED', '/images/weapons/M4A4/Spider_Lily.png', 'Floral design.'),
+('M4A4 | Cyber Security', 'WEAPON', 'CT', 5, 30, 60, 0.10, 1.5, 'NONE', 'CLASSIFIED', '/images/weapons/M4A4/Cyber_Security.png', 'Digital protection theme.'),
+('M4A4 | Temukau', 'WEAPON', 'CT', 5, 30, 60, 0.10, 1.5, 'NONE', 'COVERT', '/images/weapons/M4A4/Temukau.png', 'Anime-inspired art.'),
+('M4A4 | Howl', 'WEAPON', 'CT', 5, 30, 60, 0.20, 2.0, 'NONE', 'CONTRABAND', '/images/weapons/M4A4/Howl.png', 'A rare and legendary beast.'),
+
+-- Galil AR Skins
+('Galil AR | Grey Smoke', 'WEAPON', 'T', 4, 24, 65, 0.10, 1.5, 'NONE', 'CONSUMER_GRADE', '/images/weapons/Galil_AR/Grey_Smoke.png', 'Hazy, monochromatic finish.'),
+('Galil AR | Winter Forest', 'WEAPON', 'T', 4, 24, 65, 0.10, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/Galil_AR/Winter_Forest.png', 'Arctic foliage camo.'),
+('Galil AR | Tuxedo', 'WEAPON', 'T', 4, 24, 65, 0.10, 1.5, 'NONE', 'MIL_SPEC', '/images/weapons/Galil_AR/Tuxedo.png', 'Formal black and white.'),
+('Galil AR | CAUTION!', 'WEAPON', 'T', 4, 24, 65, 0.10, 1.5, 'NONE', 'RESTRICTED', '/images/weapons/Galil_AR/CAUTION!.png', 'Hazard-tape aesthetics.'),
+('Galil AR | Eco', 'WEAPON', 'T', 4, 24, 65, 0.10, 1.5, 'NONE', 'CLASSIFIED', '/images/weapons/Galil_AR/Eco.png', 'Minimalist green theme.'),
+('Galil AR | Chatterbox', 'WEAPON', 'T', 4, 24, 65, 0.10, 1.5, 'NONE', 'COVERT', '/images/weapons/Galil_AR/Chatterbox.png', 'Rustic, weathered look.'),
+
+-- FAMAS Skins
+('FAMAS | Colony', 'WEAPON', 'CT', 4, 22, 65, 0.10, 1.5, 'NONE', 'CONSUMER_GRADE', '/images/weapons/FAMAS/Colony.png', 'Standard issue colors.'),
+('FAMAS | Vendetta', 'WEAPON', 'CT', 4, 22, 65, 0.10, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/FAMAS/Vendetta.png', 'Dark and brooding.'),
+('FAMAS | Sundown', 'WEAPON', 'CT', 4, 22, 65, 0.10, 1.5, 'NONE', 'MIL_SPEC', '/images/weapons/FAMAS/Sundown.png', 'Sunset gradient.'),
+('FAMAS | Pulse', 'WEAPON', 'CT', 4, 22, 65, 0.10, 1.5, 'NONE', 'RESTRICTED', '/images/weapons/FAMAS/Pulse.png', 'Electric heartbeat pattern.'),
+('FAMAS | Rapid Eye Movement', 'WEAPON', 'CT', 4, 22, 65, 0.10, 1.5, 'NONE', 'CLASSIFIED', '/images/weapons/FAMAS/Rapid_Eye_Movement.png', 'Surrealist artwork.'),
+('FAMAS | Commemoration', 'WEAPON', 'CT', 4, 22, 65, 0.10, 1.5, 'NONE', 'COVERT', '/images/weapons/FAMAS/Commemoration.png', 'Golden honor skin.'),
+
+-- SSG 08 Skins
+('SSG 08 | Sand Dune', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'CONSUMER_GRADE', '/images/weapons/SSG_08/Sand_Dune.png', 'Desert-worn.'),
+('SSG 08 | Calligrafaux', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/SSG_08/Calligrafaux.png', 'Elegant brushstrokes.'),
+('SSG 08 | Acid Fade', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'MIL_SPEC', '/images/weapons/SSG_08/Acid_Fade.png', 'Chemical aesthetic.'),
+('SSG 08 | Rapid Transit', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'RESTRICTED', '/images/weapons/SSG_08/Rapid_Transit.png', 'Fast-paced graphic.'),
+('SSG 08 | Turbo Peek', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'CLASSIFIED', '/images/weapons/SSG_08/Turbo_Peek.png', 'High-velocity design.'),
+('SSG 08 | Blood in the Water', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'COVERT', '/images/weapons/SSG_08/Blood_in_the_Water.png', 'Shark-inspired predator.'),
+
+-- Desert Eagle Skins
+('Desert Eagle | Midnight Storm', 'WEAPON', 'ALL', 3, 25, 45, 0.25, 2.0, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/Desert_Eagle/Midnight_Storm.png', 'Stormy night sky.'),
+('Desert Eagle | Oxide Blaze', 'WEAPON', 'ALL', 3, 25, 45, 0.25, 2.0, 'NONE', 'MIL_SPEC', '/images/weapons/Desert_Eagle/Oxide_Blaze.png', 'Rustic, heat-treated steel.'),
+('Desert Eagle | Blaze', 'WEAPON', 'ALL', 3, 25, 45, 0.25, 2.0, 'NONE', 'RESTRICTED', '/images/weapons/Desert_Eagle/Blaze.png', 'Classic flame design.'),
+('Desert Eagle | Hypnotic', 'WEAPON', 'ALL', 3, 25, 45, 0.25, 2.0, 'NONE', 'CLASSIFIED', '/images/weapons/Desert_Eagle/Hypnotic.png', 'Vortex pattern.'),
+('Desert Eagle | Code Red', 'WEAPON', 'ALL', 3, 25, 45, 0.25, 2.0, 'NONE', 'COVERT', '/images/weapons/Desert_Eagle/Code_Red.png', 'Striking red alert.'),
+
+-- Glock-18 Skins
+('Glock-18 | High Beam', 'WEAPON', 'T', 2, 12, 80, 0.10, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/Glock-18/High_Beam.png', 'Flashy blue finish.'),
+('Glock-18 | Candy Apple', 'WEAPON', 'T', 2, 12, 80, 0.10, 1.5, 'NONE', 'MIL_SPEC', '/images/weapons/Glock-18/Candy_Apple.png', 'Glossy red finish.'),
+('Glock-18 | Fade', 'WEAPON', 'T', 2, 12, 80, 0.10, 1.5, 'NONE', 'RESTRICTED', '/images/weapons/Glock-18/Fade.png', 'Classic multicolored fade.'),
+('Glock-18 | Water Elemental', 'WEAPON', 'T', 2, 12, 80, 0.10, 1.5, 'NONE', 'CLASSIFIED', '/images/weapons/Glock-18/Water_Elemental.png', 'Aquatic creature theme.'),
+('Glock-18 | Fully Tuned', 'WEAPON', 'T', 2, 12, 80, 0.10, 1.5, 'NONE', 'COVERT', '/images/weapons/Glock-18/Fully_Tuned.png', 'Optimized appearance.'),
+
+-- USP-S Skins
+('USP-S | Desert Tactical', 'WEAPON', 'CT', 2, 15, 80, 0.15, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/USP-S/Desert_Tactical.png', 'Arid combat finish.'),
+('USP-S | Alpine Camo', 'WEAPON', 'CT', 2, 15, 80, 0.15, 1.5, 'NONE', 'MIL_SPEC', '/images/weapons/USP-S/Alpine_Camo.png', 'Mountain camo.'),
+('USP-S | Ticket to Hell', 'WEAPON', 'CT', 2, 15, 80, 0.15, 1.5, 'NONE', 'RESTRICTED', '/images/weapons/USP-S/Ticket_to_Hell.png', 'Dark thematic art.'),
+('USP-S | Jawbreaker', 'WEAPON', 'CT', 2, 15, 80, 0.15, 1.5, 'NONE', 'CLASSIFIED', '/images/weapons/USP-S/Jawbreaker.png', 'Hard-hitting visual.'),
+('USP-S | Printstream', 'WEAPON', 'CT', 2, 15, 80, 0.15, 1.5, 'NONE', 'COVERT', '/images/weapons/USP-S/Printstream.png', 'Futuristic iridescent look.');
+
 -- Users
 INSERT INTO app_user (username, password_hash, elo, credits) 
 VALUES
