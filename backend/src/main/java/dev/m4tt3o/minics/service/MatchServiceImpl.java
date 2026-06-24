@@ -249,14 +249,30 @@ public class MatchServiceImpl implements MatchService {
                 1
             );
 
+            // Determine the exact side (T or CT) this user is playing in this match
+            String activeSide = "T";
+            boolean playsT = loadoutRepository
+                .findByUserAndSide(actingUser, "T")
+                .map(loadout ->
+                    loadout
+                        .getItems()
+                        .stream()
+                        .anyMatch(item ->
+                            item.getTemplate().getId().equals(weaponId)
+                        )
+                )
+                .orElse(false);
+
+            if (!playsT) {
+                activeSide = "CT";
+            }
+
+            final String lookupSide = activeSide;
             Loadout userLoadout = loadoutRepository
-                .findByUserAndSide(actingUser, action.side())
+                .findByUserAndSide(actingUser, lookupSide)
                 .orElseGet(() ->
                     loadoutRepository
-                        .findByUserAndSide(
-                            actingUser,
-                            action.side().toLowerCase()
-                        )
+                        .findByUserAndSide(actingUser, lookupSide.toLowerCase())
                         .orElseThrow(() ->
                             new RuntimeException(
                                 "Loadout composition structure trace failed."
