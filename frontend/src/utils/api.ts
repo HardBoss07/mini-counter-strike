@@ -107,6 +107,8 @@ export const api = {
     ),
   queueMatch: () =>
     apiFetch<{ ticketId: number }>("/api/match/queue", { method: "POST" }),
+  leaveQueue: () =>
+    apiFetch<void>("/api/match/queue/leave", { method: "POST" }),
   getQueueStatus: (ticketId: number) =>
     apiFetch<{ status: string; matchId?: number }>(
       `/api/match/queue/status?ticketId=${ticketId}`,

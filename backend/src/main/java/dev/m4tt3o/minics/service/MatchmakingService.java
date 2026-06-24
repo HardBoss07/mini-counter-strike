@@ -30,9 +30,22 @@ public class MatchmakingService {
         return userId;
     }
 
+    public void leaveQueue(Long userId) {
+        matchmakingQueue.remove(userId);
+    }
+
     public String getStatus(Long ticketId) {
         if (ticketToMatch.containsKey(ticketId)) {
-            return "MATCH_FOUND";
+            Long matchId = ticketToMatch.get(ticketId);
+
+            return matchRepository
+                .findById(matchId)
+                .filter(m -> "IN_PROGRESS".equals(m.getStatus()))
+                .map(m -> "MATCH_FOUND")
+                .orElseGet(() -> {
+                    ticketToMatch.remove(ticketId);
+                    return "WAITING";
+                });
         }
         return "WAITING";
     }

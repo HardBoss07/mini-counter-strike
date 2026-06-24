@@ -81,6 +81,17 @@ public class MatchController {
         return ResponseEntity.ok(matchService.getMatchLogs(matchId));
     }
 
+    @PostMapping("/queue/leave")
+    public ResponseEntity<Void> leaveQueue() {
+        String username = SecurityContextHolder.getContext()
+            .getAuthentication()
+            .getName();
+        User user = userRepository.findByUsername(username).orElseThrow();
+
+        matchmakingService.leaveQueue(user.getId());
+        return ResponseEntity.ok().build();
+    }
+
     /**
      * Local Controller Exception Handler Shield.
      * Intercepts unhandled tactical rule calculation breakdowns from MatchEngine
