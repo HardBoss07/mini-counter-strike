@@ -1,42 +1,42 @@
 -- 1. Utility Items
 INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight, crit_chance, crit_multiplier, status_effect, rarity, image_url, description) VALUES
-('HE Grenade', 'UTILITY', 'ALL', 2, 15, 50, 0.0, 1.0, 'NONE', 'BASE_GRADE', '/images/base/he_grenade.png', 'Direct damage.'),
-('Flashbang', 'UTILITY', 'ALL', 1, 0, 60, 0.0, 1.0, 'BLIND_50', 'BASE_GRADE', '/images/base/flashbang_grenade.png', 'Next enemy weapon deals 50% dmg.'),
-('Smoke Grenade', 'UTILITY', 'ALL', 2, 0, 40, 0.0, 1.0, 'SKIP_TURN', 'BASE_GRADE', '/images/base/smoke_grenade.png', 'Enemy hand discarded next turn.'),
-('Molotov', 'UTILITY', 'ALL', 3, 10, 30, 0.0, 1.0, 'BURN_15', 'BASE_GRADE', '/images/base/molotov_grenade.png', 'Enemy takes 15 dmg at start of their next turn.');
+('HE Grenade', 'UTILITY', 'ALL', 2, 15, 50, 0.0, 1.0, 'NONE', 'BASE_GRADE', '/images/weapons/base/he_grenade.png', 'Direct damage.'),
+('Flashbang', 'UTILITY', 'ALL', 1, 0, 60, 0.0, 1.0, 'BLIND_50', 'BASE_GRADE', '/images/weapons/base/flashbang_grenade.png', 'Next enemy weapon deals 50% dmg.'),
+('Smoke Grenade', 'UTILITY', 'ALL', 2, 0, 40, 0.0, 1.0, 'SKIP_TURN', 'BASE_GRADE', '/images/weapons/base/smoke_grenade.png', 'Enemy hand discarded next turn.'),
+('Molotov', 'UTILITY', 'ALL', 3, 10, 30, 0.0, 1.0, 'BURN_15', 'BASE_GRADE', '/images/weapons/base/molotov_grenade.png', 'Enemy takes 15 dmg at start of their next turn.');
 
 -- 2. Pistols
 INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight, crit_chance, crit_multiplier, status_effect, rarity, image_url, description) VALUES
-('Glock-18', 'WEAPON', 'T', 2, 12, 80, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/base/Glock-18.png', 'Highly common, low impact.'),
-('USP-S', 'WEAPON', 'CT', 2, 15, 80, 0.15, 1.5, 'NONE', 'BASE_GRADE', '/images/base/USP-S.png', 'Slightly higher base damage and precision.'),
-('Desert Eagle', 'WEAPON', 'ALL', 3, 25, 45, 0.25, 2.0, 'NONE', 'BASE_GRADE', '/images/base/Desert_Eagle.png', '25% chance to hit for 50 HP.');
+('Glock-18', 'WEAPON', 'T', 2, 12, 80, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/Glock-18.png', 'Highly common, low impact.'),
+('USP-S', 'WEAPON', 'CT', 2, 15, 80, 0.15, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/USP-S.png', 'Slightly higher base damage and precision.'),
+('Desert Eagle', 'WEAPON', 'ALL', 3, 25, 45, 0.25, 2.0, 'NONE', 'BASE_GRADE', '/images/weapons/base/Desert_Eagle.png', '25% chance to hit for 50 HP.');
 
 -- 3. SMGs
 INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight, crit_chance, crit_multiplier, status_effect, rarity, image_url, description) VALUES
-('MAC-10', 'WEAPON', 'T', 2, 10, 90, 0.05, 1.5, 'NONE', 'BASE_GRADE', '/images/base/MAC-10.png', 'Most common draw in the game.'),
-('MP9', 'WEAPON', 'CT', 2, 11, 85, 0.05, 1.5, 'NONE', 'BASE_GRADE', '/images/base/MP9.png', 'Slightly less common than MAC-10.'),
-('MP7', 'WEAPON', 'ALL', 3, 14, 75, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/base/MP7.png', 'Better stats, but competes with rifles.');
+('MAC-10', 'WEAPON', 'T', 2, 10, 90, 0.05, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/MAC-10.png', 'Most common draw in the game.'),
+('MP9', 'WEAPON', 'CT', 2, 11, 85, 0.05, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/MP9.png', 'Slightly less common than MAC-10.'),
+('MP7', 'WEAPON', 'ALL', 3, 14, 75, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/MP7.png', 'Better stats, but competes with rifles.');
 
 -- 4. Rifles
 INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight, crit_chance, crit_multiplier, status_effect, rarity, image_url, description) VALUES
-('Galil AR', 'WEAPON', 'T', 4, 24, 65, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/base/Galil_AR.png', 'Cheap T-side rifle.'),
-('FAMAS', 'WEAPON', 'CT', 4, 22, 65, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/base/FAMAS.png', 'Cheap CT-side rifle.'),
-('AK-47', 'WEAPON', 'T', 5, 35, 50, 0.20, 2.0, 'NONE', 'BASE_GRADE', '/images/base/AK-47.png', 'Highly lethal. A crit deals 70 HP.'),
-('M4A4', 'WEAPON', 'CT', 5, 30, 60, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/base/M4A4.png', 'Consistent damage.'),
-('M4A1-S', 'WEAPON', 'CT', 5, 30, 50, 0.20, 1.5, 'NONE', 'BASE_GRADE', '/images/base/M4A1-S.png', 'Crits more often.');
+('Galil AR', 'WEAPON', 'T', 4, 24, 65, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/Galil_AR.png', 'Cheap T-side rifle.'),
+('FAMAS', 'WEAPON', 'CT', 4, 22, 65, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/FAMAS.png', 'Cheap CT-side rifle.'),
+('AK-47', 'WEAPON', 'T', 5, 35, 50, 0.20, 2.0, 'NONE', 'BASE_GRADE', '/images/weapons/base/AK-47.png', 'Highly lethal. A crit deals 70 HP.'),
+('M4A4', 'WEAPON', 'CT', 5, 30, 60, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/M4A4.png', 'Consistent damage.'),
+('M4A1-S', 'WEAPON', 'CT', 5, 30, 50, 0.20, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/M4A1-S.png', 'Crits more often.');
 
 -- 5. Snipers
 INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight, crit_chance, crit_multiplier, status_effect, rarity, image_url, description) VALUES
-('SSG 08', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'BASE_GRADE', '/images/base/SSG_08.png', 'The Wildcard. 40% chance to hit for 40 HP.'),
-('AWP', 'WEAPON', 'ALL', 8, 80, 15, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/base/AWP.png', 'Massive damage, rare draw.');
+('SSG 08', 'WEAPON', 'ALL', 4, 20, 35, 0.40, 2.0, 'NONE', 'BASE_GRADE', '/images/weapons/base/SSG_08.png', 'The Wildcard. 40% chance to hit for 40 HP.'),
+('AWP', 'WEAPON', 'ALL', 8, 80, 15, 0.10, 1.5, 'NONE', 'BASE_GRADE', '/images/weapons/base/AWP.png', 'Massive damage, rare draw.');
 
 -- 6. Custom Skinned Weapons
 INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight, crit_chance, crit_multiplier, status_effect, rarity, image_url, description) VALUES
-('AK-47 | Safari Mesh', 'WEAPON', 'T', 5, 35, 52, 0.15, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/AK-47/Safari_Mesh.png', 'A reliable fallback spray-painted using mesh packaging as a stencil. Cheap and practical.'),
-('AK-47 | Elite Build', 'WEAPON', 'T', 5, 35, 50, 0.18, 1.5, 'NONE', 'MIL_SPEC', '/images/AK-47/Elite_Build.png', 'Custom-painted with a sleek black and gold hydrographic design. Crafted for the tactical vanguard.'),
-('AK-47 | Slate', 'WEAPON', 'T', 5, 35, 48, 0.20, 1.5, 'NONE', 'RESTRICTED', '/images/AK-47/Slate.png', 'Black on black. Unforgiving, exceptionally clean, and highly customizable.'),
-('AK-47 | Redline', 'WEAPON', 'T', 5, 36, 45, 0.22, 2.0, 'NONE', 'CLASSIFIED', '/images/AK-47/Redline.png', 'Carbon fiber pattern accented with clean, striking red pinstripes. Lethal elegance.'),
-('AK-47 | Gold Arabesque', 'WEAPON', 'T', 5, 38, 42, 0.25, 2.0, 'NONE', 'COVERT', '/images/AK-47/Gold_Arabesque.png', 'An opulent masterpiece entirely filigreed with gold plating. A breathtaking display of tactical luxury.');
+('AK-47 | Safari Mesh', 'WEAPON', 'T', 5, 35, 52, 0.15, 1.5, 'NONE', 'INDUSTRIAL_GRADE', '/images/weapons/AK-47/Safari_Mesh.png', 'A reliable fallback spray-painted using mesh packaging as a stencil. Cheap and practical.'),
+('AK-47 | Elite Build', 'WEAPON', 'T', 5, 35, 50, 0.18, 1.5, 'NONE', 'MIL_SPEC', '/images/weapons/AK-47/Elite_Build.png', 'Custom-painted with a sleek black and gold hydrographic design. Crafted for the tactical vanguard.'),
+('AK-47 | Slate', 'WEAPON', 'T', 5, 35, 48, 0.20, 1.5, 'NONE', 'RESTRICTED', '/images/weapons/AK-47/Slate.png', 'Black on black. Unforgiving, exceptionally clean, and highly customizable.'),
+('AK-47 | Redline', 'WEAPON', 'T', 5, 36, 45, 0.22, 2.0, 'NONE', 'CLASSIFIED', '/images/weapons/AK-47/Redline.png', 'Carbon fiber pattern accented with clean, striking red pinstripes. Lethal elegance.'),
+('AK-47 | Gold Arabesque', 'WEAPON', 'T', 5, 38, 42, 0.25, 2.0, 'NONE', 'COVERT', '/images/weapons/AK-47/Gold_Arabesque.png', 'An opulent masterpiece entirely filigreed with gold plating. A breathtaking display of tactical luxury.');
 
 -- Users
 INSERT INTO app_user (username, password_hash, elo, credits) 
