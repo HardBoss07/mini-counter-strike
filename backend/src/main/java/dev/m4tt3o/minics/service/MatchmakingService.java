@@ -21,7 +21,23 @@ public class MatchmakingService {
     private final UserRepository userRepository;
     private final MatchService matchService;
 
-    public Long queueUser(Long userId) {
+    public synchronized Long queueUser(Long userId) {
+        // Safeguard against double-queues tearing down a freshly made match
+        if (ticketToMatch.containsKey(userId)) {
+            Long matchId = ticketToMatch.get(userId);
+
+            // Check if the match they are attached to is actually ongoing
+            boolean isActive = matchRepository
+                .findById(matchId)
+                .map(m -> "IN_PROGRESS".equals(m.getStatus()))
+                .orElse(false);
+
+            if (isActive) {
+                return userId;
+            }
+        }
+
+        // Safe to clean up stale tickets and add to the queue
         ticketToMatch.remove(userId);
 
         if (!matchmakingQueue.contains(userId)) {
@@ -30,7 +46,7 @@ public class MatchmakingService {
         return userId;
     }
 
-    public void leaveQueue(Long userId) {
+    public synchronized void leaveQueue(Long userId) {
         matchmakingQueue.remove(userId);
     }
 
