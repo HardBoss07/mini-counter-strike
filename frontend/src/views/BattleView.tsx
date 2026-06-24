@@ -46,23 +46,42 @@ const BattleView: React.FC = () => {
   useEffect(() => {
     if (!matchId) return;
 
+    let interval: any;
+    let isMounted = true;
+
     const fetchState = async () => {
       try {
         const state = await api.getMatchState(Number(matchId));
+        if (!isMounted) return;
+
         setMatchState(state);
         setError(null);
+
+        // STOP POLLING IF MATCH IS OVER
+        if (state.status !== "IN_PROGRESS") {
+          if (interval) clearInterval(interval);
+        }
       } catch (err) {
         console.error("Failed to fetch live state:", err);
-        setError("Synchronization issue with tactical encounter server.");
+        if (isMounted) {
+          setError("Synchronization issue with tactical encounter server.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
+    // Initial fetch
     fetchState();
-    const interval = setInterval(fetchState, 2000);
 
-    return () => clearInterval(interval);
+    // Start polling
+    interval = setInterval(fetchState, 2000);
+
+    // Cleanup on unmount
+    return () => {
+      isMounted = false;
+      if (interval) clearInterval(interval);
+    };
   }, [matchId]);
 
   // Tab Closure Surrender Safety Net
