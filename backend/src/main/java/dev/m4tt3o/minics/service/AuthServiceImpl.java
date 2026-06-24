@@ -4,8 +4,6 @@ import dev.m4tt3o.minics.config.JwtUtil;
 import dev.m4tt3o.minics.entity.*;
 import dev.m4tt3o.minics.repository.*;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

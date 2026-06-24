@@ -1,7 +1,6 @@
 package dev.m4tt3o.minics.service;
 
 import dev.m4tt3o.minics.entity.Match;
-import dev.m4tt3o.minics.entity.User;
 import dev.m4tt3o.minics.repository.MatchRepository;
 import dev.m4tt3o.minics.repository.UserRepository;
 import java.util.Map;

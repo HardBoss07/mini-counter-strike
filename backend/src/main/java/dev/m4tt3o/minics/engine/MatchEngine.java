@@ -1,7 +1,6 @@
 package dev.m4tt3o.minics.engine;
 
 import dev.m4tt3o.minics.dto.*;
-import dev.m4tt3o.minics.entity.WeaponTemplate;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
