@@ -2,30 +2,30 @@
 
 ## Goal
 
-Enforce a tactical loadout restriction rule where players can only equip a maximum of **one unique weapon base type** (e.g., only 1 AK-47, regardless of whether it is Slate, Redline, or Gold Arabesque) in their active 5-item loadout. Additionally, resolve match engine mechanics bugs regarding utility/grenade actions not passing turns and individual card hands scrambling sequence orders on every action submission.
+The primary objective was to resolve game-freezing states and engine crashes during matchmaking and active live battles in the Mini-Counter-Strike application. This involved making the multiplayer matchmaking state management thread-safe, optimizing frontend polling connections to reduce unnecessary server load, and repairing lookup failures when handling universal weapon or utility item archetypes.
 
 ## Current State
 
-- **Loadout Validation:** Frontend validation (`LoadoutBuilderView.tsx`) blocks the user from dragging duplicate base variants into an active slot, and full backend protection has been integrated into `LoadoutServiceImpl.java` to extract base prefixes (`split(" \\| ")[0]`) and reject duplicate API requests.
-- **HTTP Void Payloads:** Handled empty response syntax errors globally inside the frontend client wrapper (`api.ts`), ensuring successful textless void updates return clear fallback structures without throwing an `Unexpected end of JSON input` crash.
-- **Exception Interception:** Appended an localized `@ExceptionHandler` inside `MatchController.java` to prevent Spring Security configuration states from intercepting match engine business exceptions and turning them into generic `403 Forbidden` statuses.
+- **Matchmaking Race Conditions Resolved**: Addressed a critical multi-threading bug where duplicate user tickets were injected into the matchmaking queue.
+- **Smart Frontend Polling**: Frontend views now safely cancel ongoing polling routines the moment a state criteria is finalized.
+- **Utility & Universal Weapon Engine Stability**: The action phase execution path has been modified to dynamically deduce active team loadouts rather than blindly failing on neutral descriptors.
 
 ## Files Actively Involved
 
-- `frontend/src/views/LoadoutBuilderView.tsx` — Handles drag-and-drop constraints.
-- `frontend/src/utils/api.ts` — Controls API network stream parsing safely.
-- `backend/src/main/java/dev/m4tt3o/minics/service/LoadoutServiceImpl.java` — Persists validation layers across saving routines.
-- `backend/src/main/java/dev/m4tt3o/minics/controller/MatchController.java` — Serves combat action endpoints.
-- `backend/src/main/java/dev/m4tt3o/minics/engine/MatchEngine.java` — Simulates combat damage values and draws.
-- `backend/src/main/java/dev/m4tt3o/minics/service/MatchServiceImpl.java` — Coordinates match state lifecycles and stores turn data.
+- `MatchmakingService.java` — Core matchmaking queue logic and live state criteria management.
+- `MatchController.java` — API rest endpoint layer for dropping into/leaving matchmaking.
+- `MatchServiceImpl.java` — Operational live loop execution, card draw mechanics, and turn calculations.
+- `MatchmakingView.tsx` — Client entry point handling server tunnel allocation and manual queue aborts.
+- `BattleView.tsx` — HUD interface, strategic hand selection tray, and post-game metrics overlays.
+- `api.ts` — Client-side centralized data fetch configuration service.
 
 ## Investigation History & Learnings
 
-1. **Model Persistence Realization:** The `Match.java` database entity handles state values purely by serializing data into a singular database column framework text layout field named `logsJson` mapped through `LiveMatchState` wrappers. It does _not_ expose native JPA flat schema columns like `currentTurnPlayerId`, `round`, or `playerAStateJson` directly.
-2. **Turn Advancement Failure:** Grenades (`ItemType.UTILITY`) were stalling state workflows because the engine validation pipeline checked exclusively for `ItemType.WEAPON` before executing damage parameters and advancing turn markers.
-3. **Hand Reshuffling Root Cause:** The full hand randomized layout issue was traced back to the service layer regenerating a whole new 3-card hand frame using `matchEngine.drawHand(loadoutPool)` upon every turn, rather than performing an in-place array swap replacing only the single card that was spent.
+- **The Ghost Player Glitch (TOCTOU Race Condition)**: Discovered that rapid duplicate requests from client-side double-mounting (e.g., React Strict Mode in development) could bypass the queue check. Two identical user IDs would enter the queue, pair together, throw one copy back, and trap the next opponent in a frozen match state with a "ghost copy" of that player. Adding `synchronized` keys completely stopped this check-then-act vulnerability.
+- **Stale Match Cache Failures**: Identified that queue ticket validation loops blindly removed keys without tracking if old encounters were still active, occasionally throwing users backward into finished match logs.
+- **The "ALL" Loadout Crash (Side-Mismatch)**: Identified that playing a weapon or utility item with a `side` value of `ALL` broke card draws. The engine tried to fetch a database loadout matching `"ALL"`, which does not exist (`T` or `CT` only). It now checks the user's active loadout compositions to intelligently determine their match faction.
 
 ## Next Steps
 
-1. Open **`MatchEngine.java`** and inspect the `resolveTurn` method. Ensure that actions containing an `ItemType.UTILITY` are evaluated, extract any structural status effects or weapon damage configurations mapped through `data.sql`, and pass the generated values into the `CombatRoundRecord`.
-2. Open **`MatchServiceImpl.java`** and look at how `submitAction` packs changes into `logsJson`. Modify the draw logic so it doesn't pass the full loadout back to the engine. Instead, copy the current player's existing hand, drop the item matching the played `weaponId`, isolate what cards remain in the 5-item list, draw exactly **one** item to fill the gap via `matchEngine.selectByWeight(remainingPool)`, and serialize the results back into your database record structure.
+- **Verify Client Abandonment Cleanups**: Double-check network logs to confirm that browser back-button events and unexpected socket disconnects consistently clear out corresponding queue profiles.
+- **Refactor Status Effect Engine Hooks**: Ensure that utility statuses like `BLIND_50`, `SKIP_TURN`, and `BURN_15` successfully apply their unique modifier rules to the `CombatRoundRecord` outputs generated by the `MatchEngine`.
