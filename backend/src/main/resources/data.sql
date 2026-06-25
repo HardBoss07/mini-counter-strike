@@ -131,7 +131,7 @@ JOIN app_user u ON l.user_id = u.id
 JOIN user_weapon_instance uwi ON u.id = uwi.user_id
 JOIN weapon_template wt ON uwi.template_id = wt.id
 WHERE l.side = 'T'
-AND wt.name IN ('Glock-18', 'MAC-10', 'Galil AR', 'Flashbang', 'Smoke Grenade');
+AND wt.name IN ('Glock-18', 'MAC-10', 'Galil AR', 'Molotov', 'Smoke Grenade');
 
 -- Add starter items to loadouts (CT-side)
 INSERT INTO loadout_item (loadout_id, user_weapon_instance_id)
