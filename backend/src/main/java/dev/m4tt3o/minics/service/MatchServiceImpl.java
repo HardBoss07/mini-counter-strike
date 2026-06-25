@@ -342,6 +342,30 @@ public class MatchServiceImpl implements MatchService {
             );
 
             PlayerState newDefender = result.playerB();
+            
+            live.textLogs().add(result.actionLog());
+
+            boolean isUtility = action.type() == ItemType.UTILITY;
+            Long nextActivePlayerId = defender.playerId();
+
+            if (isUtility) {
+                nextActivePlayerId = attacker.playerId();
+            } else if (newDefender.activeEffects().contains(StatusEffect.SKIP_TURN)) {
+                nextActivePlayerId = attacker.playerId();
+                
+                java.util.Set<StatusEffect> clearedEffects = new java.util.HashSet<>(newDefender.activeEffects());
+                clearedEffects.remove(StatusEffect.SKIP_TURN);
+                
+                newDefender = new PlayerState(
+                    newDefender.playerId(),
+                    newDefender.username(),
+                    newDefender.hp(),
+                    newDefender.energy(),
+                    newDefender.hand(),
+                    clearedEffects
+                );
+                live.textLogs().add(newDefender.username() + " lost their turn to the Smoke Grenade!");
+            }
 
             String nextStatus = "IN_PROGRESS";
             User winner = null;
@@ -351,15 +375,24 @@ public class MatchServiceImpl implements MatchService {
                 winner = actingUser;
             }
 
-            live.textLogs().add(result.actionLog());
-
+            // 2. Build the updated state using the dynamically calculated active player
             LiveMatchState updatedState = new LiveMatchState(
                 live.round(),
-                defender.playerId(),
+                nextActivePlayerId, 
                 isPlayerA ? newAttacker : newDefender,
                 isPlayerA ? newDefender : newAttacker,
                 live.textLogs()
             );
+
+            match.setStatus(nextStatus);
+            match.setWinner(winner);
+
+            if (newDefender.hp() <= 0) {
+                nextStatus = "COMPLETED";
+                winner = actingUser;
+            }
+
+            live.textLogs().add(result.actionLog());
 
             match.setStatus(nextStatus);
             match.setWinner(winner);
