@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api } from "../utils/api";
+import { api, subscribeToMatchStream } from "../utils/api";
 import type { MatchStateResponse } from "../utils/api";
 import {
   Loader2,
@@ -43,44 +43,24 @@ const BattleView: React.FC = () => {
     loadUserIdentity();
   }, []);
 
+  // --- NEW SSE LISTENER REPLACING THE POLLING ---
   useEffect(() => {
     if (!matchId) return;
 
-    let interval: any;
-    let isMounted = true;
+    const unsubscribe = subscribeToMatchStream(matchId, (newState) => {
+      setMatchState(newState);
+      setError(null);
+      setLoading(false);
 
-    const fetchState = async () => {
-      try {
-        const state = await api.getMatchState(Number(matchId));
-        if (!isMounted) return;
-
-        setMatchState(state);
-        setError(null);
-
-        // STOP POLLING IF MATCH IS OVER
-        if (state.status !== "IN_PROGRESS") {
-          if (interval) clearInterval(interval);
-        }
-      } catch (err) {
-        console.error("Failed to fetch live state:", err);
-        if (isMounted) {
-          setError("Synchronization issue with tactical encounter server.");
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+      // Stop listening if the match completes
+      if (newState.status !== "IN_PROGRESS") {
+        unsubscribe();
       }
-    };
+    });
 
-    // Initial fetch
-    fetchState();
-
-    // Start polling
-    interval = setInterval(fetchState, 2000);
-
-    // Cleanup on unmount
+    // Cleanup the connection instantly if the user leaves the page
     return () => {
-      isMounted = false;
-      if (interval) clearInterval(interval);
+      unsubscribe();
     };
   }, [matchId]);
 
@@ -110,8 +90,8 @@ const BattleView: React.FC = () => {
     try {
       setSubmitting(true);
       await api.submitAction(Number(matchId), weaponId);
-      const updated = await api.getMatchState(Number(matchId));
-      setMatchState(updated);
+      // Removed the manual getMatchState() fetch here because 
+      // the SSE stream instantly auto-pushes the updated state to this client
     } catch (err) {
       console.error(err);
       setError("Failed to process battle action.");
@@ -231,10 +211,7 @@ const BattleView: React.FC = () => {
             </h3>
           </div>
           <p className="font-mono text-sm text-gray-300 text-center italic py-4 transition-all duration-300 animate-fade-in">
-            "
-            {matchState?.lastLog ||
-              "Tactical positioning initialized. Waiting for structural actions."}
-            "
+            "{matchState?.lastLog || "Tactical positioning initialized. Waiting for structural actions."}"
           </p>
           <div className="text-center">
             {isCompleted ? (

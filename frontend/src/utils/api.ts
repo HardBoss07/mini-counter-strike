@@ -142,3 +142,48 @@ export const api = {
       method: "POST",
     }),
 };
+
+export const subscribeToMatchStream = (
+  matchId: string | number,
+  onUpdate: (data: any) => void
+) => {
+  const token = localStorage.getItem("token");
+  const controller = new AbortController();
+
+  fetch(`/api/match/${matchId}/stream`, {
+    headers: token ? { Authorization: "Bearer " + token } : {},
+    signal: controller.signal,
+  })
+    .then(async (response) => {
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) return;
+
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data:")) {
+            try {
+              const data = JSON.parse(line.slice(5).trim());
+              onUpdate(data);
+            } catch (e) {
+              console.error("Error parsing SSE JSON:", e);
+            }
+          }
+        }
+      }
+    })
+    .catch((err) => {
+      if (err.name !== "AbortError") console.error("SSE connection error:", err);
+    });
+
+  return () => controller.abort();
+};

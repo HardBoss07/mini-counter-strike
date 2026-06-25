@@ -11,9 +11,12 @@ import dev.m4tt3o.minics.repository.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +29,8 @@ public class MatchServiceImpl implements MatchService {
     private final MatchEngine matchEngine;
     private final GameConfig gameConfig;
     private final ObjectMapper objectMapper;
-
+    private final ConcurrentHashMap<Long, Map<String, SseEmitter>> emitters = new ConcurrentHashMap<>();
+    
     @Override
     @Transactional
     public Match createMatch(String playerAUsername, String playerBUsername) {
@@ -194,11 +198,13 @@ public class MatchServiceImpl implements MatchService {
         }
     }
 
+    /*
+    this method currently doesnt compile, im commiting it to avoid losing work and the other changes to the SSE conversion
+     */
     @Override
     @Transactional
     public void submitAction(Long matchId, String username, Long weaponId) {
-        Match match = matchRepository
-            .findById(matchId)
+        Match match = matchRepository.findById(matchId)
             .orElseThrow(() -> new RuntimeException("Match not found"));
 
         if (!"IN_PROGRESS".equals(match.getStatus())) {
@@ -206,202 +212,144 @@ public class MatchServiceImpl implements MatchService {
         }
 
         try {
-            LiveMatchState live = objectMapper.readValue(
-                match.getLogsJson(),
-                LiveMatchState.class
-            );
-            User actingUser = userRepository
-                .findByUsername(username)
-                .orElseThrow();
+            LiveMatchState live = objectMapper.readValue(match.getLogsJson(), LiveMatchState.class);
+            User actingUser = userRepository.findByUsername(username).orElseThrow();
 
             if (!live.activePlayerId().equals(actingUser.getId())) {
-                throw new IllegalArgumentException(
-                    "It is not your strategic turn!"
-                );
+                throw new IllegalArgumentException("It is not your strategic turn!");
             }
 
-            boolean isPlayerA = match
-                .getPlayerA()
-                .getId()
-                .equals(actingUser.getId());
-            PlayerState attacker = isPlayerA
-                ? live.playerAState()
-                : live.playerBState();
-            PlayerState defender = isPlayerA
-                ? live.playerBState()
-                : live.playerAState();
+            boolean isPlayerA = match.getPlayerA().getId().equals(actingUser.getId());
+            PlayerState attacker = isPlayerA ? live.playerAState() : live.playerBState();
+            PlayerState defender = isPlayerA ? live.playerBState() : live.playerAState();
 
-            WeaponArchetype action = attacker
-                .hand()
-                .stream()
+            WeaponArchetype action = attacker.hand().stream()
                 .filter(w -> w.id().equals(weaponId))
                 .findFirst()
-                .orElseThrow(() ->
-                    new IllegalArgumentException(
-                        "Selected action weapon not found in deck hand."
-                    )
-                );
+                .orElseThrow(() -> new IllegalArgumentException("Weapon not in current hand!"));
 
-            CombatRoundRecord result = matchEngine.resolveTurn(
-                attacker,
-                defender,
-                action,
-                1
-            );
+            CombatRoundRecord result = matchEngine.resolveTurn(attacker, defender, action, live.round());
 
-            // Determine the exact side (T or CT) this user is playing in this match
-            String activeSide = "T";
-            boolean playsT = loadoutRepository
-                .findByUserAndSide(actingUser, "T")
-                .map(loadout ->
-                    loadout
-                        .getItems()
-                        .stream()
-                        .anyMatch(item ->
-                            item.getTemplate().getId().equals(weaponId)
-                        )
-                )
-                .orElse(false);
-
-            if (!playsT) {
-                activeSide = "CT";
-            }
-
-            final String lookupSide = activeSide;
-            Loadout userLoadout = loadoutRepository
-                .findByUserAndSide(actingUser, lookupSide)
-                .orElseGet(() ->
-                    loadoutRepository
-                        .findByUserAndSide(actingUser, lookupSide.toLowerCase())
-                        .orElseThrow(() ->
-                            new RuntimeException(
-                                "Loadout composition structure trace failed."
-                            )
-                        )
-                );
-            List<WeaponArchetype> loadoutItems = userLoadout
-                .getItems()
-                .stream()
-                .map(this::mapInstanceToArchetype)
-                .toList();
-
-            // Perform an in-place swap to replace only the single spent item
-            List<WeaponArchetype> currentHand = new ArrayList<>(
-                attacker.hand()
-            );
+            // 1. Remove the played card
+            List<WeaponArchetype> currentHand = new ArrayList<>(result.playerA().hand());
             currentHand.removeIf(w -> w.id().equals(weaponId));
 
-            List<WeaponArchetype> remainingPool = loadoutItems
-                .stream()
-                .filter(item ->
-                    currentHand
-                        .stream()
-                        .noneMatch(handItem -> handItem.id().equals(item.id()))
-                )
+            // 2. Replenish hand logic: Respect the Match/Round side-mapping
+            // This is the logic your previous version used to determine the correct Loadout
+            boolean playerAIsT = (live.round() == 1);
+            boolean isUserA = match.getPlayerA().getId().equals(actingUser.getId());
+            String activeSide = (isUserA == playerAIsT) ? "T" : "CT";
+
+            Loadout userLoadout = loadoutRepository.findByUserAndSide(actingUser, activeSide)
+                .orElseThrow(() -> new RuntimeException("Loadout missing for side: " + activeSide));
+            
+            List<WeaponArchetype> loadoutItems = userLoadout.getItems().stream()
+                .map(this::mapToArchetype).toList();
+
+            List<WeaponArchetype> remainingPool = loadoutItems.stream()
+                .filter(item -> currentHand.stream().noneMatch(handItem -> handItem.id().equals(item.id())))
                 .toList();
 
             if (!remainingPool.isEmpty()) {
-                int totalWeight = remainingPool
-                    .stream()
-                    .mapToInt(WeaponArchetype::drawWeight)
-                    .sum();
-                WeaponArchetype replacementCard;
-                if (totalWeight == 0) {
-                    replacementCard = remainingPool.get(
-                        new java.security.SecureRandom().nextInt(
-                            remainingPool.size()
-                        )
-                    );
-                } else {
-                    int r = new java.security.SecureRandom().nextInt(
-                        totalWeight
-                    );
-                    int current = 0;
-                    WeaponArchetype selected = remainingPool.get(
-                        remainingPool.size() - 1
-                    );
-                    for (WeaponArchetype item : remainingPool) {
-                        current += item.drawWeight();
-                        if (r < current) {
-                            selected = item;
-                            break;
-                        }
-                    }
-                    replacementCard = selected;
+                int totalWeight = remainingPool.stream().mapToInt(WeaponArchetype::drawWeight).sum();
+                int r = new java.security.SecureRandom().nextInt(totalWeight > 0 ? totalWeight : 1);
+                int current = 0;
+                WeaponArchetype replacement = remainingPool.get(remainingPool.size() - 1);
+                for (WeaponArchetype item : remainingPool) {
+                    current += item.drawWeight();
+                    if (r < current) { replacement = item; break; }
                 }
-                currentHand.add(replacementCard);
+                currentHand.add(replacement);
             }
 
-            PlayerState newAttacker = new PlayerState(
-                attacker.playerId(),
-                attacker.username(),
-                result.playerA().hp(),
-                result.playerA().energy(),
-                currentHand,
-                result.playerA().activeEffects()
-            );
-
+            PlayerState newAttacker = new PlayerState(attacker.playerId(), attacker.username(), result.playerA().hp(), result.playerA().energy(), currentHand, result.playerA().activeEffects());
             PlayerState newDefender = result.playerB();
             
             live.textLogs().add(result.actionLog());
 
             boolean isUtility = action.type() == ItemType.UTILITY;
-            Long nextActivePlayerId = defender.playerId();
+            Long nextActivePlayerId = defender.playerId(); 
 
             if (isUtility) {
                 nextActivePlayerId = attacker.playerId();
             } else if (newDefender.activeEffects().contains(StatusEffect.SKIP_TURN)) {
                 nextActivePlayerId = attacker.playerId();
-                
+
                 java.util.Set<StatusEffect> clearedEffects = new java.util.HashSet<>(newDefender.activeEffects());
                 clearedEffects.remove(StatusEffect.SKIP_TURN);
-                
-                newDefender = new PlayerState(
-                    newDefender.playerId(),
-                    newDefender.username(),
-                    newDefender.hp(),
-                    newDefender.energy(),
-                    newDefender.hand(),
-                    clearedEffects
-                );
+                newDefender = new PlayerState(newDefender.playerId(), newDefender.username(), newDefender.hp(), newDefender.energy(), newDefender.hand(), clearedEffects);
                 live.textLogs().add(newDefender.username() + " lost their turn to the Smoke Grenade!");
             }
 
-            String nextStatus = "IN_PROGRESS";
-            User winner = null;
+            String nextStatus = (newDefender.hp() <= 0) ? "COMPLETED" : "IN_PROGRESS";
+            User winner = (newDefender.hp() <= 0) ? actingUser : null;
 
-            if (newDefender.hp() <= 0) {
-                nextStatus = "COMPLETED";
-                winner = actingUser;
-            }
-
-            // 2. Build the updated state using the dynamically calculated active player
-            LiveMatchState updatedState = new LiveMatchState(
-                live.round(),
-                nextActivePlayerId, 
-                isPlayerA ? newAttacker : newDefender,
-                isPlayerA ? newDefender : newAttacker,
-                live.textLogs()
-            );
-
-            match.setStatus(nextStatus);
-            match.setWinner(winner);
-
-            if (newDefender.hp() <= 0) {
-                nextStatus = "COMPLETED";
-                winner = actingUser;
-            }
-
-            live.textLogs().add(result.actionLog());
+            LiveMatchState updatedState = new LiveMatchState(live.round(), nextActivePlayerId, 
+                isPlayerA ? newAttacker : newDefender, 
+                isPlayerA ? newDefender : newAttacker, 
+                live.textLogs());
 
             match.setStatus(nextStatus);
             match.setWinner(winner);
             match.setLogsJson(objectMapper.writeValueAsString(updatedState));
             matchRepository.save(match);
+
+            // 5. Broadcast to SSE Emitters
+            Map<String, SseEmitter> matchEmitters = emitters.get(matchId);
+            if (matchEmitters != null) {
+                matchEmitters.forEach((targetUsername, emitter) -> {
+                    try {
+                        emitter.send(SseEmitter.event().name("message").data(getMatchStateForUser(match, targetUsername)));
+                    } catch (Exception e) { emitter.completeWithError(e); }
+                });
+            }
         } catch (Exception e) {
-            throw new RuntimeException(
-                "Encounter resolution engine step update failure",
-                e
+            throw new RuntimeException("Failed to process action: " + e.getMessage(), e);
+        }
+    }
+
+    private MatchStateResponse getMatchStateForUser(Match match, String targetUsername) {
+        try {
+            LiveMatchState live = objectMapper.readValue(match.getLogsJson(), LiveMatchState.class);
+
+            boolean isPlayerA = match.getPlayerA().getUsername().equalsIgnoreCase(targetUsername);
+            PlayerState myState = isPlayerA ? live.playerAState() : live.playerBState();
+
+            boolean isMyTurn = live.activePlayerId().equals(
+                isPlayerA ? match.getPlayerA().getId() : match.getPlayerB().getId()
+            );
+            
+            String lastLog = live.textLogs().isEmpty() ? "Encounter ongoing." : live.textLogs().get(live.textLogs().size() - 1);
+
+            List<WeaponArchetype> stableHand = new java.util.ArrayList<>(myState.hand());
+            stableHand.sort((w1, w2) -> Long.compare(w1.id(), w2.id()));
+
+            String playerAStatus = "HP:" + live.playerAState().hp();
+            String playerBStatus = "HP:" + live.playerBState().hp();
+
+            return new MatchStateResponse(
+                live.round(),
+                playerAStatus,
+                playerBStatus,
+                lastLog,
+                match.getStatus(),
+                stableHand,
+                isMyTurn,
+                match.getPlayerA().getUsername(),
+                match.getPlayerB().getUsername()
+            );
+        } catch (Exception e) {
+            boolean iAmWinner = match.getWinner() != null && match.getWinner().getUsername().equalsIgnoreCase(targetUsername);
+            return new MatchStateResponse(
+                1,
+                iAmWinner ? "HP:100" : "HP:0",
+                !iAmWinner ? "HP:100" : "HP:0",
+                "Combat terminated.",
+                match.getStatus(),
+                Collections.emptyList(),
+                false,
+                match.getPlayerA().getUsername(),
+                match.getPlayerB().getUsername()
             );
         }
     }
@@ -613,6 +561,38 @@ public class MatchServiceImpl implements MatchService {
             t.getImageUrl(),
             t.getDescription()
         );
+    }
+
+    @Override
+    public SseEmitter subscribeToMatch(Long matchId) {
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        SseEmitter emitter = new SseEmitter(-1L); 
+        emitters.computeIfAbsent(matchId, k -> new ConcurrentHashMap<>()).put(username, emitter);
+
+        Runnable cleanup = () -> {
+            Map<String, SseEmitter> matchEmitters = emitters.get(matchId);
+            if (matchEmitters != null) {
+                matchEmitters.remove(username);
+                if (matchEmitters.isEmpty()) {
+                    emitters.remove(matchId);
+                }
+            }
+        };
+
+        emitter.onCompletion(cleanup);
+        emitter.onTimeout(cleanup);
+        emitter.onError(e -> cleanup.run());
+
+        try {
+            Match match = matchRepository.findById(matchId).orElseThrow();
+            MatchStateResponse currentState = getMatchStateForUser(match, username);
+            emitter.send(SseEmitter.event().name("message").data(currentState));
+        } catch (Exception e) {
+            emitter.completeWithError(e);
+        }
+
+        return emitter;
     }
 
     public Long queueMatch(String username) {
