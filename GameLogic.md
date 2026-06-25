@@ -33,6 +33,7 @@ Standard economic purchasing is replaced by a Turn-Based **Energy System**.
 
 - **Starting State:** Both players start with 100 HP and 0 Energy.
 - **Energy Regeneration:** At the start of Turn 1, players receive 2 Energy. On Turn 2, they receive 3 Energy, scaling up to a maximum cap (e.g., 10 Energy). Energy carries over between turns if unspent.
+- Utility can be played in the same turn as a weapon, leading to chained attacks which reduces Energy by the amount of the Utility and Weapon played. 
 
 ### Item Archetypes & Costs
 
@@ -72,17 +73,28 @@ If the match score is 1-1 (meaning both players successfully won their CT half),
 
 Players progress by unlocking new variants of weapons to replace their base items.
 
-- **The Drop System:** A Spring Boot `@Scheduled` task runs in the background, distributing 1 "Weapon Case" to every active user's inventory every 4 hours.
+- **The Drop System:** A Spring Boot `@Scheduled` task runs in the background, distributing 1 "Weapon Case" to every active user's inventory every 1 hours, only if the previous Case has been opened.
 - **Unboxing:** When a user opens a case via the frontend, the backend generates a specific `UserWeaponInstance`.
 - **Skins & Modifiers:** Unboxed weapons have distinct skins that alter base stats.
-- _Base AK-47:_ 35 Damage, 4 Cost, Normal Draw Weight.
-- _AK-47 | Redline (Rare):_ 35 Damage, **3 Cost**, Normal Draw Weight.
-- _AK-47 | Vulcan (Epic):_ **40 Damage**, 4 Cost, Normal Draw Weight.
-- _AK-47 | Asiimov (Legendary):_ 35 Damage, 4 Cost, **+15% Draw Weight (Pull out speed)**.
+- Examples:
+  - _Base AK-47:_ 35 Damage, 4 Cost, Normal Draw Weight.
+  - _AK-47 | Redline (Rare):_ 35 Damage, **3 Cost**, Normal Draw Weight.
+  - _AK-47 | Vulcan (Epic):_ **40 Damage**, 4 Cost, Normal Draw Weight.
+  - _AK-47 | Asiimov (Legendary):_ 35 Damage, 4 Cost, **+15% Draw Weight (Pull out speed)**.
 
 ---
 
-## 6. Technical Architecture Blueprint
+## 6. ELO Rating Calculation
+
+Players start out with a flat 1000 ELO. Players gain and lose ELO based on their Matches. For now the ELO Change will be a static 25.
+
+- Player1 wins against Player2:
+  - Player1 ELO: 1000 -> 1025
+  - Player2 ELO: 1000 -> 975
+
+---
+
+## 7. Technical Architecture Blueprint
 
 ### Java 21 Backend (Spring Boot)
 
