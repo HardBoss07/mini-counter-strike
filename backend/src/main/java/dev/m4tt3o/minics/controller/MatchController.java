@@ -9,9 +9,11 @@ import dev.m4tt3o.minics.service.MatchmakingService;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api/match")
@@ -31,6 +33,11 @@ public class MatchController {
         Long ticketId = matchmakingService.queueUser(user.getId());
         matchmakingService.tryMatchmaking(); // Attempt to match immediately
         return ResponseEntity.ok(Map.of("ticketId", ticketId));
+    }
+
+    @GetMapping(value = "/{matchId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamMatchState(@PathVariable Long matchId) {
+        return matchService.subscribeToMatch(matchId);
     }
 
     @GetMapping("/queue/status")

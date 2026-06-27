@@ -3,6 +3,7 @@ package dev.m4tt3o.minics.service;
 import dev.m4tt3o.minics.dto.CombatRoundRecord;
 import dev.m4tt3o.minics.dto.match.MatchStateResponse;
 import dev.m4tt3o.minics.entity.Match;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.List;
 
 public interface MatchService {
@@ -15,4 +16,5 @@ public interface MatchService {
     List<CombatRoundRecord> getMatchLogs(Long matchId);
     void simulateAndSaveMatch(Match match);
     void surrenderMatch(Long matchId, String username);
+    SseEmitter subscribeToMatch(Long matchId);
 }

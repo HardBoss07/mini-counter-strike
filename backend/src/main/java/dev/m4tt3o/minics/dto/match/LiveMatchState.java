@@ -6,6 +6,7 @@ import java.util.List;
 public record LiveMatchState(
     int round,
     Long activePlayerId,
+    boolean playerAIsT,
     PlayerState playerAState,
     PlayerState playerBState,
     List<String> textLogs
