@@ -35,7 +35,10 @@ public class MatchController {
         return ResponseEntity.ok(Map.of("ticketId", ticketId));
     }
 
-    @GetMapping(value = "/{matchId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(
+        value = "/{matchId}/stream",
+        produces = MediaType.TEXT_EVENT_STREAM_VALUE
+    )
     public SseEmitter streamMatchState(@PathVariable Long matchId) {
         return matchService.subscribeToMatch(matchId);
     }

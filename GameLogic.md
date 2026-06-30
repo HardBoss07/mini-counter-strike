@@ -33,7 +33,7 @@ Standard economic purchasing is replaced by a Turn-Based **Energy System**.
 
 - **Starting State:** Both players start with 100 HP and 0 Energy.
 - **Energy Regeneration:** At the start of Turn 1, players receive 2 Energy. On Turn 2, they receive 3 Energy, scaling up to a maximum cap (e.g., 10 Energy). Energy carries over between turns if unspent.
-- Utility can be played in the same turn as a weapon, leading to chained attacks which reduces Energy by the amount of the Utility and Weapon played. 
+- Utility can be played in the same turn as a weapon, leading to chained attacks which reduces Energy by the amount of the Utility and Weapon played.
 
 ### Item Archetypes & Costs
 

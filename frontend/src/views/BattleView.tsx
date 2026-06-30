@@ -90,7 +90,7 @@ const BattleView: React.FC = () => {
     try {
       setSubmitting(true);
       await api.submitAction(Number(matchId), weaponId);
-      // Removed the manual getMatchState() fetch here because 
+      // Removed the manual getMatchState() fetch here because
       // the SSE stream instantly auto-pushes the updated state to this client
     } catch (err) {
       console.error(err);
@@ -211,7 +211,10 @@ const BattleView: React.FC = () => {
             </h3>
           </div>
           <p className="font-mono text-sm text-gray-300 text-center italic py-4 transition-all duration-300 animate-fade-in">
-            "{matchState?.lastLog || "Tactical positioning initialized. Waiting for structural actions."}"
+            "
+            {matchState?.lastLog ||
+              "Tactical positioning initialized. Waiting for structural actions."}
+            "
           </p>
           <div className="text-center">
             {isCompleted ? (

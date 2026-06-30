@@ -145,7 +145,7 @@ export const api = {
 
 export const subscribeToMatchStream = (
   matchId: string | number,
-  onUpdate: (data: any) => void
+  onUpdate: (data: any) => void,
 ) => {
   const token = localStorage.getItem("token");
   const controller = new AbortController();
@@ -182,7 +182,8 @@ export const subscribeToMatchStream = (
       }
     })
     .catch((err) => {
-      if (err.name !== "AbortError") console.error("SSE connection error:", err);
+      if (err.name !== "AbortError")
+        console.error("SSE connection error:", err);
     });
 
   return () => controller.abort();

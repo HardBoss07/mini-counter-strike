@@ -3,8 +3,8 @@ package dev.m4tt3o.minics.service;
 import dev.m4tt3o.minics.dto.CombatRoundRecord;
 import dev.m4tt3o.minics.dto.match.MatchStateResponse;
 import dev.m4tt3o.minics.entity.Match;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.List;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public interface MatchService {
     Match createMatch(String playerAUsername, String playerBUsername);
