@@ -10,7 +10,6 @@ import dev.m4tt3o.minics.dto.match.LiveMatchState;
 import dev.m4tt3o.minics.engine.MatchEngine;
 import dev.m4tt3o.minics.entity.Loadout;
 import dev.m4tt3o.minics.entity.User;
-import dev.m4tt3o.minics.entity.UserWeaponInstance;
 import dev.m4tt3o.minics.repository.LoadoutRepository;
 import dev.m4tt3o.minics.service.mapper.LoadoutArchetypeMapper;
 import java.security.SecureRandom;
