@@ -183,8 +183,16 @@ public class MatchServiceImpl implements MatchService {
         }
 
         // Update match state
-        String nextStatus = newDefender.hp() <= 0 ? "COMPLETED" : "IN_PROGRESS";
-        User winner = newDefender.hp() <= 0 ? actingUser : null;
+        boolean defenderDead = newDefender.hp() <= 0;
+        boolean attackerDead = newAttacker.hp() <= 0;
+        String nextStatus =
+            defenderDead || attackerDead ? "COMPLETED" : "IN_PROGRESS";
+        User winner = null;
+        if (defenderDead) {
+            winner = actingUser;
+        } else if (attackerDead) {
+            winner = isPlayerA ? match.getPlayerB() : match.getPlayerA();
+        }
 
         LiveMatchState updatedState = new LiveMatchState(
             live.round(),
