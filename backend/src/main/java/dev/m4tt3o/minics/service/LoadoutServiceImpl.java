@@ -1,12 +1,10 @@
 package dev.m4tt3o.minics.service;
 
-import dev.m4tt3o.minics.dto.ItemType;
 import dev.m4tt3o.minics.entity.*;
 import dev.m4tt3o.minics.repository.*;
-import java.util.HashSet;
+import dev.m4tt3o.minics.service.loadout.LoadoutValidator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -41,11 +39,14 @@ public class LoadoutServiceImpl implements LoadoutService {
         String side,
         List<Long> weaponInstanceIds
     ) {
-        // Validation: Frontend sends up to 5 items total
-        if (weaponInstanceIds.size() > 5) {
-            throw new RuntimeException("Loadout cannot exceed 5 items total.");
-        }
+        // Fetch all weapon instances by ID
+        List<UserWeaponInstance> fetchedInstances =
+            weaponInstanceRepository.findAllById(weaponInstanceIds);
 
+        // Validate all constraints upfront
+        LoadoutValidator.validateLoadout(fetchedInstances, side);
+
+        // Build or retrieve loadout
         Loadout loadout = loadoutRepository
             .findByUserAndSide(user, side.toUpperCase())
             .orElseGet(() -> {
@@ -55,85 +56,9 @@ public class LoadoutServiceImpl implements LoadoutService {
                 return loadoutRepository.save(l);
             });
 
-        // Fetch all distinct records from the DB matching requested IDs
-        List<UserWeaponInstance> fetchedInstances =
-            weaponInstanceRepository.findAllById(weaponInstanceIds);
-
-        // Map them by ID for O(1) matching inside loops
-        Map<Long, UserWeaponInstance> instanceMap = fetchedInstances
-            .stream()
-            .collect(
-                Collectors.toMap(UserWeaponInstance::getId, Function.identity())
-            );
-
-        long weaponCount = 0;
-        long utilityCount = 0;
-
-        // Track unique base weapon names (e.g., "AK-47") to block multi-rarity duplicates
-        Set<String> equippedBaseWeapons = new HashSet<>();
-
-        // Clear existing database junction items cleanly
+        // Replace items
         loadout.getItems().clear();
-
-        for (Long weaponId : weaponInstanceIds) {
-            UserWeaponInstance inst = instanceMap.get(weaponId);
-            if (inst == null) {
-                throw new RuntimeException(
-                    "Weapon instance " + weaponId + " not found."
-                );
-            }
-
-            // Faction Validation
-            String weaponSide = inst.getTemplate().getSide();
-            if (
-                !"ALL".equalsIgnoreCase(weaponSide) &&
-                !side.equalsIgnoreCase(weaponSide)
-            ) {
-                throw new RuntimeException(
-                    "Weapon " +
-                        inst.getTemplate().getName() +
-                        " cannot be used on " +
-                        side +
-                        " side."
-                );
-            }
-
-            // Base Weapon Type Validation (Blocks stacking multiple skin variations)
-            String fullName = inst.getTemplate().getName();
-            String baseName = fullName.split(" \\| ")[0]; // Extracts "AK-47" from "AK-47 | Slate"
-
-            if (!equippedBaseWeapons.add(baseName)) {
-                throw new RuntimeException(
-                    "Validation Error: You can only equip one variant of " +
-                        baseName +
-                        " per loadout."
-                );
-            }
-
-            // Type Counting Logic (Fixed to use your ItemType Enum)
-            ItemType type = inst.getTemplate().getType();
-            if (type == ItemType.WEAPON) {
-                weaponCount++;
-            } else if (type == ItemType.UTILITY) {
-                utilityCount++;
-            }
-
-            // Safe add to Hibernate Set
-            loadout.getItems().add(inst);
-        }
-
-        // Validate final slots arrangement matches game design rules
-        if (weaponCount > 3) {
-            throw new RuntimeException(
-                "Validation Error: Maximum of 3 primary weapons allowed."
-            );
-        }
-        if (utilityCount > 2) {
-            throw new RuntimeException(
-                "Validation Error: Maximum of 2 utility items allowed."
-            );
-        }
-
+        loadout.getItems().addAll(fetchedInstances);
         loadoutRepository.save(loadout);
     }
 
@@ -155,12 +80,13 @@ public class LoadoutServiceImpl implements LoadoutService {
                 new RuntimeException("Weapon instance not found")
             );
 
+        // Validate faction compatibility
         String weaponSide = weaponInstance.getTemplate().getSide();
         if (
             !"ALL".equalsIgnoreCase(weaponSide) &&
             !side.equalsIgnoreCase(weaponSide)
         ) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                 String.format(
                     "Cannot add %s weapon (%s) to %s loadout",
                     weaponSide,
