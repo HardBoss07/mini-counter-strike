@@ -1,7 +1,6 @@
 package dev.m4tt3o.minics.engine;
 
 import dev.m4tt3o.minics.dto.*;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MatchEngine {
 
-    private final Random random = new SecureRandom();
+    private final Random random;
     private final CombatMechanicsProcessor combatProcessor;
 
     /**
@@ -152,6 +151,20 @@ public class MatchEngine {
             attackerEffects = combatProcessor.removeBurnEffect(attackerEffects);
             log.append(
                 String.format("%s took 15 burn damage. ", attacker.username())
+            );
+        }
+
+        if (attackerHp <= 0) {
+            return createRecord(
+                turnNumber,
+                attacker,
+                defender,
+                attackerHp,
+                defenderHp,
+                0,
+                attackerEffects,
+                defenderEffects,
+                log.toString()
             );
         }
 

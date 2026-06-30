@@ -2,8 +2,8 @@ package dev.m4tt3o.minics.engine;
 
 import dev.m4tt3o.minics.dto.StatusEffect;
 import dev.m4tt3o.minics.dto.WeaponArchetype;
-import java.security.SecureRandom;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CombatMechanicsProcessor {
 
-    private final SecureRandom random = new SecureRandom();
+    private final Random random;
 
     /**
      * Calculates total damage output including critical hit chance.
