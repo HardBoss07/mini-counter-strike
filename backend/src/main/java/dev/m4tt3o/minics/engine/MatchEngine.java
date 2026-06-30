@@ -7,15 +7,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * Core engine for tactical game mechanics.
+ * Orchestrates hand drawing, match simulation, and turn resolution.
  */
 @Component
+@RequiredArgsConstructor
 public class MatchEngine {
 
     private final Random random = new SecureRandom();
+    private final CombatMechanicsProcessor combatProcessor;
 
     /**
      * Draws exactly 3 items from a 5-item loadout based on their draw weights.
@@ -138,16 +142,20 @@ public class MatchEngine {
         int defenderHp = defender.hp();
         int energySpent = action.energyCost();
 
-        // 1. Start of Turn: Check for BURN_15
-        if (attackerEffects.contains(StatusEffect.BURN_15)) {
-            attackerHp = Math.max(0, attackerHp - 15);
-            attackerEffects.remove(StatusEffect.BURN_15);
+        // 1. Apply burn damage at start of turn
+        int burnDamage = combatProcessor.applyBurnDamage(
+            attackerHp,
+            attackerEffects
+        );
+        if (burnDamage < attackerHp) {
+            attackerHp = burnDamage;
+            attackerEffects = combatProcessor.removeBurnEffect(attackerEffects);
             log.append(
                 String.format("%s took 15 burn damage. ", attacker.username())
             );
         }
 
-        // 2. Check for SKIP_TURN
+        // 2. Check for SKIP_TURN effect
         if (attackerEffects.contains(StatusEffect.SKIP_TURN)) {
             attackerEffects.remove(StatusEffect.SKIP_TURN);
             log.append(
@@ -166,76 +174,30 @@ public class MatchEngine {
             );
         }
 
-        // 3. Process Action
+        // 3. Process weapon or utility action
         if (action.type() == ItemType.WEAPON) {
-            int damage = action.damage();
-
-            // Check for Critical Hit
-            if (random.nextDouble() <= action.critChance()) {
-                damage = (int) (damage * action.critMultiplier());
-                log.append("CRITICAL HIT! ");
-            }
-
-            // Check for Blindness
-            if (attackerEffects.contains(StatusEffect.BLIND_50)) {
-                damage /= 2;
-                attackerEffects.remove(StatusEffect.BLIND_50);
-                log.append(
-                    String.format(
-                        "%s fired %s while blinded, dealing %d damage.",
-                        attacker.username(),
-                        action.name(),
-                        damage
-                    )
-                );
-            } else {
-                log.append(
-                    String.format(
-                        "%s fired %s, dealing %d damage.",
-                        attacker.username(),
-                        action.name(),
-                        damage
-                    )
-                );
-            }
-            defenderHp = Math.max(0, defenderHp - damage);
+            defenderHp = processWeaponAction(
+                action,
+                attacker,
+                attackerEffects,
+                defenderHp,
+                log
+            );
+            attackerEffects = combatProcessor.removeBlindnessEffect(
+                attackerEffects
+            );
         } else {
-            // Utility Action
-            int damage = action.damage();
-            if (damage > 0) {
-                defenderHp = Math.max(0, defenderHp - damage);
-                log.append(
-                    String.format(
-                        "%s used %s, dealing %d damage.",
-                        attacker.username(),
-                        action.name(),
-                        damage
-                    )
-                );
-            } else {
-                log.append(
-                    String.format(
-                        "%s used %s.",
-                        attacker.username(),
-                        action.name()
-                    )
-                );
-            }
-
-            // Apply Status Effect to Defender
-            if (
-                action.statusEffect() != null &&
-                !"NONE".equalsIgnoreCase(action.statusEffect())
-            ) {
-                try {
-                    StatusEffect effect = StatusEffect.valueOf(
-                        action.statusEffect()
-                    );
-                    defenderEffects.add(effect);
-                } catch (IllegalArgumentException e) {
-                    // Ignore invalid status effects
-                }
-            }
+            defenderHp = processUtilityAction(
+                action,
+                attacker,
+                defenderHp,
+                defenderEffects,
+                log
+            );
+            defenderEffects = combatProcessor.applyStatusEffect(
+                action,
+                defenderEffects
+            );
         }
 
         return createRecord(
@@ -249,6 +211,74 @@ public class MatchEngine {
             defenderEffects,
             log.toString()
         );
+    }
+
+    private int processWeaponAction(
+        WeaponArchetype action,
+        PlayerState attacker,
+        Set<StatusEffect> attackerEffects,
+        int defenderHp,
+        StringBuilder log
+    ) {
+        int damage = combatProcessor.calculateDamage(action);
+        boolean wasCritical = damage != action.damage();
+
+        if (wasCritical) {
+            log.append("CRITICAL HIT! ");
+        }
+
+        // Apply blindness penalty
+        if (attackerEffects.contains(StatusEffect.BLIND_50)) {
+            damage = combatProcessor.applyBlindnessPenalty(
+                damage,
+                attackerEffects
+            );
+            log.append(
+                String.format(
+                    "%s fired %s while blinded, dealing %d damage.",
+                    attacker.username(),
+                    action.name(),
+                    damage
+                )
+            );
+        } else {
+            log.append(
+                String.format(
+                    "%s fired %s, dealing %d damage.",
+                    attacker.username(),
+                    action.name(),
+                    damage
+                )
+            );
+        }
+
+        return Math.max(0, defenderHp - damage);
+    }
+
+    private int processUtilityAction(
+        WeaponArchetype action,
+        PlayerState attacker,
+        int defenderHp,
+        Set<StatusEffect> defenderEffects,
+        StringBuilder log
+    ) {
+        int damage = action.damage();
+        if (damage > 0) {
+            defenderHp = Math.max(0, defenderHp - damage);
+            log.append(
+                String.format(
+                    "%s used %s, dealing %d damage.",
+                    attacker.username(),
+                    action.name(),
+                    damage
+                )
+            );
+        } else {
+            log.append(
+                String.format("%s used %s.", attacker.username(), action.name())
+            );
+        }
+        return defenderHp;
     }
 
     private CombatRoundRecord createRecord(
