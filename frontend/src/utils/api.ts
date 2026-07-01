@@ -1,9 +1,14 @@
-import type { Weapon } from "../components/molecules/WeaponCard";
+import type { Weapon } from "../types/weapon";
+import type { MatchStateResponse } from "../types/match";
+import type { UserProfile, LeaderboardEntry } from "../types/user";
+import type { Loadout } from "../types/loadout";
 
 const BASE_URL = ""; // Proxied by Vite in development
 
 /**
  * Generic API request wrapper using native fetch.
+ * Automatically attaches the JWT from localStorage and sets Content-Type.
+ * Throws a descriptive Error on any non-2xx response.
  */
 async function apiFetch<T>(
   endpoint: string,
@@ -11,24 +16,18 @@ async function apiFetch<T>(
 ): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
 
-  const headers = new Headers(options.headers || {});
+  const headers = new Headers(options.headers ?? {});
 
-  // 1. Add Content-Type if body exists
   if (options.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
-  // 2. Add JWT token from localStorage
   const token = localStorage.getItem("token");
-
   if (token) {
     headers.set("Authorization", "Bearer " + token);
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const response = await fetch(url, { ...options, headers });
 
   if (response.status === 403) {
     throw new Error("Unauthorized: 403 Forbidden");
@@ -38,10 +37,10 @@ async function apiFetch<T>(
     const errorBody = await response.text();
     let message = `API Error: ${response.status} ${response.statusText}`;
     try {
-      const json = JSON.parse(errorBody);
-      if (json.message) message = json.message;
-      else if (json.error) message = json.error;
-    } catch (e) {
+      const json = JSON.parse(errorBody) as Record<string, unknown>;
+      if (typeof json.message === "string") message = json.message;
+      else if (typeof json.error === "string") message = json.error;
+    } catch {
       if (errorBody) message = errorBody;
     }
     throw new Error(message);
@@ -51,102 +50,133 @@ async function apiFetch<T>(
   return text ? (JSON.parse(text) as T) : ({} as T);
 }
 
-export interface MatchStateResponse {
-  round: number;
-  playerAStatus: string; // e.g., "HP:100"
-  playerBStatus: string; // e.g., "HP:100"
-  lastLog: string;
-  status: "IN_PROGRESS" | "COMPLETED";
-  playerHand?: any[]; // Holds the current live hand if ongoing
-  isMyTurn?: boolean;
-  playerAUsername: string; // Added field
-  playerBUsername: string; // Added field
-}
-
 /**
- * Service functions for specific API endpoints.
+ * Service functions for all API endpoints, grouped by domain.
  */
 export const api = {
-  /**
-   * Auth Endpoints
-   */
-  login: (username: string, password: string) =>
+  // --- Auth ---
+
+  login: (username: string, password: string): Promise<{ token: string }> =>
     apiFetch<{ token: string }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     }),
 
-  register: (username: string, password: string) =>
+  register: (username: string, password: string): Promise<{ token: string }> =>
     apiFetch<{ token: string }>("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     }),
 
-  /**
-   * Catalog
-   */
-  getWeapons: () =>
+  // --- User ---
+
+  getUserProfile: (): Promise<UserProfile> =>
+    apiFetch<UserProfile>("/api/user/me", { method: "GET" }),
+
+  // --- Leaderboard ---
+
+  getLeaderboard: (): Promise<LeaderboardEntry[]> =>
+    apiFetch<LeaderboardEntry[]>("/api/leaderboard", { method: "GET" }),
+
+  // --- Catalog / Inventory ---
+
+  getWeapons: (): Promise<Weapon[]> =>
     apiFetch<Weapon[]>("/api/inventory/weapons", { method: "GET" }),
 
-  getUserProfile: () =>
-    apiFetch<{
-      id: number;
-      username: string;
-      elo: number;
-      credits: number;
-      caseCount: number;
-    }>("/api/user/me", { method: "GET" }),
-  getLeaderboard: () =>
-    apiFetch<{ username: string; elo: number }[]>("/api/leaderboard", {
-      method: "GET",
-    }),
-  openCase: () =>
+  // --- Economy ---
+
+  openCase: (): Promise<{
+    weaponName: string;
+    rarity: string;
+    imageUrl: string;
+  }> =>
     apiFetch<{ weaponName: string; rarity: string; imageUrl: string }>(
       "/api/economy/cases/open",
       { method: "POST" },
     ),
-  queueMatch: () =>
+
+  // --- Loadout ---
+
+  getLoadouts: (): Promise<Loadout> =>
+    apiFetch<Loadout>("/api/loadout", { method: "GET" }),
+
+  saveLoadouts: (tLoadout: Weapon[], ctLoadout: Weapon[]): Promise<void> =>
+    apiFetch<void>("/api/loadout/save", {
+      method: "POST",
+      body: JSON.stringify({
+        tLoadoutIds: tLoadout.map((weapon) => weapon.id),
+        ctLoadoutIds: ctLoadout.map((weapon) => weapon.id),
+      }),
+    }),
+
+  // --- Match ---
+
+  queueMatch: (): Promise<{ ticketId: number }> =>
     apiFetch<{ ticketId: number }>("/api/match/queue", { method: "POST" }),
-  leaveQueue: () =>
+
+  leaveQueue: (): Promise<void> =>
     apiFetch<void>("/api/match/queue/leave", { method: "POST" }),
-  getQueueStatus: (ticketId: number) =>
+
+  getQueueStatus: (
+    ticketId: number,
+  ): Promise<{ status: string; matchId?: number }> =>
     apiFetch<{ status: string; matchId?: number }>(
       `/api/match/queue/status?ticketId=${ticketId}`,
       { method: "GET" },
     ),
-  getMatchState: (matchId: number) =>
-    apiFetch<any>(`/api/match/${matchId}/state`, { method: "GET" }),
-  submitAction: (matchId: number, weaponId: number) =>
+
+  getMatchState: (matchId: number): Promise<MatchStateResponse> =>
+    apiFetch<MatchStateResponse>(`/api/match/${matchId}/state`, {
+      method: "GET",
+    }),
+
+  getMatchLogs: (matchId: number): Promise<string[]> =>
+    apiFetch<string[]>(`/api/match/${matchId}/logs`, { method: "GET" }),
+
+  submitAction: (matchId: number, weaponId: number): Promise<void> =>
     apiFetch<void>(`/api/match/${matchId}/action`, {
       method: "POST",
       body: JSON.stringify({ weaponId }),
     }),
-  getMatchLogs: (matchId: number) =>
-    apiFetch<any[]>(`/api/match/${matchId}/logs`, { method: "GET" }),
 
-  getLoadouts: () =>
-    apiFetch<{ tLoadout: Weapon[]; ctLoadout: Weapon[] }>("/api/loadout", {
-      method: "GET",
-    }),
-  saveLoadouts: (tLoadout: Weapon[], ctLoadout: Weapon[]) =>
-    apiFetch<any>("/api/loadout/save", {
-      method: "POST",
-      body: JSON.stringify({
-        tLoadoutIds: tLoadout.map((w) => w.id),
-        ctLoadoutIds: ctLoadout.map((w) => w.id),
-      }),
-    }),
+  surrenderMatch: (matchId: number): Promise<void> =>
+    apiFetch<void>(`/api/match/${matchId}/surrender`, { method: "POST" }),
 
-  surrenderMatch: (matchId: number) =>
-    apiFetch<void>(`/api/match/${matchId}/surrender`, {
+  /**
+   * Fires a keepalive surrender request suitable for use inside a
+   * `beforeunload` event handler. Uses the native fetch keepalive flag so
+   * the browser dispatches the request even as the tab is closing.
+   *
+   * NOTE: This cannot use the async apiFetch wrapper because beforeunload
+   * handlers must be synchronous. Auth header assembly is intentionally
+   * duplicated here to keep this self-contained.
+   */
+  keepaliveSurrender: (matchId: string | number): void => {
+    const token = localStorage.getItem("token");
+    fetch(`/api/match/${matchId}/surrender`, {
       method: "POST",
-    }),
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({}),
+      keepalive: true,
+    }).catch((error: unknown) => {
+      console.error("keepaliveSurrender failed:", error);
+    });
+  },
 };
 
-export const subscribeToMatchStream = (
+/**
+ * Opens a persistent SSE connection to the match stream endpoint and calls
+ * onUpdate each time a valid MatchStateResponse event is received.
+ *
+ * Returns a cleanup function that aborts the connection.
+ */
+export function subscribeToMatchStream(
   matchId: string | number,
-  onUpdate: (data: any) => void,
-) => {
+  onUpdate: (data: MatchStateResponse) => void,
+): () => void {
   const token = localStorage.getItem("token");
   const controller = new AbortController();
 
@@ -167,24 +197,27 @@ export const subscribeToMatchStream = (
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
 
-        buffer = lines.pop() || "";
+        buffer = lines.pop() ?? "";
 
         for (const line of lines) {
           if (line.startsWith("data:")) {
             try {
-              const data = JSON.parse(line.slice(5).trim());
+              const data = JSON.parse(
+                line.slice(5).trim(),
+              ) as MatchStateResponse;
               onUpdate(data);
-            } catch (e) {
-              console.error("Error parsing SSE JSON:", e);
+            } catch (parseError: unknown) {
+              console.error("Error parsing SSE JSON:", parseError);
             }
           }
         }
       }
     })
-    .catch((err) => {
-      if (err.name !== "AbortError")
-        console.error("SSE connection error:", err);
+    .catch((error: unknown) => {
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("SSE connection error:", error);
+      }
     });
 
   return () => controller.abort();
-};
+}
