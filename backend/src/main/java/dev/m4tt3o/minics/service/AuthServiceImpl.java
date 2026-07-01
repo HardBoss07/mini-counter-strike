@@ -42,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
                     "Glock-18",
                     "MAC-10",
                     "Galil AR",
-                    "Flashbang",
+                    "Molotov",
                     "Smoke Grenade"
                 )
             );
