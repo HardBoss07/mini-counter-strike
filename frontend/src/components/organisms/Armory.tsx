@@ -1,6 +1,6 @@
 import React from "react";
 import WeaponCard from "../molecules/WeaponCard";
-import type { Weapon } from "../molecules/WeaponCard";
+import type { Weapon } from "../../types/weapon";
 
 interface ArmoryProps {
   weapons: Weapon[];
@@ -23,8 +23,8 @@ const Armory: React.FC<ArmoryProps> = ({ weapons, tLoadout, ctLoadout }) => {
       <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
         {weapons.map((weapon) => {
           const isEquipped =
-            tLoadout.some((w) => w.id === weapon.id) ||
-            ctLoadout.some((w) => w.id === weapon.id);
+            tLoadout.some((equipped) => equipped.id === weapon.id) ||
+            ctLoadout.some((equipped) => equipped.id === weapon.id);
           return (
             <WeaponCard
               key={weapon.id}

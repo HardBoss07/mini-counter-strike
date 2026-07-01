@@ -1,13 +1,13 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import WeaponCard from "../molecules/WeaponCard";
-import type { Weapon } from "../molecules/WeaponCard";
+import type { LoadoutItem } from "../../types/loadout";
 
 interface LoadoutZoneProps {
   id: string;
   title: string;
   side: "T" | "CT";
-  items: (Weapon & { uniqueId: string })[]; // Assuming uniqueId is added
+  items: LoadoutItem[];
   onRemoveItem: (uniqueId: string) => void;
 }
 
@@ -18,17 +18,15 @@ const LoadoutZone: React.FC<LoadoutZoneProps> = ({
   items,
   onRemoveItem,
 }) => {
-  const { isOver, setNodeRef } = useDroppable({
-    id: id,
-    data: { side },
-  });
+  const { isOver, setNodeRef } = useDroppable({ id, data: { side } });
 
-  const weaponCount = items.filter((i) => i.type === "WEAPON").length;
-  const utilityCount = items.filter((i) => i.type === "UTILITY").length;
+  const weaponCount = items.filter((item) => item.type === "WEAPON").length;
+  const utilityCount = items.filter((item) => item.type === "UTILITY").length;
 
   const borderColor =
     side === "T" ? "border-tactical-t/30" : "border-tactical-ct/30";
   const overColor = side === "T" ? "bg-tactical-t/10" : "bg-tactical-ct/10";
+  const titleColor = side === "T" ? "text-tactical-t" : "text-tactical-ct";
 
   return (
     <div
@@ -37,7 +35,7 @@ const LoadoutZone: React.FC<LoadoutZoneProps> = ({
     >
       <div className="flex items-center justify-between mb-4">
         <h2
-          className={`text-lg font-black uppercase tracking-wider ${side === "T" ? "text-tactical-t" : "text-tactical-ct"}`}
+          className={`text-lg font-black uppercase tracking-wider ${titleColor}`}
         >
           {title}
         </h2>

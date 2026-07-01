@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import type { Weapon } from "../molecules/WeaponCard";
 import { ChevronDown, Search } from "lucide-react";
+import type { Weapon, WeaponRarity, WeaponSide } from "../../types/weapon";
 
 interface CardSorterProps {
   items: Weapon[];
@@ -14,9 +14,8 @@ type SortOption =
   | "dmg-desc"
   | "rarity-desc"
   | "rarity-asc";
-type SideFilter = "ALL" | "T" | "CT";
 
-const RARITY_WEIGHT: Record<Weapon["rarity"], number> = {
+const RARITY_WEIGHT: Record<WeaponRarity, number> = {
   BASE_GRADE: 0,
   CONSUMER_GRADE: 1,
   INDUSTRIAL_GRADE: 2,
@@ -27,21 +26,28 @@ const RARITY_WEIGHT: Record<Weapon["rarity"], number> = {
   CONTRABAND: 7,
 };
 
+const SELECT_CLASS =
+  "appearance-none bg-tactical-dark border border-white/10 rounded pl-3 pr-8 py-1.5 text-sm text-white focus:outline-none focus:border-tactical-accent cursor-pointer";
+
 export const CardSorter: React.FC<CardSorterProps> = ({ items, children }) => {
-  const [search, setSearch] = useState("");
-  const [side, setSide] = useState<SideFilter>("ALL");
+  const [search, setSearch] = useState<string>("");
+  const [side, setSide] = useState<WeaponSide | "ALL">("ALL");
   const [sortBy, setSortBy] = useState<SortOption>("name");
 
-  const processedItems = useMemo(() => {
+  const processedItems = useMemo<Weapon[]>(() => {
     let result = [...items];
 
     if (side !== "ALL") {
-      result = result.filter((w) => w.side === side || w.side === "ALL");
+      result = result.filter(
+        (weapon) => weapon.side === side || weapon.side === "ALL",
+      );
     }
 
-    if (search.trim() !== "") {
-      const query = search.toLowerCase();
-      result = result.filter((w) => w.name.toLowerCase().includes(query));
+    const query = search.trim().toLowerCase();
+    if (query !== "") {
+      result = result.filter((weapon) =>
+        weapon.name.toLowerCase().includes(query),
+      );
     }
 
     result.sort((a, b) => {
@@ -78,7 +84,7 @@ export const CardSorter: React.FC<CardSorterProps> = ({ items, children }) => {
               type="text"
               placeholder="Search weapons..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) => setSearch(event.target.value)}
               className="bg-tactical-dark border border-white/10 rounded pl-9 pr-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-tactical-accent min-w-[200px]"
             />
           </div>
@@ -86,8 +92,10 @@ export const CardSorter: React.FC<CardSorterProps> = ({ items, children }) => {
           <div className="relative flex items-center">
             <select
               value={side}
-              onChange={(e) => setSide(e.target.value as SideFilter)}
-              className="appearance-none bg-tactical-dark border border-white/10 rounded pl-3 pr-8 py-1.5 text-sm text-white focus:outline-none focus:border-tactical-accent cursor-pointer min-w-[110px]"
+              onChange={(event) =>
+                setSide(event.target.value as WeaponSide | "ALL")
+              }
+              className={`${SELECT_CLASS} min-w-[110px]`}
             >
               <option value="ALL">All Sides</option>
               <option value="T">T-Side</option>
@@ -103,8 +111,8 @@ export const CardSorter: React.FC<CardSorterProps> = ({ items, children }) => {
         <div className="relative flex items-center">
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="appearance-none bg-tactical-dark border border-white/10 rounded pl-3 pr-8 py-1.5 text-sm text-white focus:outline-none focus:border-tactical-accent cursor-pointer min-w-[150px]"
+            onChange={(event) => setSortBy(event.target.value as SortOption)}
+            className={`${SELECT_CLASS} min-w-[150px]`}
           >
             <option value="name">Alphabetical</option>
             <option value="rarity-desc">Rarity: High to Low</option>

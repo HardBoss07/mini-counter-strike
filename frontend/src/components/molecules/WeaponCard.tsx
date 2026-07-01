@@ -3,59 +3,12 @@ import { useDraggable } from "@dnd-kit/core";
 import StatBadge from "../atoms/StatBadge";
 import { Crosshair, Zap, Weight, ImageOff } from "lucide-react";
 import { useWeaponData } from "../../hooks/useWeaponData";
+import type { Weapon, WeaponRarity } from "../../types/weapon";
 
-export interface Weapon {
-  id: number;
-  uniqueId?: string;
-  name: string;
-  type: "WEAPON" | "UTILITY";
-  side: "T" | "CT" | "ALL";
-  energyCost: number;
-  damage: number;
-  drawWeight: number;
-  critChance: number;
-  critMultiplier: number;
-  statusEffect: string;
-  rarity:
-    | "BASE_GRADE"
-    | "CONSUMER_GRADE"
-    | "INDUSTRIAL_GRADE"
-    | "MIL_SPEC"
-    | "RESTRICTED"
-    | "CLASSIFIED"
-    | "COVERT"
-    | "CONTRABAND";
-  imageUrl: string;
-  description: string;
-}
-
-export const mapBackendWeapon = (raw: any): Weapon => {
-  const template = raw.template || raw;
-
-  const getField = (camel: string, snake: string, fallback: any = null) => {
-    return template[camel] ?? template[snake] ?? fallback;
-  };
-
-  return {
-    id: raw.id,
-    name: template.name || "Unknown Weapon",
-    type: template.type || "WEAPON",
-    side: template.side || "ALL",
-    energyCost: getField("energyCost", "energy_cost", 0),
-    damage: template.damage || 0,
-    drawWeight: getField("drawWeight", "draw_weight", 0),
-    critChance: getField("critChance", "crit_chance", 0),
-    critMultiplier: getField("critMultiplier", "crit_multiplier", 1.0),
-    statusEffect: getField("statusEffect", "status_effect", "NONE"),
-    rarity: getField("rarity", "rarity", "BASE_GRADE"),
-    imageUrl: getField(
-      "imageUrl",
-      "image_url",
-      "/assets/placeholder-weapon.png",
-    ),
-    description: template.description || "No description available",
-  };
-};
+// Re-export Weapon so existing consumers that import it from this file keep working
+// without a breaking migration step. Prefer importing from src/types/weapon.ts directly.
+export type { Weapon } from "../../types/weapon";
+export { mapBackendWeapon } from "../../types/weapon";
 
 interface WeaponCardProps {
   weapon?: Weapon;
@@ -67,8 +20,8 @@ interface WeaponCardProps {
   backContent?: React.ReactNode;
 }
 
-// Maps your Weapon rarity strings directly to your custom Tailwind config utility keys
-const RARITY_COLOR_MAP: Record<Weapon["rarity"], string> = {
+/** Maps weapon rarity to Tailwind utility strings. */
+const RARITY_COLOR_MAP: Record<WeaponRarity, string> = {
   BASE_GRADE: "bg-rarity-base text-rarity-base border-rarity-base",
   CONSUMER_GRADE:
     "bg-rarity-consumer text-rarity-consumer border-rarity-consumer",
@@ -84,8 +37,11 @@ const RARITY_COLOR_MAP: Record<Weapon["rarity"], string> = {
     "bg-rarity-contraband text-rarity-contraband border-rarity-contraband",
 };
 
-// Maps inline drop-shadow filters dynamically since Tailwind standard class builds don't support custom arbitrary values cleanly
-const RARITY_GLOW_MAP: Record<Weapon["rarity"], string> = {
+/**
+ * Inline drop-shadow values are kept as arbitrary Tailwind classes because
+ * the custom rarity colors are not natively supported by Tailwind's shadow system.
+ */
+const RARITY_GLOW_MAP: Record<WeaponRarity, string> = {
   BASE_GRADE: "drop-shadow-[0_0_12px_rgba(94,87,79,0.2)]",
   CONSUMER_GRADE: "drop-shadow-[0_0_12px_rgba(176,195,217,0.2)]",
   INDUSTRIAL_GRADE: "drop-shadow-[0_0_12px_rgba(94,152,217,0.3)]",
@@ -106,17 +62,18 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
   backContent,
 }) => {
   const fetchedWeapon = useWeaponData(weaponId);
-  const weapon = initialWeapon || fetchedWeapon;
+  const weapon = initialWeapon ?? fetchedWeapon;
   const [imageError, setImageError] = useState(false);
 
-  if (!weapon)
+  if (!weapon) {
     return (
       <div className="w-48 h-64 bg-tactical-gray rounded-lg border-2 border-white/5 animate-pulse" />
     );
+  }
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
-      id: weapon.uniqueId || weapon.id.toString(),
+      id: weapon.uniqueId ?? weapon.id.toString(),
       data: weapon,
       disabled: !isDraggable || isDisabled,
     });
@@ -128,11 +85,14 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
         ? "border-tactical-ct"
         : "border-tactical-accent";
 
-  // Safeguard utility lookup mapping to protect rendering states
   const rarityClasses =
-    RARITY_COLOR_MAP[weapon.rarity] || RARITY_COLOR_MAP.BASE_GRADE;
+    RARITY_COLOR_MAP[weapon.rarity] ?? RARITY_COLOR_MAP.BASE_GRADE;
   const glowClass =
-    RARITY_GLOW_MAP[weapon.rarity] || RARITY_GLOW_MAP.BASE_GRADE;
+    RARITY_GLOW_MAP[weapon.rarity] ?? RARITY_GLOW_MAP.BASE_GRADE;
+
+  const rarityParts = rarityClasses.split(" ");
+  const rarityBg = rarityParts[0];
+  const rarityText = rarityParts[1];
 
   const cardContent = (
     <div
@@ -144,7 +104,16 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
       }
       {...listeners}
       {...attributes}
-      className={`relative w-48 h-64 bg-tactical-gray rounded-lg border-2 ${sideColor} shadow-xl overflow-hidden flex flex-col ${isDraggable && !isDisabled ? "cursor-grab active:cursor-grabbing" : ""} ${isDragging ? "opacity-50" : ""} ${isDisabled ? "opacity-30 grayscale" : ""}`}
+      className={[
+        "relative w-48 h-64 bg-tactical-gray rounded-lg border-2",
+        sideColor,
+        "shadow-xl overflow-hidden flex flex-col",
+        isDraggable && !isDisabled ? "cursor-grab active:cursor-grabbing" : "",
+        isDragging ? "opacity-50" : "",
+        isDisabled ? "opacity-30 grayscale" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
     >
       <div className="absolute top-2 right-2 z-20 flex gap-2">
         {onRemove && (
@@ -160,7 +129,6 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
         </div>
       </div>
 
-      {/* Weapon Image Wrapper Box */}
       <div className="relative h-32 w-full bg-tactical-dark flex items-center justify-center p-4">
         {!imageError ? (
           <img
@@ -172,19 +140,13 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
         ) : (
           <ImageOff size={32} className="text-gray-600" />
         )}
-
-        {/* Visual Element 1: Dynamic rarity stripe accent alignment pinning item category tiers */}
-        <div
-          className={`absolute bottom-0 left-0 right-0 h-1 ${rarityClasses.split(" ")[0]}`}
-        />
+        <div className={`absolute bottom-0 left-0 right-0 h-1 ${rarityBg}`} />
       </div>
 
-      {/* Item text metadata panel area details layout mapping */}
       <div className="flex-1 p-3 flex flex-col justify-between bg-gradient-to-b from-tactical-gray to-tactical-dark">
         <div>
-          {/* Visual Element 2: Small micro rarity tier indicator layout name */}
           <span
-            className={`text-[8px] font-bold uppercase tracking-wider ${rarityClasses.split(" ")[1]}`}
+            className={`text-[8px] font-bold uppercase tracking-wider ${rarityText}`}
           >
             {weapon.rarity.replace("_", " ")}
           </span>
@@ -222,7 +184,6 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
         <div className="absolute inset-0 [backface-visibility:hidden]">
           {cardContent}
         </div>
-        {/* Matches the front face's external framework precisely mapping container details */}
         <div
           className={`absolute inset-0 w-full h-full bg-tactical-gray rounded-lg border-2 ${sideColor} p-4 flex flex-col items-center justify-center [transform:rotateY(180deg)] [backface-visibility:hidden]`}
         >
