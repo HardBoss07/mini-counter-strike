@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api } from "../utils/api";
+import type { AuthUser } from "../types/user";
 
 interface AuthContextType {
   token: string | null;
-  user: { username: string } | null;
+  user: AuthUser | null;
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => void;
@@ -18,12 +19,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("token"),
   );
-  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     if (token) {
-      // In a real app, we might decode the JWT or call /api/auth/me
-      // For now, we'll just assume valid if present
       localStorage.setItem("token", token);
     } else {
       localStorage.removeItem("token");
@@ -31,19 +30,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [token]);
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string): Promise<void> => {
     const response = await api.login(username, password);
     setToken(response.token);
     setUser({ username });
   };
 
-  const register = async (username: string, password: string) => {
+  const register = async (
+    username: string,
+    password: string,
+  ): Promise<void> => {
     const response = await api.register(username, password);
     setToken(response.token);
     setUser({ username });
   };
 
-  const logout = () => {
+  const logout = (): void => {
     setToken(null);
   };
 
@@ -56,7 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
