@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../utils/api";
 import type { UserProfile } from "../types/user";
 
@@ -44,14 +44,23 @@ interface UseUserProfileResult {
  * Deduplicates concurrent calls and caches the result for the session.
  */
 export function useUserProfile(): UseUserProfileResult {
+  const token = localStorage.getItem("token");
   const [profile, setProfile] = useState<UserProfile | null>(profileCache);
-  const [loading, setLoading] = useState<boolean>(profileCache === null);
+  const [loading, setLoading] = useState<boolean>(
+    profileCache === null && !!token,
+  );
   const [error, setError] = useState<string | null>(null);
-  const refreshCounterRef = useRef<number>(0);
+  const [refreshCounter, setRefreshCounter] = useState<number>(0);
 
   useEffect(() => {
-    let isMounted = true;
+    if (!token) {
+      setProfile(null);
+      setLoading(false);
+      setError("No authentication token found.");
+      return;
+    }
 
+    let isMounted = true;
     setLoading(true);
     setError(null);
 
@@ -76,12 +85,11 @@ export function useUserProfile(): UseUserProfileResult {
     return () => {
       isMounted = false;
     };
-  }, [refreshCounterRef.current]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshCounter, token]);
 
   const refetch = (): void => {
     invalidateProfileCache();
-    refreshCounterRef.current += 1;
-    setLoading(true);
+    setRefreshCounter((prev) => prev + 1);
   };
 
   return { profile, loading, error, refetch };

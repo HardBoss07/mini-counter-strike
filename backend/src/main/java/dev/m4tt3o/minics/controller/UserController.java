@@ -31,8 +31,8 @@ public class UserController {
             new UserProfileResponse(
                 user.getId(),
                 user.getUsername(),
-                1000,
-                100,
+                user.getElo(),
+                user.getCredits(),
                 5
             )
         );
