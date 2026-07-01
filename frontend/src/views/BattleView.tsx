@@ -65,12 +65,18 @@ const BattleView: React.FC = () => {
     const handleTabCloseSurrender = () => {
       const token = localStorage.getItem("token");
       const url = `/api/match/${matchId}/surrender`;
-      const headers = {
-        type: "application/json",
-        Authorization: `Bearer ${token}`,
-      };
-      const blob = new Blob([JSON.stringify({})], headers);
-      navigator.sendBeacon(url, blob);
+
+      fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+        keepalive: true, // This ensures the browser sends the request even after tab termination
+      }).catch((err) => {
+        console.error("Failed to execute background fallback exit stream", err);
+      });
     };
 
     window.addEventListener("beforeunload", handleTabCloseSurrender);
@@ -310,7 +316,7 @@ const BattleView: React.FC = () => {
 
             <h3 className="text-4xl font-black uppercase tracking-tight mb-6 transform transition-all duration-700">
               {(hpA === "0" && isUserPlayerA) ||
-                (hpB === "0" && !isUserPlayerA) ? (
+              (hpB === "0" && !isUserPlayerA) ? (
                 <span className="text-red-500 tracking-wide drop-shadow-[0_0_10px_rgba(239,68,68,0.2)]">
                   Mission Failed
                 </span>
