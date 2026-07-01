@@ -1,26 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { api } from "../utils/api";
-import { Loader2 } from "lucide-react";
+import React from "react";
+import { useLeaderboard } from "../hooks/useLeaderboard";
+import LoadingSpinner from "../components/atoms/LoadingSpinner";
+import type { LeaderboardEntry } from "../types/user";
 
 const LeaderboardView: React.FC = () => {
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { leaderboard, loading } = useLeaderboard();
 
-  useEffect(() => {
-    api
-      .getLeaderboard()
-      .then(setLeaderboard)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading)
-    return (
-      <Loader2
-        className="animate-spin text-tactical-accent mx-auto"
-        size={48}
-      />
-    );
+  if (loading) {
+    return <LoadingSpinner label="Loading Rankings..." />;
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -32,11 +20,11 @@ const LeaderboardView: React.FC = () => {
           <tr className="border-b border-white/10 text-gray-500 uppercase text-xs">
             <th className="p-4">Rank</th>
             <th className="p-4">Username</th>
-            <th className="p-4">Elo</th>
+            <th className="p-4">ELO</th>
           </tr>
         </thead>
         <tbody>
-          {leaderboard.map((entry, index) => (
+          {leaderboard.map((entry: LeaderboardEntry, index: number) => (
             <tr
               key={entry.username}
               className="border-b border-white/5 hover:bg-white/5"

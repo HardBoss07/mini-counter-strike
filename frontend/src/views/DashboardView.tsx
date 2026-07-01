@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../utils/api";
-import { Loader2 } from "lucide-react";
+import { useUserProfile } from "../hooks/useUserProfile";
+import LoadingSpinner from "../components/atoms/LoadingSpinner";
+
+function resolveRankLabel(elo: number): string {
+  if (elo >= 1500) return "GLOBAL ELITE";
+  if (elo >= 1200) return "GOLD";
+  return "SILVER";
+}
 
 const DashboardView: React.FC = () => {
-  const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
+  const { profile, loading } = useUserProfile();
 
-  useEffect(() => {
-    api.getUserProfile().then(setProfile).catch(console.error);
-  }, []);
+  if (loading) {
+    return <LoadingSpinner label="Loading Command Center..." />;
+  }
 
-  if (!profile)
-    return (
-      <Loader2
-        className="animate-spin text-tactical-accent mx-auto"
-        size={48}
-      />
-    );
+  if (!profile) return null;
 
   return (
     <div className="flex flex-col items-center justify-center gap-8 py-16">
@@ -26,11 +26,7 @@ const DashboardView: React.FC = () => {
           Current Rank
         </h2>
         <div className="text-8xl font-black text-tactical-accent drop-shadow-[0_0_15px_rgba(125,1,227,0.5)]">
-          {profile.elo >= 1500
-            ? "GLOBAL ELITE"
-            : profile.elo >= 1200
-              ? "GOLD"
-              : "SILVER"}
+          {resolveRankLabel(profile.elo)}
         </div>
         <p className="text-2xl font-mono text-white mt-2">{profile.elo} ELO</p>
       </div>

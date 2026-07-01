@@ -1,34 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { api } from "../utils/api";
-import {
-  WeaponCard,
-  mapBackendWeapon,
-} from "../components/molecules/WeaponCard";
-import type { Weapon } from "../components/molecules/WeaponCard";
-import { Loader2 } from "lucide-react";
+import React from "react";
+import { useInventory } from "../hooks/useInventory";
+import { WeaponCard } from "../components/molecules/WeaponCard";
 import { CardSorter } from "../components/organisms/CardSorter";
+import LoadingSpinner from "../components/atoms/LoadingSpinner";
 
 const InventoryView: React.FC = () => {
-  const [weapons, setWeapons] = useState<Weapon[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { weapons, loading } = useInventory();
 
-  useEffect(() => {
-    api
-      .getWeapons()
-      .then((data) => setWeapons(data.map(mapBackendWeapon)))
-      .catch((err) => {
-        console.error("API Error:", err);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading)
-    return (
-      <Loader2
-        className="animate-spin text-tactical-accent mx-auto"
-        size={48}
-      />
-    );
+  if (loading) {
+    return <LoadingSpinner label="Synchronizing Arsenal..." />;
+  }
 
   return (
     <CardSorter items={weapons}>

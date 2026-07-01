@@ -11,13 +11,13 @@ interface AuthViewProps {
 const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
   const { login, register } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent): Promise<void> => {
+    event.preventDefault();
     setLoading(true);
     setError(null);
     try {
@@ -27,12 +27,19 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
         await register(username, password);
       }
       navigate("/");
-    } catch (err: any) {
-      setError(err.message || "Authentication failed");
+    } catch (submissionError: unknown) {
+      const message =
+        submissionError instanceof Error
+          ? submissionError.message
+          : "Authentication failed";
+      setError(message);
     } finally {
       setLoading(false);
     }
   };
+
+  const INPUT_CLASS =
+    "bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:border-tactical-accent outline-none transition-colors";
 
   return (
     <div className="min-h-screen bg-tactical-dark flex items-center justify-center p-4">
@@ -66,8 +73,8 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:border-tactical-accent outline-none transition-colors"
+              onChange={(event) => setUsername(event.target.value)}
+              className={INPUT_CLASS}
               placeholder="OPERATOR_NAME"
               required
             />
@@ -80,8 +87,8 @@ const AuthView: React.FC<AuthViewProps> = ({ mode, onSwitchMode }) => {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:border-tactical-accent outline-none transition-colors"
+              onChange={(event) => setPassword(event.target.value)}
+              className={INPUT_CLASS}
               placeholder="••••••••"
               required
             />

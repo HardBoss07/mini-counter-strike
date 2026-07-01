@@ -1,43 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { api } from "../utils/api";
-import { Loader2 } from "lucide-react";
+import { useUserProfile } from "../hooks/useUserProfile";
+import { invalidateProfileCache } from "../hooks/useUserProfile";
+import LoadingSpinner from "../components/atoms/LoadingSpinner";
 import WeaponCard from "../components/molecules/WeaponCard";
-import type { Weapon } from "../components/molecules/WeaponCard";
+import { mapBackendWeapon } from "../types/weapon";
+import type { Weapon } from "../types/weapon";
+import { Loader2 } from "lucide-react";
 
 const CasesView: React.FC = () => {
-  const [profile, setProfile] = useState<any>(null);
+  const { profile, loading, refetch } = useUserProfile();
   const [unlocked, setUnlocked] = useState<Weapon | null>(null);
-  const [isOpening, setIsOpening] = useState(false);
+  const [isOpening, setIsOpening] = useState<boolean>(false);
 
-  useEffect(() => {
-    api.getUserProfile().then(setProfile);
-  }, []);
-
-  const handleOpen = async () => {
+  const handleOpen = async (): Promise<void> => {
     setIsOpening(true);
     setUnlocked(null);
     try {
       const result = await api.openCase();
-      // Mocked delay for roulette animation
-      await new Promise((r) => setTimeout(r, 2000));
-      setUnlocked({
-        id: 0,
-        name: result.weaponName,
-        imageUrl: result.imageUrl,
-        description: result.rarity,
-      } as any);
+      // Simulated delay for the unboxing animation
+      await new Promise<void>((resolve) => setTimeout(resolve, 2000));
+      setUnlocked(
+        mapBackendWeapon({
+          id: 0,
+          name: result.weaponName,
+          imageUrl: result.imageUrl,
+          rarity: result.rarity,
+          description: result.rarity,
+        } as Parameters<typeof mapBackendWeapon>[0]),
+      );
+      // Invalidate profile cache so caseCount updates in Navbar
+      invalidateProfileCache();
+      refetch();
+    } catch (openError: unknown) {
+      console.error("Failed to open case:", openError);
     } finally {
       setIsOpening(false);
     }
   };
 
-  if (!profile)
-    return (
-      <Loader2
-        className="animate-spin text-tactical-accent mx-auto"
-        size={48}
-      />
-    );
+  if (loading) {
+    return <LoadingSpinner label="Preparing Case Inventory..." />;
+  }
+
+  if (!profile) return null;
 
   return (
     <div className="flex flex-col items-center gap-12 py-16">
@@ -52,7 +58,7 @@ const CasesView: React.FC = () => {
       <button
         onClick={handleOpen}
         disabled={isOpening || profile.caseCount === 0}
-        className="bg-tactical-accent text-black font-black px-12 py-4 rounded-lg uppercase tracking-widest disabled:opacity-30"
+        className="bg-tactical-accent text-black font-black px-12 py-4 rounded-lg uppercase tracking-widest disabled:opacity-30 hover:bg-tactical-accent/80 transition-colors"
       >
         Open Case
       </button>
