@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS app_user (
     username VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     elo INTEGER DEFAULT 1000,
-    credits INTEGER DEFAULT 0
+    credits INTEGER DEFAULT 100
 );
 
 -- User Weapon Instances (Ownership)

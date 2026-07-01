@@ -110,9 +110,9 @@ INSERT INTO weapon_template (name, type, side, energy_cost, damage, draw_weight,
 -- Users
 INSERT INTO app_user (username, password_hash, elo, credits) 
 VALUES
-  ('root', '$2a$10$BzZFDpO1nnDrCaiV90ds9eVEv08vnu1Cq2VujMCNkXRRH9DAhH4by', 1000, 0),
-  ('user1', '$2a$10$3MUdSYlWE9ZF1QHaZPfZU.9mgYFkQ60/Cna1pGiaJEAexGfuyOxfq', 1000, 0),
-  ('user2', '$2a$10$.fbPORQ00L/2LfsLRoqhLey/eASVISrhEd8gMMiD4PjQLpFiFUGeW', 1000, 0);
+  ('root', '$2a$10$BzZFDpO1nnDrCaiV90ds9eVEv08vnu1Cq2VujMCNkXRRH9DAhH4by', 1000, 100),
+  ('user1', '$2a$10$3MUdSYlWE9ZF1QHaZPfZU.9mgYFkQ60/Cna1pGiaJEAexGfuyOxfq', 1000, 100),
+  ('user2', '$2a$10$.fbPORQ00L/2LfsLRoqhLey/eASVISrhEd8gMMiD4PjQLpFiFUGeW', 1000, 100);
 
 -- Weapons for users (Instance mapping)
 -- Replicating AuthServiceImpl logic: Each user gets ALL weapons
