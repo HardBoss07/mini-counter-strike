@@ -331,6 +331,8 @@ public class MatchServiceImpl implements MatchService {
         }
 
         matchRepository.save(match);
+
+        broadcastMatchState(matchId, match);
     }
 
     @Override

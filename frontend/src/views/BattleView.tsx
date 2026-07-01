@@ -51,14 +51,8 @@ const BattleView: React.FC = () => {
       setMatchState(newState);
       setError(null);
       setLoading(false);
-
-      // Stop listening if the match completes
-      if (newState.status !== "IN_PROGRESS") {
-        unsubscribe();
-      }
     });
 
-    // Cleanup the connection instantly if the user leaves the page
     return () => {
       unsubscribe();
     };
@@ -316,7 +310,7 @@ const BattleView: React.FC = () => {
 
             <h3 className="text-4xl font-black uppercase tracking-tight mb-6 transform transition-all duration-700">
               {(hpA === "0" && isUserPlayerA) ||
-              (hpB === "0" && !isUserPlayerA) ? (
+                (hpB === "0" && !isUserPlayerA) ? (
                 <span className="text-red-500 tracking-wide drop-shadow-[0_0_10px_rgba(239,68,68,0.2)]">
                   Mission Failed
                 </span>
