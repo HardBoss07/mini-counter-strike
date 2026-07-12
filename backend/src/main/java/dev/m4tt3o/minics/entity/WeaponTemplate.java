@@ -51,4 +51,8 @@ public class WeaponTemplate {
     private String imageUrl;
 
     private String description;
+
+    @ManyToOne
+    @JoinColumn(name = "case_id")
+    private CaseTemplate caseTemplate;
 }
