@@ -2,6 +2,7 @@ package dev.m4tt3o.minics.controller;
 
 import dev.m4tt3o.minics.dto.user.UserProfileResponse;
 import dev.m4tt3o.minics.entity.User;
+import dev.m4tt3o.minics.repository.UserCaseInstanceRepository;
 import dev.m4tt3o.minics.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final UserCaseInstanceRepository userCaseInstanceRepository;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getMe() {
@@ -26,14 +28,17 @@ public class UserController {
             .findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Assuming user entity has these fields
+        int caseCount = (int) userCaseInstanceRepository.countByUserId(
+            user.getId()
+        );
+
         return ResponseEntity.ok(
             new UserProfileResponse(
                 user.getId(),
                 user.getUsername(),
                 user.getElo(),
                 user.getCredits(),
-                5
+                caseCount
             )
         );
     }
