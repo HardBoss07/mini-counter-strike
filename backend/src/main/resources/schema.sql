@@ -1,3 +1,9 @@
+-- Cases Table
+CREATE TABLE IF NOT EXISTS cases (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL
+);
+
 -- Weapon Templates (Static Catalog)
 CREATE TABLE IF NOT EXISTS weapon_template (
     id SERIAL PRIMARY KEY,
@@ -12,8 +18,11 @@ CREATE TABLE IF NOT EXISTS weapon_template (
     status_effect VARCHAR(50) DEFAULT 'NONE',
     rarity VARCHAR(50) DEFAULT 'BASE_GRADE' NOT NULL,
     image_url VARCHAR(255),
-    description TEXT
+    description TEXT,
+    case_id INTEGER REFERENCES cases(id)
 );
+
+ALTER TABLE weapon_template ADD COLUMN IF NOT EXISTS case_id INTEGER REFERENCES cases(id);
 
 -- Users (Dynamic Data)
 CREATE TABLE IF NOT EXISTS app_user (
@@ -33,6 +42,13 @@ CREATE TABLE IF NOT EXISTS user_weapon_instance (
     damage_modifier INTEGER DEFAULT 0,
     cost_modifier INTEGER DEFAULT 0,
     draw_weight_modifier INTEGER DEFAULT 0
+);
+
+-- User Cases (Ownership)
+CREATE TABLE IF NOT EXISTS user_cases (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES app_user(id),
+    case_id INTEGER REFERENCES cases(id)
 );
 
 -- Loadouts (Side Definitions)

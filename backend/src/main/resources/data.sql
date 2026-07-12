@@ -142,3 +142,33 @@ JOIN user_weapon_instance uwi ON u.id = uwi.user_id
 JOIN weapon_template wt ON uwi.template_id = wt.id
 WHERE l.side = 'CT'
 AND wt.name IN ('USP-S', 'MP9', 'FAMAS', 'HE Grenade', 'Flashbang');
+
+-- Seed Cases
+INSERT INTO cases (title) VALUES ('Kilowatt Case'), ('Revolution Case');
+
+-- Update Weapon Templates for Kilowatt Case (case_id = 1)
+UPDATE weapon_template SET case_id = 1 WHERE name IN (
+    'AK-47 | Elite Build', 'AK-47 | Slate', 'AK-47 | Redline', 'AK-47 | Gold Arabesque',
+    'M4A1-S | VariCamo', 'M4A1-S | Nitro', 'M4A1-S | Hot Rod', 'M4A1-S | Fade',
+    'Glock-18 | Candy Apple', 'Glock-18 | Fade', 'Glock-18 | Water Elemental', 'Glock-18 | Fully Tuned',
+    'Desert Eagle | Oxide Blaze', 'Desert Eagle | Blaze', 'Desert Eagle | Hypnotic', 'Desert Eagle | Code Red',
+    'Galil AR | Tuxedo', 'Galil AR | CAUTION!', 'Galil AR | Eco', 'Galil AR | Chatterbox'
+);
+
+-- Update Weapon Templates for Revolution Case (case_id = 2)
+UPDATE weapon_template SET case_id = 2 WHERE name IN (
+    'AWP | Capillary', 'AWP | Atheris', 'AWP | Crakow!', 'AWP | Dragon Lore',
+    'M4A4 | Radiation Hazard', 'M4A4 | Spider Lily', 'M4A4 | Cyber Security', 'M4A4 | Temukau',
+    'USP-S | Alpine Camo', 'USP-S | Ticket to Hell', 'USP-S | Jawbreaker', 'USP-S | Printstream',
+    'SSG 08 | Acid Fade', 'SSG 08 | Rapid Transit', 'SSG 08 | Turbo Peek', 'SSG 08 | Blood in the Water',
+    'FAMAS | Sundown', 'FAMAS | Pulse', 'FAMAS | Rapid Eye Movement', 'FAMAS | Commemoration'
+);
+
+-- Seed sample cases for testing
+INSERT INTO user_cases (user_id, case_id) VALUES
+-- User 1
+(1, 1), (1, 1), (1, 2), (1, 2),
+-- User 2
+(2, 1), (2, 1), (2, 2), (2, 2),
+-- User 3
+(3, 1), (3, 1), (3, 2), (3, 2);
