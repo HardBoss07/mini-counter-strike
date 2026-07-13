@@ -2,6 +2,7 @@ import type { Weapon } from "../types/weapon";
 import type { MatchStateResponse } from "../types/match";
 import type { UserProfile, LeaderboardEntry } from "../types/user";
 import type { Loadout } from "../types/loadout";
+import type { UserCaseInstance, OpenCaseResponse } from "../types/case";
 
 const BASE_URL = ""; // Proxied by Vite in development
 
@@ -83,15 +84,14 @@ export const api = {
   getWeapons: (): Promise<Weapon[]> =>
     apiFetch<Weapon[]>("/api/inventory/weapons", { method: "GET" }),
 
+  getUserCases: (): Promise<UserCaseInstance[]> =>
+    apiFetch<UserCaseInstance[]>("/api/inventory/cases", { method: "GET" }),
+
   // --- Economy ---
 
-  openCase: (): Promise<{
-    weaponName: string;
-    rarity: string;
-    imageUrl: string;
-  }> =>
-    apiFetch<{ weaponName: string; rarity: string; imageUrl: string }>(
-      "/api/economy/cases/open",
+  openCase: (userCaseInstanceId: number): Promise<OpenCaseResponse> =>
+    apiFetch<OpenCaseResponse>(
+      `/api/economy/cases/${userCaseInstanceId}/open`,
       { method: "POST" },
     ),
 
