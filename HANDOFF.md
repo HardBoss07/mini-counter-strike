@@ -2,60 +2,49 @@
 
 ## Goal
 
-Maintain a seamless, turn-based battle engine with utility chaining (Smoke/Grenade combos), persistent asynchronous state updates via Server-Sent Events (SSE), and correct per-player deck consistency across round-based side swaps (T/CT). Architecture has been refactored to eliminate God Object anti-pattern, improving testability and maintainability while preserving all functionality.
+Maintain a seamless, turn-based battle engine with utility chaining, persistent asynchronous state updates via Server-Sent Events (SSE), and correct side-swapped deck consistency. In parallel, deliver a robust, strictly typed CS2-style Case Opening system supporting discrete user container inventory instances, probability-weighted random drops from template loot pools, and an authentic horizontal scrolling marquee animation sequence. All additions must ensure zero functional regressions and uphold strict separation of concerns across the stack.
 
 ## Current State
 
-- **Architecture:** Successfully refactored to eliminate God Object anti-pattern. MatchServiceImpl reduced from 728 to 255 LOC (-65%) through extraction of focused components.
-- **Networking:** Persistent SSE stream fully implemented (`subscribeToMatchStream` in `api.ts` and `BattleView.tsx`). Per-player state isolation ensures clients receive only their own hand/perspective.
-- **Engine Logic:** Updated to handle utility-based turn chaining (grenades don't pass turn) and Smoke Grenade `SKIP_TURN` status. Logic delegated to testable components.
-- **State Management:** JSON serialization/deserialization centralized in `MatchStateMapper`. Side-aware loadout resolution via `activeSide` calculation in `CombatRoundProcessor`.
-- **Validation:** All loadout validation rules extracted to `LoadoutValidator` (static utility). Hand replenishment uses weighted random selection from available pool.
-- **Status:** All issues resolved. Maven build succeeds (0 errors). Public API unchanged (100% backward compatible).
+- **Architecture:** Core engine logic remains highly decoupled following the elimination of the God Object anti-pattern. Added support for Container Cases via explicit `CaseTemplate` pools and unique user-bound `UserCaseInstance` ownership tables.
+- **Networking:** Asynchronous match state updates run persistently over SSE. Standard HTTP endpoints route the new inventory and economy actions.
+- **Economy & Cases System:** Added single-purpose endpoints to fetch the user's specific un-opened containers and to process localized opening selections (`POST /api/economy/cases/{id}/open`).
+- **Frontend Architecture:** Reconstructed the non-selective screen into a modular two-stage experience in `CasesView.tsx`:
+  1. An inventory selection view rendering a grid of individual container keys via the atomic `CaseCard` component.
+  2. A dedicated unboxing carousel viewport managing a randomized layout track of 45 items that slides using fluid cubic-bezier CSS animations, terminating exactly centered on the server-calculated winning weapon item.
+- **State Management & Validation:** All backend endpoint methods use isolated data transfer mechanisms (`UserCaseInstanceDTO`, `CaseTemplateDTO`, and `OpenCaseResponse`). The API client wrapper layer (`api.ts`) consumes these payload models with 100% strict contract conformance.
+- **Status:** Core frontend view updates, API services, and presentation atoms are written and type-checked. Ready for final endpoint security tuning to eliminate routing errors.
 
 ## Files Actively Involved
 
-**Core Services:**
+**Core Services & Routing:**
 
-- `backend/src/main/java/dev/m4tt3o/minics/service/MatchServiceImpl.java`: Orchestrator for match CRUD, SSE subscriptions, state delegation.
-- `backend/src/main/java/dev/m4tt3o/minics/service/LoadoutServiceImpl.java`: Loadout persistence with delegated validation.
+- `backend/src/main/java/dev/m4tt3o/minics/controller/InventoryController.java` / `EconomyController.java`: Handles target routing for case queries and unboxing requests.
+- `backend/src/main/java/dev/m4tt3o/minics/service/InventoryServiceImpl.java`: Manages case-to-item probability resolution, case instance lifecycle pruning, and user inventory additions.
 
-**New Components (Refactored):**
+**Entities & DTOs:**
 
-- `backend/src/main/java/dev/m4tt3o/minics/service/mapper/MatchStateMapper.java`: JSON serialization/deserialization of `LiveMatchState`.
-- `backend/src/main/java/dev/m4tt3o/minics/service/mapper/LoadoutArchetypeMapper.java`: Entity-to-DTO transformation (static utility).
-- `backend/src/main/java/dev/m4tt3o/minics/service/combat/CombatRoundProcessor.java`: Turn execution, hand replenishment, side-aware loadout resolution.
-- `backend/src/main/java/dev/m4tt3o/minics/engine/CombatMechanicsProcessor.java`: Damage calculation, status effects, critical hits.
-- `backend/src/main/java/dev/m4tt3o/minics/service/loadout/LoadoutValidator.java`: Centralized validation (static utility).
+- `backend/src/main/java/dev/m4tt3o/minics/entity/CaseTemplate.java` & `UserCaseInstance.java`: Database persistent mappings for case entities.
+- `backend/src/main/java/dev/m4tt3o/minics/dto/inventory/CaseTemplateDTO.java` & `UserCaseInstanceDTO.java`: Standardized case metadata mapping schemas.
+- `backend/src/main/java/dev/m4tt3o/minics/dto/economy/OpenCaseResponse.java`: Payload contract containing the unboxed weapon's attributes.
 
-**DTOs & Entities:**
+**Frontend View Layer:**
 
-- `backend/src/main/java/dev/m4tt3o/minics/dto/match/LiveMatchState.java`: Serialized game state.
-
-**Frontend:**
-
-- `frontend/src/views/BattleView.tsx`: UI lifecycle and SSE subscription.
-- `frontend/src/utils/api.ts`: SSE stream reader.
+- `frontend/src/views/CasesView.tsx`: Manages inventory picker layout state transitions and carousel timing lifecycles.
+- `frontend/src/components/atoms/CaseCard.tsx`: Dedicated presentation atom for specific case inventory records.
+- `frontend/src/utils/api.ts`: Bound endpoint wrapper definitions handling JWT header configuration and error mapping.
+- `frontend/src/types/weapon.ts`: Houses strict typescript models matching backend records.
 
 ## Investigation History & Learnings
 
-- **Architecture Simplification:** Decomposing God Objects into focused components significantly improves code maintainability and testability. A 65% LOC reduction in MatchServiceImpl proves this principle.
-- **Side-Aware Replenishment:** The `activeSide` must be calculated using `live.playerAIsT()` flag and player position (`isPlayerA`), NOT relying on round logic alone. This calculation is now centralized in `CombatRoundProcessor.processTurn()`.
-- **State Serialization:** Centralizing JSON I/O in `MatchStateMapper` prevents coupling ObjectMapper concerns to service logic and enables consistent error handling.
-- **Validation Extraction:** Moving all validation rules to `LoadoutValidator` (static utility class) enables unit testing validation logic independently and prevents O(n²) complexity in nested loops.
-- **Per-Player SSE Broadcasting:** Generating `MatchStateResponse` per subscriber using `getMatchStateForUser(match, username)` ensures state isolation. The response includes only the player's own hand, not the opponent's.
-- **Combat Mechanics Isolation:** Extracting critical hit, damage reduction, and status effect logic to `CombatMechanicsProcessor` makes combat rules independently testable and easier to extend.
-- **Backward Compatibility Priority:** All refactoring maintained 100% API compatibility—no public method signatures changed, all @Transactional boundaries preserved, zero breaking changes.
+- **Debugging the `403 Forbidden` Error on Case Endpoints:** Spring Security defaults to throwing a `403 Forbidden` response for a variety of hidden underlying conditions rather than a true authorization failure. When interfacing with the new case endpoints, check the following structural issues in order:
+  1. **CSRF Protection Defenses:** Because the open case request executes via an state-mutating `POST` method, Spring Security will reject the transaction with a `403 Forbidden` if CSRF protection is active but token synchronization isn't configured for that path. Ensure `/api/economy/**` and `/api/inventory/**` matchers are correctly chained into the `.csrf(csrf -> csrf.ignoringRequestMatchers(...))` block inside `SecurityConfig.java`.
+  2. **Endpoint Mapping Misalignments:** Spring Security throws a generic `403` if a resource path is incorrectly defined or not registered as a bean controller endpoint. Verify that the controller annotations (`@RestController` + `@RequestMapping`) align precisely with the frontend routes (`/api/inventory/cases` and `/api/economy/cases/{userCaseInstanceId}/open`).
+  3. **Role/Authority Restraints:** Ensure the security filter chain configuration contains permissive authorization lines (e.g., `.requestMatchers("/api/inventory/**", "/api/economy/**").authenticated()`) so valid user JWTs aren't preemptively screened out.
+- **Carousel Animation Mechanics:** Precise centering within the viewport relies on a uniform horizontal cell tracking width. The carousel component applies a fixed spacing framework combining card dimensions with layout margins (`w-48` equivalent to `192px` + `8px` gap = `200px` index intervals). The final left shift offset calculates dynamically using `(targetIndex * cardWidthWithGap) - (viewportContainerWidth / 2 - cardWidthWithGap / 2)`.
 
 ## Next Steps
 
-1. **Code Review & Testing:** Review the refactored components. Run full Maven build (`mvn clean package`) and unit tests (`mvn test`) to verify behavior.
-2. **Integration Testing:** Test match creation, combat turns, loadout save/load, and SSE broadcasting in staging environment.
-3. **Load Testing:** Verify concurrent match handling and SSE emitter cleanup with multiple concurrent players.
-4. **Staging Deployment:** Deploy refactored backend to staging. Monitor logs for Spring bean initialization and transaction handling.
-5. **Production Deployment:** Follow standard deployment procedures. Monitor production for any regressions (should be none—100% backward compatible).
-6. **Future Enhancements:**
-   - Convert `LiveMatchState` and `CombatRoundRecord` DTOs to Java Records (immutability).
-   - Add metrics collection to `CombatMechanicsProcessor` for combat statistics.
-   - Implement sealed classes for weapon archetypes and status effects.
-   - Consider virtual threads for SSE emitter management (Java 21+).
+1. **Spring Security Alignment:** Open `backend/src/main/java/dev/m4tt3o/minics/config/SecurityConfig.java` to verify that the endpoints are accessible to authenticated sessions and that the `POST` request is properly excluded from restrictive CSRF interception rules.
+2. **Backend Integrity Verification:** Verify that `InventoryServiceImpl` processes the probability pool calculation using clean sub-functions, ensuring the template items are loaded correctly from `CaseTemplateRepository` and `UserCaseInstanceRepository`.
+3. **Integration Verification:** Run a local live-instance unboxing sequence. Confirm that upon animation completion (`onTransitionEnd`), the won weapon displays and the case layout collection safely updates via cache invalidation hooks without throwing structural component regressions.
