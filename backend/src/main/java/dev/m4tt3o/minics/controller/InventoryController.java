@@ -1,6 +1,7 @@
 package dev.m4tt3o.minics.controller;
 
 import dev.m4tt3o.minics.dto.SaveLoadoutRequest;
+import dev.m4tt3o.minics.dto.inventory.UserCaseInstanceDTO;
 import dev.m4tt3o.minics.dto.inventory.WeaponInstanceDTO;
 import dev.m4tt3o.minics.service.InventoryService;
 import dev.m4tt3o.minics.service.LoadoutService;
@@ -43,5 +44,15 @@ public class InventoryController {
         return ResponseEntity.ok(
             Map.of("message", "Loadout saved successfully")
         );
+    }
+
+    // Cases retrieval endpoint moved here from CaseController
+    @GetMapping("/cases")
+    public ResponseEntity<List<UserCaseInstanceDTO>> getUserCases() {
+        String username = SecurityContextHolder.getContext()
+            .getAuthentication()
+            .getName();
+            
+        return ResponseEntity.ok(inventoryService.getUserCases(username)); 
     }
 }
