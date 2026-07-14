@@ -143,16 +143,13 @@ export const CasesView: React.FC = () => {
           disabled={isOpening}
           className="self-start flex items-center gap-2 text-zinc-500 hover:text-white transition-colors uppercase font-black text-xs tracking-wider disabled:opacity-30 cursor-pointer"
         >
-          <ArrowLeft size={14} /> Leave Container Workspace
+          <ArrowLeft size={14} /> Back to Case Selection
         </button>
 
         <div className="text-center">
           <h2 className="text-3xl font-black uppercase tracking-widest text-white mb-1">
             {activeCase?.caseTemplate.title ?? "Unboxing Arena"}
           </h2>
-          <p className="text-tactical-accent text-xs font-mono tracking-widest uppercase">
-            Currently Interfacing Container Instance Key: #{selectedInstanceId}
-          </p>
         </div>
 
         {/* CSS Marquee Carousel Slider Viewport Container */}
@@ -183,7 +180,6 @@ export const CasesView: React.FC = () => {
               ))
             ) : (
               <div className="w-full flex items-center justify-center py-16 text-zinc-500 font-bold uppercase tracking-widest text-sm">
-                Ready Container Locking Mechanism
               </div>
             )}
           </div>
@@ -196,7 +192,7 @@ export const CasesView: React.FC = () => {
         >
           {isOpening ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="animate-spin" size={18} /> Decoding Lockbox...
+              <Loader2 className="animate-spin" size={18} /> Opening Case...
             </span>
           ) : (
             "Initiate De-encryption Sequence"
@@ -220,7 +216,7 @@ export const CasesView: React.FC = () => {
     <div className="flex flex-col items-center gap-12 py-16 px-6 w-full max-w-7xl mx-auto">
       <div className="text-center">
         <h2 className="text-4xl font-black uppercase tracking-widest text-white mb-2">
-          Secure Storage Crates
+          Your available Cases
         </h2>
         <p className="text-sm text-zinc-400 max-w-xl font-medium mx-auto">
           You have{" "}
@@ -228,13 +224,13 @@ export const CasesView: React.FC = () => {
             {userCases.length}
           </span>{" "}
           individual containers stored in your profile allocations. Choose a
-          crate below to access the decryption terminal.
+          case below to access the decryption terminal.
         </p>
       </div>
 
       {userCases.length === 0 ? (
         <div className="text-center text-zinc-500 py-16 font-bold uppercase tracking-wider text-xs border-2 border-dashed border-white/5 rounded-2xl w-full max-w-lg bg-tactical-gray/20">
-          No allocated crates detected inside global system loadouts
+          No allocated cases detected inside global system loadouts
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center w-full mt-4">
