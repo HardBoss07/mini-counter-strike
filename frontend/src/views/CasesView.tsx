@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { api } from "../utils/api";
-import { useUserProfile } from "../hooks/useUserProfile";
-import { invalidateProfileCache } from "../hooks/useUserProfile";
+import {
+  useUserProfile,
+  invalidateProfileCache,
+} from "../hooks/useUserProfile";
 import LoadingSpinner from "../components/atoms/LoadingSpinner";
 import WeaponCard from "../components/molecules/WeaponCard";
 import CaseCard from "../components/atoms/CaseCard";
-import { mapBackendWeapon } from "../types/weapon";
 import type { Weapon } from "../types/weapon";
-import type { UserCaseInstance } from "../types/case";
+import type { UserCaseInstance, OpenCaseResponse } from "../types/case";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 export const CasesView: React.FC = () => {
   const { profile, loading, refetch } = useUserProfile();
+
+  // Data States
   const [userCases, setUserCases] = useState<UserCaseInstance[]>([]);
   const [weaponPool, setWeaponPool] = useState<Weapon[]>([]);
   const [casesLoading, setCasesLoading] = useState<boolean>(true);
@@ -27,183 +30,229 @@ export const CasesView: React.FC = () => {
   // Animation layout elements
   const [carouselWeapons, setCarouselWeapons] = useState<Weapon[]>([]);
   const [translateX, setTranslateX] = useState<number>(0);
-  const reelRef = useRef<HTMLDivElement>(null);
+  const carouselContainerRef = useRef<HTMLDivElement>(null);
 
   // Initialize and pull current cases along with master weapon templates
   useEffect(() => {
-    async function loadInitialData() {
+    const loadInitialData = async () => {
       try {
-        const [casesData, weaponsData] = await Promise.all([
+        const [casesRes, weaponsRes] = await Promise.all([
           api.getUserCases(),
           api.getWeapons(),
         ]);
-        setUserCases(casesData);
-        setWeaponPool(weaponsData);
-      } catch (err) {
-        console.error("Failed to load cases workspace:", err);
+        setUserCases(casesRes);
+        setWeaponPool(weaponsRes);
+      } catch (error) {
+        console.error("Failed to load cases workspace:", error);
       } finally {
         setCasesLoading(false);
       }
-    }
+    };
     loadInitialData();
   }, []);
 
-  const getSelectedCaseDetails = (): UserCaseInstance | undefined => {
-    return userCases.find((c) => c.id === selectedInstanceId);
-  };
+  const handleOpenCase = async () => {
+    if (!selectedInstanceId) return;
 
-  const handleOpen = async (): Promise<void> => {
-    if (selectedInstanceId === null || weaponPool.length === 0) return;
-
+    // 1. Reset visual states immediately upon click
     setIsOpening(true);
-    setUnlocked(null);
     setShowWinner(false);
-    setTranslateX(0); // Reset reel back to starting point
+    setTranslateX(0);
+    setCarouselWeapons([]);
 
     try {
-      // Dispatches request sending explicit target case ID
-      const result = await api.openCase(selectedInstanceId);
+      const response = await api.openCase(selectedInstanceId);
 
-      const winningWeapon = mapBackendWeapon({
-        id: Math.floor(Math.random() * 100000), // Temp runtime identifier
-        name: result.weaponName,
-        imageUrl: result.imageUrl,
-        rarity: result.rarity,
-        description: result.rarity,
-      } as any);
+      const wonWeaponStats = weaponPool.find(
+        (w) => w.name === response.weaponName,
+      );
 
-      // Generate 45 total randomized items to fill the track sequence
-      const generatedReel: Weapon[] = [];
-      for (let i = 0; i < 45; i++) {
-        if (i === 38) {
-          // Place our confirmed winning item at index 38
-          generatedReel.push(winningWeapon);
+      const actualWinner: Weapon = {
+        id: Date.now(), // Ephemeral ID for UI rendering
+        name: response.weaponName,
+        type: wonWeaponStats?.type ?? "WEAPON",
+        side: wonWeaponStats?.side ?? "ALL",
+        energyCost: wonWeaponStats?.energyCost ?? 0,
+        damage: wonWeaponStats?.damage ?? 0,
+        drawWeight: wonWeaponStats?.drawWeight ?? 0,
+        critChance: wonWeaponStats?.critChance ?? 0,
+        critMultiplier: wonWeaponStats?.critMultiplier ?? 1.0,
+        statusEffect: wonWeaponStats?.statusEffect ?? "NONE",
+        rarity: response.rarity as any,
+        imageUrl: response.imageUrl,
+        description: wonWeaponStats?.description ?? "Case drop",
+      };
+
+      const CAROUSEL_STOP_INDEX = 45;
+      const TOTAL_CAROUSEL_ITEMS = 50;
+      const track: Weapon[] = [];
+
+      for (let i = 0; i < TOTAL_CAROUSEL_ITEMS; i++) {
+        if (i === CAROUSEL_STOP_INDEX) {
+          track.push({ ...actualWinner, uniqueId: `winner-${i}` });
         } else {
-          // Distribute weapons into the timeline tracking array
-          const randomIdx = Math.floor(Math.random() * weaponPool.length);
-          generatedReel.push(weaponPool[randomIdx]);
+          const randomItem =
+            weaponPool.length > 0
+              ? weaponPool[Math.floor(Math.random() * weaponPool.length)]
+              : actualWinner; // Safe fallback
+
+          track.push({
+            ...randomItem,
+            uniqueId: `filler-${i}-${Math.random()}`,
+          });
         }
       }
 
-      setCarouselWeapons(generatedReel);
-      setUnlocked(winningWeapon);
+      setCarouselWeapons(track);
+      setUnlocked(actualWinner);
 
-      // Trigger standard microtask offset so DOM mounts before computing animations
       setTimeout(() => {
-        // Precise alignment formula focusing card width adjustments (w-48 = 192px + 8px gap = 200px offset per index)
-        const cardWidthWithGap = 200;
-        const targetIndex = 38;
+        if (carouselContainerRef.current) {
+          const containerWidth = carouselContainerRef.current.offsetWidth;
 
-        if (reelRef.current) {
-          const containerWidth =
-            reelRef.current.parentElement?.clientWidth ?? 800;
-          const centerShift = containerWidth / 2 - cardWidthWithGap / 2;
-          const finalOffset = targetIndex * cardWidthWithGap - centerShift;
-          // Shift left onto item center coordinate
-          setTranslateX(-finalOffset);
+          const cardWidthWithGap = 200;
+
+          const targetX =
+            CAROUSEL_STOP_INDEX * cardWidthWithGap -
+            (containerWidth / 2 - cardWidthWithGap / 2);
+
+          const jitter = Math.floor(Math.random() * 160) - 80;
+
+          setTranslateX(-(targetX + jitter));
         }
-      }, 100);
-    } catch (openError: unknown) {
-      console.error("Failed to open case:", openError);
+      }, 50);
+
+      invalidateProfileCache();
+      refetch();
+
+      setUserCases((prev) => prev.filter((c) => c.id !== selectedInstanceId));
+    } catch (error) {
+      console.error("Unboxing error:", error);
       setIsOpening(false);
     }
   };
 
-  const handleAnimationEnd = (): void => {
-    setShowWinner(true);
-    setIsOpening(false);
-    invalidateProfileCache();
-    refetch();
-    // Remove the opened case from the local layout view configuration
-    setUserCases((prev) => prev.filter((c) => c.id !== selectedInstanceId));
-  };
-
-  const handleBackToSelection = (): void => {
-    if (isOpening) return;
+  const resetView = () => {
     setSelectedInstanceId(null);
-    setUnlocked(null);
+    setIsOpening(false);
     setShowWinner(false);
-    setCarouselWeapons([]);
+    setUnlocked(null);
     setTranslateX(0);
+    setCarouselWeapons([]);
   };
 
   if (loading || casesLoading) {
-    return <LoadingSpinner label="Preparing Case Inventory..." />;
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <LoadingSpinner size={48} />
+      </div>
+    );
   }
 
-  if (!profile) return null;
-
   // --- Render Stage 2: Ticker tape unboxing workspace views ---
-  if (selectedInstanceId !== null) {
-    const activeCase = getSelectedCaseDetails();
-    return (
-      <div className="flex flex-col items-center gap-10 py-12 w-full max-w-6xl mx-auto px-4 select-none">
-        <button
-          onClick={handleBackToSelection}
-          disabled={isOpening}
-          className="self-start flex items-center gap-2 text-zinc-500 hover:text-white transition-colors uppercase font-black text-xs tracking-wider disabled:opacity-30 cursor-pointer"
-        >
-          <ArrowLeft size={14} /> Back to Case Selection
-        </button>
+  if (selectedInstanceId) {
+    const activeCase = userCases.find((c) => c.id === selectedInstanceId);
 
-        <div className="text-center">
-          <h2 className="text-3xl font-black uppercase tracking-widest text-white mb-1">
-            {activeCase?.caseTemplate.title ?? "Unboxing Arena"}
-          </h2>
+    return (
+      <div className="flex flex-col items-center gap-8 py-10 w-full max-w-6xl mx-auto">
+        <div className="w-full flex items-center justify-between px-6">
+          <button
+            onClick={resetView}
+            disabled={isOpening && !showWinner}
+            className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+          >
+            <ArrowLeft size={20} />
+            <span className="font-bold uppercase tracking-wider text-sm">
+              Back to Inventory
+            </span>
+          </button>
+          <div className="text-right">
+            <h2 className="text-2xl font-black text-white uppercase tracking-widest">
+              {activeCase?.caseTemplate.title || "Secure Container"}
+            </h2>
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider">
+              Decryption Terminal
+            </p>
+          </div>
         </div>
 
-        {/* CSS Marquee Carousel Slider Viewport Container */}
-        <div className="w-full relative bg-tactical-dark/90 border-y-2 border-white/10 py-6 overflow-hidden shadow-2xl rounded-xl">
-          {/* Authentic CSS Centered Targeting reticle crosshair element indicator */}
-          <div className="absolute top-0 bottom-0 left-1/2 w-1 bg-tactical-accent z-30 shadow-[0_0_12px_#de9b35] -translate-x-1/2 pointer-events-none" />
+        <div className="w-full relative mt-12 mb-8 bg-tactical-gray/30 border-y border-white/10 py-10 overflow-hidden shadow-2xl">
+          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-tactical-accent/80 z-20 shadow-[0_0_15px_rgba(125,1,227,0.8)] -translate-x-1/2"></div>
 
           <div
-            ref={reelRef}
-            style={{
-              transform: `translateX(${translateX}px)`,
-              transition:
-                carouselWeapons.length > 0
-                  ? "transform 5.5s cubic-bezier(0.1, 0.8, 0.1, 1)"
-                  : "none",
-            }}
-            onTransitionEnd={handleAnimationEnd}
-            className="flex gap-2 px-[50%] transition-transform"
+            ref={carouselContainerRef}
+            className="w-full relative h-64 overflow-hidden"
           >
             {carouselWeapons.length > 0 ? (
-              carouselWeapons.map((weapon, index) => (
-                <div
-                  key={`${weapon.id}-${index}`}
-                  className="flex-shrink-0 w-48"
-                >
-                  <WeaponCard weapon={weapon} isDraggable={false} />
-                </div>
-              ))
+              <div
+                className="flex gap-2 transition-transform ease-cs2-spin will-change-transform absolute left-0"
+                style={{
+                  transform: `translateX(${translateX}px)`,
+                  transitionDuration:
+                    isOpening && translateX !== 0 ? "8000ms" : "0ms",
+                }}
+                onTransitionEnd={() => {
+                  if (translateX !== 0) setShowWinner(true);
+                }}
+              >
+                {carouselWeapons.map((weapon, idx) => (
+                  <div key={weapon.uniqueId || idx} className="w-48 shrink-0">
+                    <WeaponCard weapon={weapon} isFlippable={false} />
+                  </div>
+                ))}
+              </div>
             ) : (
-              <div className="w-full flex items-center justify-center py-16 text-zinc-500 font-bold uppercase tracking-widest text-sm"></div>
+              <div className="absolute inset-0 flex items-center justify-center text-zinc-600 font-black tracking-widest uppercase">
+                Awaiting Authorization...
+              </div>
             )}
           </div>
         </div>
 
-        <button
-          onClick={handleOpen}
-          disabled={isOpening}
-          className="bg-tactical-accent text-black font-black px-16 py-4 rounded-xl uppercase tracking-widest text-base shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-20 cursor-pointer"
-        >
-          {isOpening ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="animate-spin" size={18} /> Opening Case...
-            </span>
+        {/* Controls */}
+        <div className="flex flex-col items-center gap-4">
+          {!isOpening || showWinner ? (
+            <button
+              onClick={handleOpenCase}
+              className="bg-tactical-accent hover:bg-tactical-accent/80 text-black font-black uppercase tracking-widest py-4 px-12 rounded-lg shadow-xl transition-all hover:scale-105 active:scale-95"
+            >
+              {showWinner ? "Open Another" : "Decrypt Container"}
+            </button>
           ) : (
-            "Initiate De-encryption Sequence"
+            <button
+              disabled
+              className="bg-zinc-800 text-zinc-500 font-black uppercase tracking-widest py-4 px-12 rounded-lg flex items-center gap-3 shadow-xl"
+            >
+              <Loader2 className="animate-spin" size={20} />
+              Processing...
+            </button>
           )}
-        </button>
+        </div>
 
+        {/* Winner Modal */}
         {showWinner && unlocked && (
-          <div className="text-center animate-fade-in mt-4 flex flex-col items-center">
-            <p className="text-tactical-accent font-black tracking-widest mb-4 uppercase text-sm animate-pulse">
-              ITEM UNBOXED SUCCESSFUL
-            </p>
-            <WeaponCard weapon={unlocked} isDraggable={false} />
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="bg-tactical-gray border border-tactical-accent/30 rounded-2xl p-10 flex flex-col items-center max-w-sm w-full shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 w-full h-2 bg-gradient-to-r from-transparent via-tactical-accent to-transparent opacity-50"></div>
+              <h3 className="text-tactical-accent font-black tracking-widest uppercase mb-6 text-xl">
+                Item Acquired
+              </h3>
+              <WeaponCard weapon={unlocked} isFlippable={false} />
+              <button
+                onClick={() => {
+                  if (userCases.length === 0) resetView();
+                  else {
+                    setShowWinner(false);
+                    setTranslateX(0);
+                    setCarouselWeapons([]);
+                    setIsOpening(false);
+                  }
+                }}
+                className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-lg uppercase tracking-wider text-sm transition-colors"
+              >
+                Acknowledge
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -238,7 +287,7 @@ export const CasesView: React.FC = () => {
               key={caseInstance.id}
               caseInstance={caseInstance}
               onSelect={setSelectedInstanceId}
-              disabled={false}
+              disabled={isOpening}
             />
           ))}
         </div>

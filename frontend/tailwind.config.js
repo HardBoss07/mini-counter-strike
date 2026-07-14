@@ -21,6 +21,9 @@ export default {
           covert: "#EB4B4B",
           contraband: "#E4AE39",
         },
+        transitionTimingFunction: {
+          "cs2-spin": "cubic-bezier(0.15, 0.9, 0.15, 1)",
+        },
       },
     },
   },
