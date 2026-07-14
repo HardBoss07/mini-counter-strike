@@ -5,5 +5,6 @@ import java.util.List;
 public record CaseTemplateDTO(
     Long id,
     String title,
+    String imageUrl,
     List<WeaponTemplateDTO> weapons
 ) {}

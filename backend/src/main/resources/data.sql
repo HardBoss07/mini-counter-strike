@@ -144,7 +144,9 @@ WHERE l.side = 'CT'
 AND wt.name IN ('USP-S', 'MP9', 'FAMAS', 'HE Grenade', 'Flashbang');
 
 -- Seed Cases
-INSERT INTO cases (title) VALUES ('Kilowatt Case'), ('Revolution Case');
+INSERT INTO cases (title, image_url) VALUES 
+  ('Kilowatt Case', '/images/cases/kilowatt-case.png'),
+  ('Revolution Case', '/images/cases/revolution-case.png');
 
 -- Update Weapon Templates for Kilowatt Case (case_id = 1)
 UPDATE weapon_template SET case_id = 1 WHERE name IN (

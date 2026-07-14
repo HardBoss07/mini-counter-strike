@@ -19,6 +19,9 @@ public class CaseTemplate {
     @Column(nullable = false)
     private String title;
 
+    @Column(name = "image_url", nullable = false)
+    private String imageUrl;
+
     @OneToMany(mappedBy = "caseTemplate", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<WeaponTemplate> weapons;

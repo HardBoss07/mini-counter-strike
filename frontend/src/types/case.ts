@@ -1,6 +1,7 @@
 export interface CaseTemplate {
   id: number;
   title: string;
+  imageUrl: string;
 }
 
 export interface UserCaseInstance {

@@ -52,7 +52,7 @@ public class InventoryController {
         String username = SecurityContextHolder.getContext()
             .getAuthentication()
             .getName();
-            
-        return ResponseEntity.ok(inventoryService.getUserCases(username)); 
+
+        return ResponseEntity.ok(inventoryService.getUserCases(username));
     }
 }

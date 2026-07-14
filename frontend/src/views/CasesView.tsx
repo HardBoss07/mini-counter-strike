@@ -179,8 +179,7 @@ export const CasesView: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div className="w-full flex items-center justify-center py-16 text-zinc-500 font-bold uppercase tracking-widest text-sm">
-              </div>
+              <div className="w-full flex items-center justify-center py-16 text-zinc-500 font-bold uppercase tracking-widest text-sm"></div>
             )}
           </div>
         </div>

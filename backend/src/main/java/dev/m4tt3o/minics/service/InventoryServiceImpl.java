@@ -122,6 +122,7 @@ public class InventoryServiceImpl implements InventoryService {
         CaseTemplateDTO caseTemplateDTO = new CaseTemplateDTO(
             caseTemplate.getId(),
             caseTemplate.getTitle(),
+            caseTemplate.getImageUrl(),
             weapons
         );
         return new UserCaseInstanceDTO(instance.getId(), caseTemplateDTO);
