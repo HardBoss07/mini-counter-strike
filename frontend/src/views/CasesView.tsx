@@ -121,11 +121,6 @@ export const CasesView: React.FC = () => {
           setTranslateX(-(targetX + jitter));
         }
       }, 50);
-
-      invalidateProfileCache();
-      refetch();
-
-      setUserCases((prev) => prev.filter((c) => c.id !== selectedInstanceId));
     } catch (error) {
       console.error("Unboxing error:", error);
       setIsOpening(false);
@@ -141,7 +136,7 @@ export const CasesView: React.FC = () => {
     setCarouselWeapons([]);
   };
 
-  if (loading || casesLoading) {
+  if (casesLoading || (loading && !profile)) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
         <LoadingSpinner size={48} />
@@ -168,10 +163,10 @@ export const CasesView: React.FC = () => {
           </button>
           <div className="text-right">
             <h2 className="text-2xl font-black text-white uppercase tracking-widest">
-              {activeCase?.caseTemplate.title || "Secure Container"}
+              {activeCase?.caseTemplate.title || "MINICS Case"}
             </h2>
             <p className="text-zinc-500 text-xs font-bold uppercase tracking-wider">
-              Decryption Terminal
+              Opening {activeCase?.caseTemplate.title || "Case"}
             </p>
           </div>
         </div>
@@ -203,7 +198,7 @@ export const CasesView: React.FC = () => {
               </div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-zinc-600 font-black tracking-widest uppercase">
-                Awaiting Authorization...
+                Awaiting User...
               </div>
             )}
           </div>
@@ -211,12 +206,12 @@ export const CasesView: React.FC = () => {
 
         {/* Controls */}
         <div className="flex flex-col items-center gap-4">
-          {!isOpening || showWinner ? (
+          {!isOpening ? (
             <button
               onClick={handleOpenCase}
               className="bg-tactical-accent hover:bg-tactical-accent/80 text-black font-black uppercase tracking-widest py-4 px-12 rounded-lg shadow-xl transition-all hover:scale-105 active:scale-95"
             >
-              {showWinner ? "Open Another" : "Decrypt Container"}
+              Open Case
             </button>
           ) : (
             <button
@@ -240,17 +235,16 @@ export const CasesView: React.FC = () => {
               <WeaponCard weapon={unlocked} isFlippable={false} />
               <button
                 onClick={() => {
-                  if (userCases.length === 0) resetView();
-                  else {
-                    setShowWinner(false);
-                    setTranslateX(0);
-                    setCarouselWeapons([]);
-                    setIsOpening(false);
-                  }
+                  invalidateProfileCache();
+                  refetch();
+                  setUserCases((prev) =>
+                    prev.filter((c) => c.id !== selectedInstanceId),
+                  );
+                  resetView();
                 }}
                 className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-lg uppercase tracking-wider text-sm transition-colors"
               >
-                Acknowledge
+                Back to Cases
               </button>
             </div>
           </div>
@@ -271,14 +265,14 @@ export const CasesView: React.FC = () => {
           <span className="text-tactical-accent font-bold">
             {userCases.length}
           </span>{" "}
-          individual containers stored in your profile allocations. Choose a
-          case below to access the decryption terminal.
+          individual cases stored in your profile allocations. Choose a case
+          below to access the decryption terminal.
         </p>
       </div>
 
       {userCases.length === 0 ? (
         <div className="text-center text-zinc-500 py-16 font-bold uppercase tracking-wider text-xs border-2 border-dashed border-white/5 rounded-2xl w-full max-w-lg bg-tactical-gray/20">
-          No allocated cases detected inside global system loadouts
+          No available cases
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 justify-items-center w-full mt-4">
