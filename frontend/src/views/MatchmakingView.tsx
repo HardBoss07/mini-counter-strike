@@ -12,7 +12,7 @@ const MatchmakingView: React.FC = () => {
         Searching for opponents...
       </h2>
       <p className="text-xs text-gray-500 uppercase tracking-widest">
-        Establishing secure battle server tunnel
+        Establishing server tunnel
       </p>
 
       <button
