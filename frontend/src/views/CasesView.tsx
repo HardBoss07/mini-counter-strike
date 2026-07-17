@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { api } from "../utils/api";
-import {
-  useUserProfile,
-  invalidateProfileCache,
-} from "../hooks/useUserProfile";
+import { useUserProfile } from "../hooks/useUserProfile";
+import { useCaseUnboxing } from "../hooks/useCaseUnboxing";
 import LoadingSpinner from "../components/atoms/LoadingSpinner";
 import WeaponCard from "../components/molecules/WeaponCard";
 import CaseCard from "../components/atoms/CaseCard";
 import type { Weapon } from "../types/weapon";
-import type { UserCaseInstance, OpenCaseResponse } from "../types/case";
+import type { UserCaseInstance } from "../types/case";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 export const CasesView: React.FC = () => {
@@ -18,21 +16,30 @@ export const CasesView: React.FC = () => {
   const [userCases, setUserCases] = useState<UserCaseInstance[]>([]);
   const [weaponPool, setWeaponPool] = useState<Weapon[]>([]);
   const [casesLoading, setCasesLoading] = useState<boolean>(true);
-
-  // Workflow states
   const [selectedInstanceId, setSelectedInstanceId] = useState<number | null>(
     null,
   );
-  const [isOpening, setIsOpening] = useState<boolean>(false);
-  const [unlocked, setUnlocked] = useState<Weapon | null>(null);
-  const [showWinner, setShowWinner] = useState<boolean>(false);
 
-  // Animation layout elements
-  const [carouselWeapons, setCarouselWeapons] = useState<Weapon[]>([]);
-  const [translateX, setTranslateX] = useState<number>(0);
-  const carouselContainerRef = useRef<HTMLDivElement>(null);
+  // Unboxing state is managed via hook
+  const {
+    isOpening,
+    unlocked,
+    showWinner,
+    carouselWeapons,
+    translateX,
+    carouselContainerRef,
+    handleOpenCase,
+    resetView,
+    handleConfirmReward,
+    setShowWinner,
+  } = useCaseUnboxing({
+    weaponPool,
+    selectedInstanceId,
+    refetchProfile: refetch,
+    setUserCases,
+  });
 
-  // Initialize and pull current cases along with master weapon templates
+  // Pull initial workspace datasets
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -50,91 +57,6 @@ export const CasesView: React.FC = () => {
     };
     loadInitialData();
   }, []);
-
-  const handleOpenCase = async () => {
-    if (!selectedInstanceId) return;
-
-    // 1. Reset visual states immediately upon click
-    setIsOpening(true);
-    setShowWinner(false);
-    setTranslateX(0);
-    setCarouselWeapons([]);
-
-    try {
-      const response = await api.openCase(selectedInstanceId);
-
-      const wonWeaponStats = weaponPool.find(
-        (w) => w.name === response.weaponName,
-      );
-
-      const actualWinner: Weapon = {
-        id: Date.now(), // Ephemeral ID for UI rendering
-        name: response.weaponName,
-        type: wonWeaponStats?.type ?? "WEAPON",
-        side: wonWeaponStats?.side ?? "ALL",
-        energyCost: wonWeaponStats?.energyCost ?? 0,
-        damage: wonWeaponStats?.damage ?? 0,
-        drawWeight: wonWeaponStats?.drawWeight ?? 0,
-        critChance: wonWeaponStats?.critChance ?? 0,
-        critMultiplier: wonWeaponStats?.critMultiplier ?? 1.0,
-        statusEffect: wonWeaponStats?.statusEffect ?? "NONE",
-        rarity: response.rarity as any,
-        imageUrl: response.imageUrl,
-        description: wonWeaponStats?.description ?? "Case drop",
-      };
-
-      const CAROUSEL_STOP_INDEX = 45;
-      const TOTAL_CAROUSEL_ITEMS = 50;
-      const track: Weapon[] = [];
-
-      for (let i = 0; i < TOTAL_CAROUSEL_ITEMS; i++) {
-        if (i === CAROUSEL_STOP_INDEX) {
-          track.push({ ...actualWinner, uniqueId: `winner-${i}` });
-        } else {
-          const randomItem =
-            weaponPool.length > 0
-              ? weaponPool[Math.floor(Math.random() * weaponPool.length)]
-              : actualWinner; // Safe fallback
-
-          track.push({
-            ...randomItem,
-            uniqueId: `filler-${i}-${Math.random()}`,
-          });
-        }
-      }
-
-      setCarouselWeapons(track);
-      setUnlocked(actualWinner);
-
-      setTimeout(() => {
-        if (carouselContainerRef.current) {
-          const containerWidth = carouselContainerRef.current.offsetWidth;
-
-          const cardWidthWithGap = 200;
-
-          const targetX =
-            CAROUSEL_STOP_INDEX * cardWidthWithGap -
-            (containerWidth / 2 - cardWidthWithGap / 2);
-
-          const jitter = Math.floor(Math.random() * 160) - 80;
-
-          setTranslateX(-(targetX + jitter));
-        }
-      }, 50);
-    } catch (error) {
-      console.error("Unboxing error:", error);
-      setIsOpening(false);
-    }
-  };
-
-  const resetView = () => {
-    setSelectedInstanceId(null);
-    setIsOpening(false);
-    setShowWinner(false);
-    setUnlocked(null);
-    setTranslateX(0);
-    setCarouselWeapons([]);
-  };
 
   if (casesLoading || (loading && !profile)) {
     return (
@@ -234,14 +156,9 @@ export const CasesView: React.FC = () => {
               </h3>
               <WeaponCard weapon={unlocked} isFlippable={false} />
               <button
-                onClick={() => {
-                  invalidateProfileCache();
-                  refetch();
-                  setUserCases((prev) =>
-                    prev.filter((c) => c.id !== selectedInstanceId),
-                  );
-                  resetView();
-                }}
+                onClick={() =>
+                  handleConfirmReward(() => setSelectedInstanceId(null))
+                }
                 className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-lg uppercase tracking-wider text-sm transition-colors"
               >
                 Back to Cases
