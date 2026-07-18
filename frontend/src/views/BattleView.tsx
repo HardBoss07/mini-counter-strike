@@ -1,7 +1,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMatchStream } from "../hooks/useMatchStream";
-import { parseHp } from "../types/match";
+import { useMatchStats } from "../hooks/useMatchStats";
 import WeaponCard from "../components/molecules/WeaponCard";
 import LoadingSpinner from "../components/atoms/LoadingSpinner";
 import ErrorToast from "../components/atoms/ErrorToast";
@@ -115,6 +115,18 @@ const BattleView: React.FC = () => {
     surrender,
   } = useMatchStream(matchId);
 
+  // Hook handles all string parsing and role derivations
+  const {
+    hpA,
+    hpB,
+    isCompleted,
+    isUserPlayerA,
+    labelA,
+    labelB,
+    viewerHp,
+    opponentHp,
+  } = useMatchStats(matchState, viewerUsername);
+
   const handleRetreat = async (): Promise<void> => {
     await surrender();
     navigate("/");
@@ -123,26 +135,6 @@ const BattleView: React.FC = () => {
   if (loading) {
     return <LoadingSpinner fullScreen label="Initializing Encounter Link..." />;
   }
-
-  const hpA = parseHp(matchState?.playerAStatus ?? "HP:100");
-  const hpB = parseHp(matchState?.playerBStatus ?? "HP:100");
-  const isCompleted = matchState?.status === "COMPLETED";
-
-  const playerAUser = matchState?.playerAUsername ?? "Player A";
-  const playerBUser = matchState?.playerBUsername ?? "Player B";
-  const isUserPlayerA =
-    viewerUsername.length > 0 &&
-    playerAUser.toLowerCase() === viewerUsername.toLowerCase();
-
-  const labelA = isUserPlayerA
-    ? `${playerAUser} (You)`
-    : `${playerAUser} (Opponent)`;
-  const labelB = !isUserPlayerA
-    ? `${playerBUser} (You)`
-    : `${playerBUser} (Opponent)`;
-
-  const viewerHp = isUserPlayerA ? hpA : hpB;
-  const opponentHp = isUserPlayerA ? hpB : hpA;
 
   return (
     <div className="min-h-screen bg-tactical-dark text-white flex flex-col font-sans select-none animate-fade-in duration-500">
