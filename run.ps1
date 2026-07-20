@@ -28,3 +28,6 @@ switch ($Action) {
         .\mvnw.cmd test "-Dtest=$Target"
     }
 }
+
+# Navigate back to the root directory
+Set-Location -Path $PSScriptRoot
