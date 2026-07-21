@@ -10,10 +10,10 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>Energy model:
  * <ul>
- *   <li>{@code baseEnergy} — energy granted on turn 1.</li>
- *   <li>{@code energyScalingFactor} — additional energy granted per subsequent player-turn.</li>
- *   <li>{@code maxEnergyPerTurn} — ceiling on the energy granted in a single replenishment (6).</li>
- *   <li>{@code maxEnergy} — ceiling on total energy a player may hold at any time (10).</li>
+ *   <li>{@code baseEnergy} - energy granted on turn 1.</li>
+ *   <li>{@code energyScalingFactor} - additional energy granted per subsequent player-turn.</li>
+ *   <li>{@code maxEnergyPerTurn} - ceiling on the energy granted in a single replenishment (6).</li>
+ *   <li>{@code maxEnergy} - ceiling on total energy a player may hold at any time (10).</li>
  * </ul>
  */
 @Configuration
