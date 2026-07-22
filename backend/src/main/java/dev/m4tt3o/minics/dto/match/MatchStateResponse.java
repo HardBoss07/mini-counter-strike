@@ -12,5 +12,7 @@ public record MatchStateResponse(
     List<WeaponArchetype> playerHand,
     boolean isMyTurn,
     String playerAUsername,
-    String playerBUsername
+    String playerBUsername,
+    int playerAEnergy,
+    int playerBEnergy
 ) {}
