@@ -17,9 +17,9 @@ export type PlayerHandItem = Weapon;
  */
 export interface MatchStateResponse {
   round: number;
-  /** Formatted as "HP:<value>" — use parseHp() to extract the number. */
+  /** Formatted as "HP:<value>" - use parseHp() to extract the number. */
   playerAStatus: string;
-  /** Formatted as "HP:<value>" — use parseHp() to extract the number. */
+  /** Formatted as "HP:<value>" - use parseHp() to extract the number. */
   playerBStatus: string;
   lastLog: string;
   status: MatchStatus;
@@ -28,6 +28,10 @@ export interface MatchStateResponse {
   isMyTurn?: boolean;
   playerAUsername: string;
   playerBUsername: string;
+  /** Current energy for player A, as sent by the backend SSE stream. */
+  playerAEnergy?: number;
+  /** Current energy for player B, as sent by the backend SSE stream. */
+  playerBEnergy?: number;
 }
 
 /**

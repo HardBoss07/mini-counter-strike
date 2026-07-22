@@ -20,7 +20,7 @@ export type WeaponType = "WEAPON" | "UTILITY";
 
 /**
  * Canonical frontend representation of a weapon or utility item.
- * All views and hooks consume this shape — never a raw backend payload.
+ * All views and hooks consume this shape - never a raw backend payload.
  */
 export interface Weapon {
   id: number;
