@@ -18,6 +18,7 @@ interface WeaponCardProps {
   isDisabled?: boolean;
   isFlippable?: boolean;
   backContent?: React.ReactNode;
+  currentEnergy?: number;
 }
 
 /** Maps weapon rarity to Tailwind utility strings. */
@@ -60,6 +61,7 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
   isDisabled = false,
   isFlippable = false,
   backContent,
+  currentEnergy,
 }) => {
   const fetchedWeapon = useWeaponData(weaponId);
   const weapon = initialWeapon ?? fetchedWeapon;
@@ -84,6 +86,9 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
       : weapon.side === "CT"
         ? "border-tactical-ct"
         : "border-tactical-accent";
+
+  const cannotAfford =
+    currentEnergy !== undefined && weapon.energyCost > currentEnergy;
 
   const rarityClasses =
     RARITY_COLOR_MAP[weapon.rarity] ?? RARITY_COLOR_MAP.BASE_GRADE;
@@ -115,6 +120,18 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
         .filter(Boolean)
         .join(" ")}
     >
+      {cannotAfford && (
+        <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-[1px] rounded-lg flex flex-col items-center justify-center gap-1 pointer-events-none">
+          <Zap size={20} className="text-yellow-500/80" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-yellow-400/90 text-center px-2">
+            Not enough energy
+          </span>
+          <span className="text-[10px] font-mono text-yellow-500/70">
+            {weapon.energyCost} / {currentEnergy}
+          </span>
+        </div>
+      )}
+
       <div className="absolute top-2 right-2 z-20 flex gap-2">
         {onRemove && (
           <button
@@ -160,6 +177,7 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
             label="Cost"
             value={weapon.energyCost}
             icon={<Zap size={10} className="text-yellow-500" />}
+            variant="energy"
           />
           <StatBadge
             label="Dmg"

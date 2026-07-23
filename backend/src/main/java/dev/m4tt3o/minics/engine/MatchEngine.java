@@ -1,5 +1,6 @@
 package dev.m4tt3o.minics.engine;
 
+import dev.m4tt3o.minics.config.GameConfig;
 import dev.m4tt3o.minics.dto.*;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,6 +20,7 @@ public class MatchEngine {
 
     private final Random random;
     private final CombatMechanicsProcessor combatProcessor;
+    private final GameConfig gameConfig;
 
     /**
      * Draws exactly 3 items from a 5-item loadout based on their draw weights.
@@ -62,8 +64,17 @@ public class MatchEngine {
 
         while (attacker.hp() > 0 && defender.hp() > 0 && turnNumber <= 100) {
             int playerTurn = (turnNumber + 1) / 2;
-            int energyToAdd = Math.min(playerTurn + 1, 10);
-            int currentEnergy = Math.min(attacker.energy() + energyToAdd, 10);
+            // Energy granted this turn: base + (turn - 1) * scalingFactor, capped at maxEnergyPerTurn
+            int energyToAdd = Math.min(
+                gameConfig.getBaseEnergy() +
+                    (playerTurn - 1) * gameConfig.getEnergyScalingFactor(),
+                gameConfig.getMaxEnergyPerTurn()
+            );
+            // Total held energy capped at maxEnergy (carry-over cap)
+            int currentEnergy = Math.min(
+                attacker.energy() + energyToAdd,
+                gameConfig.getMaxEnergy()
+            );
 
             // Draw Hand
             List<WeaponArchetype> hand = drawHand(attackerLoadout);
@@ -90,7 +101,9 @@ public class MatchEngine {
                     attacker,
                     defender,
                     String.format("%s saved energy.", attacker.username()),
-                    attacker.playerId()
+                    attacker.playerId(),
+                    0,
+                    attacker.energy()
                 );
                 logs.add(record);
             } else {
@@ -154,6 +167,7 @@ public class MatchEngine {
             );
         }
 
+        // Burn killed the attacker before they could act - no energy is spent.
         if (attackerHp <= 0) {
             return createRecord(
                 turnNumber,
@@ -162,13 +176,14 @@ public class MatchEngine {
                 attackerHp,
                 defenderHp,
                 0,
+                attacker.energy(),
                 attackerEffects,
                 defenderEffects,
                 log.toString()
             );
         }
 
-        // 2. Check for SKIP_TURN effect
+        // 2. Check for SKIP_TURN effect - attacker's action is cancelled, no energy spent.
         if (attackerEffects.contains(StatusEffect.SKIP_TURN)) {
             attackerEffects.remove(StatusEffect.SKIP_TURN);
             log.append(
@@ -181,13 +196,20 @@ public class MatchEngine {
                 attackerHp,
                 defenderHp,
                 0,
+                attacker.energy(),
                 attackerEffects,
                 defenderEffects,
                 log.toString()
             );
         }
 
-        // 3. Process weapon or utility action
+        // 3. Validate and deduct energy - only reached when the action actually fires.
+        int energyAfterDeduction = combatProcessor.validateAndDeductEnergy(
+            attacker.energy(),
+            energySpent
+        );
+
+        // 4. Process weapon or utility action
         if (action.type() == ItemType.WEAPON) {
             defenderHp = processWeaponAction(
                 action,
@@ -220,6 +242,7 @@ public class MatchEngine {
             attackerHp,
             defenderHp,
             energySpent,
+            energyAfterDeduction,
             attackerEffects,
             defenderEffects,
             log.toString()
@@ -300,7 +323,8 @@ public class MatchEngine {
         PlayerState b,
         int aHp,
         int bHp,
-        int energy,
+        int energySpent,
+        int remainingEnergy,
         Set<StatusEffect> aEff,
         Set<StatusEffect> bEff,
         String log
@@ -309,7 +333,7 @@ public class MatchEngine {
             a.playerId(),
             a.username(),
             aHp,
-            a.energy() - energy,
+            remainingEnergy,
             a.hand(),
             aEff
         );
@@ -326,7 +350,9 @@ public class MatchEngine {
             newAttacker,
             newDefender,
             log,
-            a.playerId()
+            a.playerId(),
+            energySpent,
+            remainingEnergy
         );
     }
 

@@ -25,9 +25,19 @@ export const useMatchStats = (matchState: any, viewerUsername: string) => {
     const viewerHp = isUserPlayerA ? hpA : hpB;
     const opponentHp = isUserPlayerA ? hpB : hpA;
 
+    const playerAEnergy = matchState?.playerAEnergy ?? 0;
+    const playerBEnergy = matchState?.playerBEnergy ?? 0;
+
+    const viewerEnergy = isUserPlayerA ? playerAEnergy : playerBEnergy;
+    const opponentEnergy = isUserPlayerA ? playerBEnergy : playerAEnergy;
+
     return {
       hpA,
       hpB,
+      playerAEnergy,
+      playerBEnergy,
+      viewerEnergy,
+      opponentEnergy,
       isCompleted,
       isUserPlayerA,
       labelA,

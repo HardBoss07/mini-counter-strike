@@ -45,7 +45,8 @@ class CombatRoundProcessorTest {
         GameConfig gameConfig = new GameConfig();
         MatchEngine matchEngine = new MatchEngine(
             new ControllableRandom(),
-            new CombatMechanicsProcessor(new ControllableRandom())
+            new CombatMechanicsProcessor(new ControllableRandom()),
+            gameConfig
         );
         combatRoundProcessor = new CombatRoundProcessor(
             matchEngine,

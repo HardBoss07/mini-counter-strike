@@ -95,4 +95,26 @@ public class CombatMechanicsProcessor {
         updated.remove(StatusEffect.BLIND_50);
         return updated;
     }
+
+    /**
+     * Validates that the acting player can afford the given energy cost, then
+     * deducts it and returns the new balance.
+     *
+     * @param currentEnergy the player's current energy total
+     * @param cost          the energy cost of the item being played
+     * @return the remaining energy after deduction
+     * @throws IllegalStateException if the player cannot afford the cost
+     */
+    public int validateAndDeductEnergy(int currentEnergy, int cost) {
+        if (currentEnergy < cost) {
+            throw new IllegalStateException(
+                String.format(
+                    "Insufficient energy: action costs %d but player only has %d.",
+                    cost,
+                    currentEnergy
+                )
+            );
+        }
+        return currentEnergy - cost;
+    }
 }

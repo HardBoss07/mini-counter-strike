@@ -162,13 +162,51 @@ public class MatchServiceImpl implements MatchService {
 
         live.textLogs().add(turnResult.actionLog());
 
-        // Determine next active player
+        // Determine next active player and handle round/energy replenishment
         Long nextActivePlayerId = combatRoundProcessor.resolveNextActivePlayer(
             newAttacker,
             newDefender,
             action,
             live
         );
+
+        int nextRound = live.round();
+        if (!nextActivePlayerId.equals(attacker.playerId())) {
+            // Control shifted to the other player (new turn/round cycle starts)
+            nextRound = live.round() + 1;
+
+            // Replenish energy to the new active player
+            boolean nextIsA = nextActivePlayerId.equals(
+                match.getPlayerA().getId()
+            );
+            PlayerState targetPlayer = nextIsA ? newAttacker : newDefender;
+
+            int playerTurn = (nextRound + 1) / 2;
+            int energyToAdd = Math.min(
+                gameConfig.getBaseEnergy() +
+                    (playerTurn - 1) * gameConfig.getEnergyScalingFactor(),
+                gameConfig.getMaxEnergyPerTurn()
+            );
+            int replenishedEnergy = Math.min(
+                targetPlayer.energy() + energyToAdd,
+                gameConfig.getMaxEnergy()
+            );
+
+            PlayerState replenishedPlayer = new PlayerState(
+                targetPlayer.playerId(),
+                targetPlayer.username(),
+                targetPlayer.hp(),
+                replenishedEnergy,
+                targetPlayer.hand(),
+                targetPlayer.activeEffects()
+            );
+
+            if (nextIsA) {
+                newAttacker = replenishedPlayer;
+            } else {
+                newDefender = replenishedPlayer;
+            }
+        }
 
         // Apply skip turn penalty if needed
         if (newDefender.activeEffects().contains(StatusEffect.SKIP_TURN)) {
@@ -195,7 +233,7 @@ public class MatchServiceImpl implements MatchService {
         }
 
         LiveMatchState updatedState = new LiveMatchState(
-            live.round(),
+            nextRound,
             nextActivePlayerId,
             live.playerAIsT(),
             isPlayerA ? newAttacker : newDefender,
@@ -254,7 +292,9 @@ public class MatchServiceImpl implements MatchService {
                 stableHand,
                 isMyTurn,
                 match.getPlayerA().getUsername(),
-                match.getPlayerB().getUsername()
+                match.getPlayerB().getUsername(),
+                live.playerAState().energy(),
+                live.playerBState().energy()
             );
         } catch (Exception e) {
             boolean iAmWinner =
@@ -272,7 +312,9 @@ public class MatchServiceImpl implements MatchService {
                 Collections.emptyList(),
                 false,
                 match.getPlayerA().getUsername(),
-                match.getPlayerB().getUsername()
+                match.getPlayerB().getUsername(),
+                0,
+                0
             );
         }
     }

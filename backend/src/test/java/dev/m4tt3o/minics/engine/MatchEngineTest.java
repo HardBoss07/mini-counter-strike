@@ -27,7 +27,8 @@ class MatchEngineTest {
         );
         matchEngine = new MatchEngine(
             ControllableRandom.withInts(0),
-            combatProcessor
+            combatProcessor,
+            new dev.m4tt3o.minics.config.GameConfig()
         );
     }
 
@@ -45,7 +46,8 @@ class MatchEngineTest {
         List<WeaponArchetype> loadout = TestFixtures.standardLoadout();
         matchEngine = new MatchEngine(
             ControllableRandom.withInts(0, 0, 0),
-            combatProcessor
+            combatProcessor,
+            new dev.m4tt3o.minics.config.GameConfig()
         );
 
         List<WeaponArchetype> hand = matchEngine.drawHand(loadout);
@@ -115,7 +117,8 @@ class MatchEngineTest {
         );
         matchEngine = new MatchEngine(
             ControllableRandom.withInts(0, 1, 2),
-            combatProcessor
+            combatProcessor,
+            new dev.m4tt3o.minics.config.GameConfig()
         );
 
         List<WeaponArchetype> hand = matchEngine.drawHand(loadout);
@@ -281,7 +284,8 @@ class MatchEngineTest {
     void simulateMatch_terminatesWhenDefenderHpReachesZero() {
         matchEngine = new MatchEngine(
             ControllableRandom.withInts(0, 0, 0),
-            new CombatMechanicsProcessor(ControllableRandom.withDoubles(1.0))
+            new CombatMechanicsProcessor(ControllableRandom.withDoubles(1.0)),
+            new dev.m4tt3o.minics.config.GameConfig()
         );
 
         WeaponArchetype lethal = TestFixtures.weapon(

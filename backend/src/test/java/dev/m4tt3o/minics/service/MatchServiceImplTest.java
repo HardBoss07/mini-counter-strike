@@ -64,7 +64,11 @@ class MatchServiceImplTest {
         CombatMechanicsProcessor combatProcessor = new CombatMechanicsProcessor(
             random
         );
-        MatchEngine matchEngine = new MatchEngine(random, combatProcessor);
+        MatchEngine matchEngine = new MatchEngine(
+            random,
+            combatProcessor,
+            gameConfig
+        );
         CombatRoundProcessor combatRoundProcessor = new CombatRoundProcessor(
             matchEngine,
             gameConfig,

@@ -7,6 +7,7 @@ import LoadingSpinner from "../components/atoms/LoadingSpinner";
 import ErrorToast from "../components/atoms/ErrorToast";
 import { Heart, ArrowLeft, Swords, Briefcase, Trophy } from "lucide-react";
 import type { PlayerHandItem } from "../types/match";
+import EnergyBar from "../components/atoms/EnergyBar";
 
 // ---------------------------------------------------------------------------
 // Sub-components (view-scoped, not globally reusable)
@@ -15,10 +16,16 @@ import type { PlayerHandItem } from "../types/match";
 interface PlayerCardProps {
   label: string;
   hp: string;
+  energy: number;
   isViewer: boolean;
 }
 
-const PlayerCard: React.FC<PlayerCardProps> = ({ label, hp, isViewer }) => {
+const PlayerCard: React.FC<PlayerCardProps> = ({
+  label,
+  hp,
+  energy,
+  isViewer,
+}) => {
   const hpValue = parseInt(hp, 10);
 
   return (
@@ -45,12 +52,13 @@ const PlayerCard: React.FC<PlayerCardProps> = ({ label, hp, isViewer }) => {
         />
         <span className="text-5xl font-black font-mono">{hp}</span>
       </div>
-      <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+      <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden mb-2">
         <div
           className="bg-red-500 h-full transition-all duration-500 ease-out"
           style={{ width: `${hp}%` }}
         />
       </div>
+      <EnergyBar current={energy} />
     </div>
   );
 };
@@ -119,6 +127,9 @@ const BattleView: React.FC = () => {
   const {
     hpA,
     hpB,
+    playerAEnergy,
+    playerBEnergy,
+    viewerEnergy,
     isCompleted,
     isUserPlayerA,
     labelA,
@@ -164,13 +175,23 @@ const BattleView: React.FC = () => {
 
       {/* Main Arena Grid */}
       <main className="flex-1 grid lg:grid-cols-3 gap-8 p-8 max-w-7xl mx-auto w-full items-start">
-        <PlayerCard label={labelA} hp={hpA} isViewer={isUserPlayerA} />
+        <PlayerCard
+          label={labelA}
+          hp={hpA}
+          energy={playerAEnergy}
+          isViewer={isUserPlayerA}
+        />
         <CombatLog
           lastLog={matchState?.lastLog ?? ""}
           isCompleted={isCompleted}
           isMyTurn={matchState?.isMyTurn ?? false}
         />
-        <PlayerCard label={labelB} hp={hpB} isViewer={!isUserPlayerA} />
+        <PlayerCard
+          label={labelB}
+          hp={hpB}
+          energy={playerBEnergy}
+          isViewer={!isUserPlayerA}
+        />
       </main>
 
       {/* Action Tray */}
@@ -192,7 +213,8 @@ const BattleView: React.FC = () => {
                   onClick={() => submitAction(handItem.id)}
                   className="group relative w-48 h-64 block text-left transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] disabled:opacity-30 disabled:hover:translate-y-0 disabled:hover:scale-100 focus:outline-none"
                 >
-                  <WeaponCard weapon={handItem} />
+                  <WeaponCard weapon={handItem} currentEnergy={viewerEnergy} />
+
                   {matchState.isMyTurn && !isCompleted && (
                     <div className="absolute inset-0 bg-tactical-accent/10 opacity-0 group-hover:opacity-100 transition-all duration-300 border-2 border-tactical-accent rounded-lg pointer-events-none shadow-[0_0_20px_rgba(125,1,227,0.2)]" />
                   )}
