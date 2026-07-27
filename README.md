@@ -15,3 +15,9 @@ This is a Counter Strike inspired turn-based card game. Designed as an asynchron
 - **Draw Weight:** At the start of each turn, the backend randomly selects exactly 3 items from the 5-item loadout to form the player's hand. The probability of an item being drawn is determined by a hidden integer value called Draw Weight.
 - **Weapons:** Players utilize Pistols, SMGs, Rifles, and Snipers.
 - **Utility:** Utility items alter the match state for the following turns. Examples include Flashbangs (blinds enemies), Smoke Grenades (skips enemy turn), and Molotovs (applies burn damage).
+
+## Progression & Economy
+
+- **Cases:** A Spring Boot scheduled task distributes 1 Weapon Case to every active user's inventory every 1 hours, only if the previous Case has been opened.
+- **Modifiers:** Unboxed weapons feature distinct skins that alter base stats, such as reducing energy cost or increasing draw weight.
+- **ELO System:** Players start out with a flat 1000 ELO and gain or lose a static 25 ELO based on match outcomes.
