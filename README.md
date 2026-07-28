@@ -21,3 +21,20 @@ This is a Counter Strike inspired turn-based card game. Designed as an asynchron
 - **Cases:** A Spring Boot scheduled task distributes 1 Weapon Case to every active user's inventory every 1 hours, only if the previous Case has been opened.
 - **Modifiers:** Unboxed weapons feature distinct skins that alter base stats, such as reducing energy cost or increasing draw weight.
 - **ELO System:** Players start out with a flat 1000 ELO and gain or lose a static 25 ELO based on match outcomes.
+
+## Technical Architecture
+
+The architecture supports the complete game loop from registration, to inventory management, case unboxing, and the turn-based combat engine.
+
+### Backend
+
+- **Stack:** Built with Java 21 and Spring Boot.
+- **Engine:** Utilizes a dedicated `MatchEngine.java` service to run a deterministic simulation loop when an attack is initiated, saving the sequence of events to the database.
+- **State:** Uses Java 21 record classes for immutable data transfer, such as the `CombatRoundRecord`.
+
+### Frontend
+
+- **Stack:** React Single Page Application (SPA) built with Vite.
+- **UI Architecture:** Implements strict Atomic Design principles to manage the complexity of the match viewer.
+- **Playback:** The React frontend receives the full JSON array of turns from the backend and acts purely as a "replay viewer," stepping through the array with a 1-second delay between turns.
+- **Package Management:** Uses `npm` to keep the dependency tree lean.
