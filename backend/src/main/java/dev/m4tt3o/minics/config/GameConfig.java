@@ -27,4 +27,9 @@ public class GameConfig {
     private int energyScalingFactor = 1;
     private int maxEnergyPerTurn = 6;
     private int maxEnergy = 10;
+
+    @org.springframework.beans.factory.annotation.Value(
+        "${game.cases.drop-cooldown}"
+    )
+    private java.time.Duration dropCooldown;
 }
