@@ -151,9 +151,9 @@ public class MatchServiceImpl implements MatchService {
         String activeSide = resolveActiveSide(isPlayerA, live.playerAIsT());
         var turnResult = combatRoundProcessor.processTurn(
             live,
-            actingUser, // Pass the full entity here
+            actingUser,
             weaponId,
-            activeSide // Username is no longer needed by the processor
+            activeSide
         );
 
         PlayerState newAttacker = turnResult.newAttacker();
@@ -175,36 +175,28 @@ public class MatchServiceImpl implements MatchService {
             // Control shifted to the other player (new turn/round cycle starts)
             nextRound = live.round() + 1;
 
-            // Replenish energy to the new active player
-            boolean nextIsA = nextActivePlayerId.equals(
-                match.getPlayerA().getId()
-            );
-            PlayerState targetPlayer = nextIsA ? newAttacker : newDefender;
+            // Replenish energy to the new active player starting from round 3 onwards
+            // (Player 1 starts round 1 with base energy, Player 2 starts round 2 with base energy)
+            if (nextRound > 2) {
+                int playerTurn = (nextRound + 1) / 2;
+                int energyToAdd = Math.min(
+                    gameConfig.getBaseEnergy() +
+                        (playerTurn - 1) * gameConfig.getEnergyScalingFactor(),
+                    gameConfig.getMaxEnergyPerTurn()
+                );
+                int replenishedEnergy = Math.min(
+                    newDefender.energy() + energyToAdd,
+                    gameConfig.getMaxEnergy()
+                );
 
-            int playerTurn = (nextRound + 1) / 2;
-            int energyToAdd = Math.min(
-                gameConfig.getBaseEnergy() +
-                    (playerTurn - 1) * gameConfig.getEnergyScalingFactor(),
-                gameConfig.getMaxEnergyPerTurn()
-            );
-            int replenishedEnergy = Math.min(
-                targetPlayer.energy() + energyToAdd,
-                gameConfig.getMaxEnergy()
-            );
-
-            PlayerState replenishedPlayer = new PlayerState(
-                targetPlayer.playerId(),
-                targetPlayer.username(),
-                targetPlayer.hp(),
-                replenishedEnergy,
-                targetPlayer.hand(),
-                targetPlayer.activeEffects()
-            );
-
-            if (nextIsA) {
-                newAttacker = replenishedPlayer;
-            } else {
-                newDefender = replenishedPlayer;
+                newDefender = new PlayerState(
+                    newDefender.playerId(),
+                    newDefender.username(),
+                    newDefender.hp(),
+                    replenishedEnergy,
+                    newDefender.hand(),
+                    newDefender.activeEffects()
+                );
             }
         }
 
