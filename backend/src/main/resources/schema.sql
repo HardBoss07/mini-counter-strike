@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS app_user (
     username VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     elo INTEGER DEFAULT 1000,
-    credits INTEGER DEFAULT 100
+    credits INTEGER DEFAULT 100,
+    next_case_available_at TIMESTAMP
 );
 
 -- User Weapon Instances (Ownership)
@@ -49,7 +50,8 @@ CREATE TABLE IF NOT EXISTS user_weapon_instance (
 CREATE TABLE IF NOT EXISTS user_cases (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES app_user(id),
-    case_id INTEGER REFERENCES cases(id)
+    case_id INTEGER REFERENCES cases(id),
+    is_opened BOOLEAN DEFAULT FALSE
 );
 
 -- Loadouts (Side Definitions)
