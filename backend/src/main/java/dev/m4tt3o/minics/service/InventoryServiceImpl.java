@@ -1,5 +1,6 @@
 package dev.m4tt3o.minics.service;
 
+import dev.m4tt3o.minics.config.GameConfig;
 import dev.m4tt3o.minics.dto.ItemRarity;
 import dev.m4tt3o.minics.dto.economy.OpenCaseResponse;
 import dev.m4tt3o.minics.dto.inventory.CaseTemplateDTO;
@@ -14,6 +15,8 @@ import dev.m4tt3o.minics.entity.WeaponTemplate;
 import dev.m4tt3o.minics.repository.UserCaseInstanceRepository;
 import dev.m4tt3o.minics.repository.UserRepository;
 import dev.m4tt3o.minics.repository.UserWeaponInstanceRepository;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,6 +31,8 @@ public class InventoryServiceImpl implements InventoryService {
     private final UserWeaponInstanceRepository weaponInstanceRepository;
     private final UserRepository userRepository;
     private final UserCaseInstanceRepository userCaseInstanceRepository;
+    private final Clock clock;
+    private final GameConfig gameConfig;
 
     private static final Map<ItemRarity, Integer> RARITY_WEIGHTS = Map.of(
         ItemRarity.MIL_SPEC,
@@ -66,7 +71,7 @@ public class InventoryServiceImpl implements InventoryService {
             );
 
         List<UserCaseInstance> instances =
-            userCaseInstanceRepository.findByUserId(user.getId());
+            userCaseInstanceRepository.findByUserIdAndOpenedFalse(user.getId());
         return instances.stream().map(this::mapToUserCaseInstanceDTO).toList();
     }
 
@@ -89,6 +94,10 @@ public class InventoryServiceImpl implements InventoryService {
 
         if (!caseInstance.getUser().getId().equals(userId)) {
             throw new RuntimeException("You do not own this case instance");
+        }
+
+        if (caseInstance.isOpened()) {
+            throw new RuntimeException("Case instance is already opened");
         }
 
         CaseTemplate caseTemplate = caseInstance.getCaseTemplate();
@@ -192,7 +201,20 @@ public class InventoryServiceImpl implements InventoryService {
         weaponInstance.setSkinName(parseSkinName(wonTemplate.getName()));
 
         weaponInstanceRepository.save(weaponInstance);
-        userCaseInstanceRepository.delete(caseInstance);
+
+        caseInstance.setOpened(true);
+        userCaseInstanceRepository.save(caseInstance);
+
+        long remaining = userCaseInstanceRepository.countByUserAndOpenedFalse(
+            user
+        );
+        if (remaining == 0) {
+            LocalDateTime nextAvailable = LocalDateTime.now(clock).plus(
+                gameConfig.getDropCooldown()
+            );
+            user.setNextCaseAvailableAt(nextAvailable);
+            userRepository.save(user);
+        }
     }
 
     private String parseSkinName(String fullWeaponName) {
