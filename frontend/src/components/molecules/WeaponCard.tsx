@@ -127,7 +127,7 @@ export const WeaponCard: React.FC<WeaponCardProps> = ({
             Not enough energy
           </span>
           <span className="text-[10px] font-mono text-yellow-500/70">
-            {weapon.energyCost} / {currentEnergy}
+            {currentEnergy} / {weapon.energyCost}
           </span>
         </div>
       )}
