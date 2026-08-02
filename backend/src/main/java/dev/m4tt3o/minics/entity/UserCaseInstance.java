@@ -21,4 +21,7 @@ public class UserCaseInstance {
     @ManyToOne
     @JoinColumn(name = "case_id", nullable = false)
     private CaseTemplate caseTemplate;
+
+    @Column(name = "is_opened")
+    private boolean opened;
 }

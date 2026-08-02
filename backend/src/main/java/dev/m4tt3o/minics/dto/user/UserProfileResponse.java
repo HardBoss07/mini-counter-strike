@@ -5,5 +5,6 @@ public record UserProfileResponse(
     String username,
     int elo,
     int credits,
-    int caseCount
+    int caseCount,
+    java.time.LocalDateTime nextCaseAvailableAt
 ) {}

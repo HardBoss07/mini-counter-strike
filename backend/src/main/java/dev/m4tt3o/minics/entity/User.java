@@ -26,4 +26,6 @@ public class User {
     private int elo = 1000;
 
     private int credits = 0;
+
+    private java.time.LocalDateTime nextCaseAvailableAt;
 }

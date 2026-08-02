@@ -28,9 +28,8 @@ public class UserController {
             .findByUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
 
-        int caseCount = (int) userCaseInstanceRepository.countByUserId(
-            user.getId()
-        );
+        int caseCount =
+            (int) userCaseInstanceRepository.countByUserAndOpenedFalse(user);
 
         return ResponseEntity.ok(
             new UserProfileResponse(
@@ -38,7 +37,8 @@ public class UserController {
                 user.getUsername(),
                 user.getElo(),
                 user.getCredits(),
-                caseCount
+                caseCount,
+                user.getNextCaseAvailableAt()
             )
         );
     }
