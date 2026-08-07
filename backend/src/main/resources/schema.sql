@@ -153,3 +153,22 @@ CREATE TABLE IF NOT EXISTS match_weapon_stats (
     crits_landed INTEGER DEFAULT 0,
     CONSTRAINT unique_match_user_weapon UNIQUE(match_id, user_id, template_id, user_weapon_instance_id)
 );
+
+-- ==========================================
+-- 5. INDEXES FOR FAST GRAPHING & QUERIES
+-- ==========================================
+
+-- Optimizes Elo graph queries (e.g. SELECT * FROM elo_history WHERE user_id = X ORDER BY recorded_at DESC LIMIT 30)
+CREATE INDEX IF NOT EXISTS idx_elo_history_user_date ON elo_history(user_id, recorded_at DESC);
+
+-- Optimizes filtering Elo graph by match count
+CREATE INDEX IF NOT EXISTS idx_elo_history_user_match ON elo_history(user_id, match_id DESC);
+
+-- Optimizes player match history pagination
+CREATE INDEX IF NOT EXISTS idx_match_player_stats_user ON match_player_stats(user_id);
+
+-- Optimizes "Most Used / Deadliest Gun" aggregate queries
+CREATE INDEX IF NOT EXISTS idx_match_weapon_stats_user_template ON match_weapon_stats(user_id, template_id);
+
+-- Optimizes match list timelines
+CREATE INDEX IF NOT EXISTS idx_match_state_created_at ON match_state(created_at DESC);
