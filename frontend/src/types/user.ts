@@ -1,5 +1,7 @@
+import type { PlayerStatsSummary } from './stats';
+
 /**
- * Full user profile returned by /api/user/me.
+ * Full user profile returned by /api/user/me or /api/users/:id/profile.
  * Also used by AuthContext for richer user state.
  */
 export interface UserProfile {
@@ -8,6 +10,7 @@ export interface UserProfile {
   elo: number;
   credits: number;
   caseCount: number;
+  statsSummary?: PlayerStatsSummary;
 }
 
 /**
