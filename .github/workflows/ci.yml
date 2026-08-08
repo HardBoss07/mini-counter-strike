@@ -19,6 +19,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
+          cache-dependency-path: 'backend/pom.xml'
 
       - name: Run Spring Boot Tests
+        working-directory: backend
         run: mvn test
