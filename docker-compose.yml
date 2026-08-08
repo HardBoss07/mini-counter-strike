@@ -19,11 +19,12 @@ services:
     ports:
       - '8080:8080'
     environment:
-      # These override application.properties, connecting it to the 'db' container
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/minics
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_SQL_INIT_DATA_LOCATIONS: classpath:data-01-templates.sql,classpath:data-02-cases.sql,classpath:data-03-users-and-seeds.sql
+      SPRING_SQL_INIT_MODE: always
     depends_on:
       - db
     restart: unless-stopped
