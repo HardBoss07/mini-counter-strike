@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { api } from "../utils/api";
-import { mapBackendWeapon } from "../types/weapon";
-import type { Weapon } from "../types/weapon";
+import { useState, useEffect } from 'react';
+import { api } from '../utils/api';
+import { mapBackendWeapon } from '../types/weapon';
+import type { Weapon } from '../types/weapon';
 
 interface UseInventoryResult {
   weapons: Weapon[];
@@ -32,9 +32,7 @@ export function useInventory(): UseInventoryResult {
       .catch((fetchError: unknown) => {
         if (isMounted) {
           const message =
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Failed to load inventory";
+            fetchError instanceof Error ? fetchError.message : 'Failed to load inventory';
           setError(message);
           setLoading(false);
         }

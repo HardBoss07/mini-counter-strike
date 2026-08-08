@@ -61,14 +61,8 @@ class MatchServiceImplTest {
     void setUp() {
         gameConfig = new GameConfig();
         ControllableRandom random = new ControllableRandom();
-        CombatMechanicsProcessor combatProcessor = new CombatMechanicsProcessor(
-            random
-        );
-        MatchEngine matchEngine = new MatchEngine(
-            random,
-            combatProcessor,
-            gameConfig
-        );
+        CombatMechanicsProcessor combatProcessor = new CombatMechanicsProcessor(random);
+        MatchEngine matchEngine = new MatchEngine(random, combatProcessor, gameConfig);
         CombatRoundProcessor combatRoundProcessor = new CombatRoundProcessor(
             matchEngine,
             gameConfig,
@@ -107,9 +101,7 @@ class MatchServiceImplTest {
 
         when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
         when(matchStateMapper.readFromMatch(match)).thenReturn(state);
-        when(userRepository.findByUsername("Bravo")).thenReturn(
-            Optional.of(playerB)
-        );
+        when(userRepository.findByUsername("Bravo")).thenReturn(Optional.of(playerB));
 
         assertThatThrownBy(() -> matchService.submitAction(10L, "Bravo", 10L))
             .isInstanceOf(IllegalArgumentException.class)
@@ -150,19 +142,13 @@ class MatchServiceImplTest {
 
         stubLoadout(playerA, "T");
         when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
-        when(matchRepository.save(any(Match.class))).thenAnswer(inv ->
-            inv.getArgument(0)
-        );
+        when(matchRepository.save(any(Match.class))).thenAnswer((inv) -> inv.getArgument(0));
         when(matchStateMapper.readFromMatch(match)).thenReturn(state);
-        when(userRepository.findByUsername("Alpha")).thenReturn(
-            Optional.of(playerA)
-        );
+        when(userRepository.findByUsername("Alpha")).thenReturn(Optional.of(playerA));
 
         matchService.submitAction(10L, "Alpha", 10L);
 
-        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(
-            Match.class
-        );
+        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
         verify(matchRepository).save(matchCaptor.capture());
 
         Match saved = matchCaptor.getValue();
@@ -191,19 +177,13 @@ class MatchServiceImplTest {
 
         stubLoadout(playerB, "CT");
         when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
-        when(matchRepository.save(any(Match.class))).thenAnswer(inv ->
-            inv.getArgument(0)
-        );
+        when(matchRepository.save(any(Match.class))).thenAnswer((inv) -> inv.getArgument(0));
         when(matchStateMapper.readFromMatch(match)).thenReturn(state);
-        when(userRepository.findByUsername("Bravo")).thenReturn(
-            Optional.of(playerB)
-        );
+        when(userRepository.findByUsername("Bravo")).thenReturn(Optional.of(playerB));
 
         matchService.submitAction(10L, "Bravo", 20L);
 
-        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(
-            Match.class
-        );
+        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
         verify(matchRepository).save(matchCaptor.capture());
 
         Match saved = matchCaptor.getValue();
@@ -223,21 +203,14 @@ class MatchServiceImplTest {
         );
 
         when(matchRepository.findById(10L)).thenReturn(Optional.of(match));
-        when(matchRepository.save(any(Match.class))).thenAnswer(inv ->
-            inv.getArgument(0)
-        );
+        when(matchRepository.save(any(Match.class))).thenAnswer((inv) -> inv.getArgument(0));
         when(matchStateMapper.readFromMatch(match)).thenReturn(state);
 
         matchService.surrenderMatch(10L, "Alpha");
 
-        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(
-            Match.class
-        );
+        ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
         verify(matchRepository).save(matchCaptor.capture());
-        verify(matchStateMapper).writeToMatch(
-            eq(match),
-            any(LiveMatchState.class)
-        );
+        verify(matchStateMapper).writeToMatch(eq(match), any(LiveMatchState.class));
 
         Match saved = matchCaptor.getValue();
         assertThat(saved.getStatus()).isEqualTo("COMPLETED");
@@ -249,29 +222,12 @@ class MatchServiceImplTest {
         loadout.setItems(
             new HashSet<>(
                 List.of(
-                    TestFixtures.loadoutWeaponInstance(
-                        10L,
-                        "AK-47",
-                        dev.m4tt3o.minics.dto.ItemType.WEAPON,
-                        side
-                    ),
-                    TestFixtures.loadoutWeaponInstance(
-                        11L,
-                        "Molotov",
-                        dev.m4tt3o.minics.dto.ItemType.UTILITY,
-                        "ALL"
-                    ),
-                    TestFixtures.loadoutWeaponInstance(
-                        20L,
-                        "AWP",
-                        dev.m4tt3o.minics.dto.ItemType.WEAPON,
-                        side
-                    )
+                    TestFixtures.loadoutWeaponInstance(10L, "AK-47", dev.m4tt3o.minics.dto.ItemType.WEAPON, side),
+                    TestFixtures.loadoutWeaponInstance(11L, "Molotov", dev.m4tt3o.minics.dto.ItemType.UTILITY, "ALL"),
+                    TestFixtures.loadoutWeaponInstance(20L, "AWP", dev.m4tt3o.minics.dto.ItemType.WEAPON, side)
                 )
             )
         );
-        when(loadoutRepository.findByUserAndSide(user, side)).thenReturn(
-            Optional.of(loadout)
-        );
+        when(loadoutRepository.findByUserAndSide(user, side)).thenReturn(Optional.of(loadout));
     }
 }

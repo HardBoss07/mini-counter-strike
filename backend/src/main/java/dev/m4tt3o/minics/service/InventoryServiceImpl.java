@@ -50,15 +50,9 @@ public class InventoryServiceImpl implements InventoryService {
     public List<WeaponInstanceDTO> getWeaponsForUser(String username) {
         User user = userRepository
             .findByUsername(username)
-            .orElseThrow(() ->
-                new RuntimeException("User not found: " + username)
-            );
+            .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
-        return weaponInstanceRepository
-            .findByUser(user)
-            .stream()
-            .map(WeaponInstanceDTO::fromEntity)
-            .toList();
+        return weaponInstanceRepository.findByUser(user).stream().map(WeaponInstanceDTO::fromEntity).toList();
     }
 
     @Override
@@ -66,12 +60,9 @@ public class InventoryServiceImpl implements InventoryService {
     public List<UserCaseInstanceDTO> getUserCases(String username) {
         User user = userRepository
             .findByUsername(username)
-            .orElseThrow(() ->
-                new RuntimeException("User not found: " + username)
-            );
+            .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
-        List<UserCaseInstance> instances =
-            userCaseInstanceRepository.findByUserIdAndOpenedFalse(user.getId());
+        List<UserCaseInstance> instances = userCaseInstanceRepository.findByUserIdAndOpenedFalse(user.getId());
         return instances.stream().map(this::mapToUserCaseInstanceDTO).toList();
     }
 
@@ -80,17 +71,11 @@ public class InventoryServiceImpl implements InventoryService {
     public OpenCaseResponse openCase(Long userId, Long userCaseInstanceId) {
         User user = userRepository
             .findById(userId)
-            .orElseThrow(() ->
-                new RuntimeException("User not found: " + userId)
-            );
+            .orElseThrow(() -> new RuntimeException("User not found: " + userId));
 
         UserCaseInstance caseInstance = userCaseInstanceRepository
             .findById(userCaseInstanceId)
-            .orElseThrow(() ->
-                new RuntimeException(
-                    "Case instance not found: " + userCaseInstanceId
-                )
-            );
+            .orElseThrow(() -> new RuntimeException("Case instance not found: " + userCaseInstanceId));
 
         if (!caseInstance.getUser().getId().equals(userId)) {
             throw new RuntimeException("You do not own this case instance");
@@ -103,25 +88,17 @@ public class InventoryServiceImpl implements InventoryService {
         CaseTemplate caseTemplate = caseInstance.getCaseTemplate();
         List<WeaponTemplate> weapons = caseTemplate.getWeapons();
         if (weapons == null || weapons.isEmpty()) {
-            throw new RuntimeException(
-                "Case template has no weapons configured"
-            );
+            throw new RuntimeException("Case template has no weapons configured");
         }
 
         WeaponTemplate wonTemplate = selectRandomWeaponByRarity(weapons);
 
         processInventoryChange(user, wonTemplate, caseInstance);
 
-        return new OpenCaseResponse(
-            wonTemplate.getName(),
-            wonTemplate.getRarity().name(),
-            wonTemplate.getImageUrl()
-        );
+        return new OpenCaseResponse(wonTemplate.getName(), wonTemplate.getRarity().name(), wonTemplate.getImageUrl());
     }
 
-    private UserCaseInstanceDTO mapToUserCaseInstanceDTO(
-        UserCaseInstance instance
-    ) {
+    private UserCaseInstanceDTO mapToUserCaseInstanceDTO(UserCaseInstance instance) {
         CaseTemplate caseTemplate = instance.getCaseTemplate();
         List<WeaponTemplateDTO> weapons = caseTemplate
             .getWeapons()
@@ -137,34 +114,23 @@ public class InventoryServiceImpl implements InventoryService {
         return new UserCaseInstanceDTO(instance.getId(), caseTemplateDTO);
     }
 
-    private WeaponTemplate selectRandomWeaponByRarity(
-        List<WeaponTemplate> weapons
-    ) {
+    private WeaponTemplate selectRandomWeaponByRarity(List<WeaponTemplate> weapons) {
         Map<ItemRarity, List<WeaponTemplate>> groupedByRarity = weapons
             .stream()
-            .filter(weapon -> RARITY_WEIGHTS.containsKey(weapon.getRarity()))
+            .filter((weapon) -> RARITY_WEIGHTS.containsKey(weapon.getRarity()))
             .collect(Collectors.groupingBy(WeaponTemplate::getRarity));
 
         if (groupedByRarity.isEmpty()) {
-            throw new RuntimeException(
-                "No unboxable weapon rarities found in this case"
-            );
+            throw new RuntimeException("No unboxable weapon rarities found in this case");
         }
 
-        int totalWeight = groupedByRarity
-            .keySet()
-            .stream()
-            .mapToInt(RARITY_WEIGHTS::get)
-            .sum();
+        int totalWeight = groupedByRarity.keySet().stream().mapToInt(RARITY_WEIGHTS::get).sum();
 
         double randomValue = Math.random() * totalWeight;
         double cumulativeWeight = 0.0;
         ItemRarity selectedRarity = null;
 
-        for (Map.Entry<
-            ItemRarity,
-            List<WeaponTemplate>
-        > entry : groupedByRarity.entrySet()) {
+        for (Map.Entry<ItemRarity, List<WeaponTemplate>> entry : groupedByRarity.entrySet()) {
             ItemRarity rarity = entry.getKey();
             cumulativeWeight += RARITY_WEIGHTS.get(rarity);
             if (randomValue < cumulativeWeight) {
@@ -177,24 +143,16 @@ public class InventoryServiceImpl implements InventoryService {
             selectedRarity = groupedByRarity.keySet().iterator().next();
         }
 
-        List<WeaponTemplate> weaponsOfRarity = groupedByRarity.get(
-            selectedRarity
-        );
+        List<WeaponTemplate> weaponsOfRarity = groupedByRarity.get(selectedRarity);
         return chooseWeaponFromRarity(weaponsOfRarity);
     }
 
-    private WeaponTemplate chooseWeaponFromRarity(
-        List<WeaponTemplate> weaponsOfRarity
-    ) {
+    private WeaponTemplate chooseWeaponFromRarity(List<WeaponTemplate> weaponsOfRarity) {
         int randomIndex = (int) (Math.random() * weaponsOfRarity.size());
         return weaponsOfRarity.get(randomIndex);
     }
 
-    private void processInventoryChange(
-        User user,
-        WeaponTemplate wonTemplate,
-        UserCaseInstance caseInstance
-    ) {
+    private void processInventoryChange(User user, WeaponTemplate wonTemplate, UserCaseInstance caseInstance) {
         UserWeaponInstance weaponInstance = new UserWeaponInstance();
         weaponInstance.setUser(user);
         weaponInstance.setTemplate(wonTemplate);
@@ -205,13 +163,9 @@ public class InventoryServiceImpl implements InventoryService {
         caseInstance.setOpened(true);
         userCaseInstanceRepository.save(caseInstance);
 
-        long remaining = userCaseInstanceRepository.countByUserAndOpenedFalse(
-            user
-        );
+        long remaining = userCaseInstanceRepository.countByUserAndOpenedFalse(user);
         if (remaining == 0) {
-            LocalDateTime nextAvailable = LocalDateTime.now(clock).plus(
-                gameConfig.getDropCooldown()
-            );
+            LocalDateTime nextAvailable = LocalDateTime.now(clock).plus(gameConfig.getDropCooldown());
             user.setNextCaseAvailableAt(nextAvailable);
             userRepository.save(user);
         }

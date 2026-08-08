@@ -6,8 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface WeaponTemplateRepository
-    extends JpaRepository<WeaponTemplate, Long>
-{
+public interface WeaponTemplateRepository extends JpaRepository<WeaponTemplate, Long> {
     Optional<WeaponTemplate> findByName(String name);
 }

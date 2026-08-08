@@ -1,10 +1,10 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
-import { useUserProfile } from "../../hooks/useUserProfile";
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { useUserProfile } from '../../hooks/useUserProfile';
 
 const NAV_LINK_CLASS = ({ isActive }: { isActive: boolean }): string =>
-  isActive ? "text-tactical-accent" : "hover:text-gray-300";
+  isActive ? 'text-tactical-accent' : 'hover:text-gray-300';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -13,12 +13,12 @@ const Navbar: React.FC = () => {
 
   const handleLogout = (): void => {
     logout();
-    navigate("/login");
+    navigate('/login');
   };
 
   return (
-    <nav className="bg-tactical-dark border-b border-white/10 p-4 flex justify-between items-center text-white">
-      <div className="flex gap-6 font-black uppercase tracking-widest text-sm">
+    <nav className="flex items-center justify-between border-b border-white/10 bg-tactical-dark p-4 text-white">
+      <div className="flex gap-6 text-sm font-black uppercase tracking-widest">
         <NavLink to="/" end className={NAV_LINK_CLASS}>
           Command
         </NavLink>
@@ -37,26 +37,20 @@ const Navbar: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="text-xs font-mono text-gray-400">
+        <div className="font-mono text-xs text-gray-400">
           {profile ? (
             <>
-              ELO:{" "}
-              <span className="text-tactical-accent font-bold">
-                {profile.elo}
-              </span>
-              {" | "}
-              CR:{" "}
-              <span className="text-tactical-accent font-bold">
-                {profile.credits}
-              </span>
+              ELO: <span className="font-bold text-tactical-accent">{profile.elo}</span>
+              {' | '}
+              CR: <span className="font-bold text-tactical-accent">{profile.credits}</span>
             </>
           ) : (
-            "Loading..."
+            'Loading...'
           )}
         </div>
         <button
           onClick={handleLogout}
-          className="text-xs bg-red-900/50 hover:bg-red-800 px-3 py-1 rounded transition-colors"
+          className="rounded bg-red-900/50 px-3 py-1 text-xs transition-colors hover:bg-red-800"
         >
           Logout
         </button>

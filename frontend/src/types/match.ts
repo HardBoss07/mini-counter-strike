@@ -1,7 +1,7 @@
-import type { Weapon } from "./weapon";
+import type { Weapon } from './weapon';
 
 /** Lifecycle state of a match. */
-export type MatchStatus = "IN_PROGRESS" | "COMPLETED";
+export type MatchStatus = 'IN_PROGRESS' | 'COMPLETED';
 
 /**
  * A single item in the player's live hand during a battle round.
@@ -39,8 +39,8 @@ export interface MatchStateResponse {
  * Returns "100" as a safe fallback if the format is unexpected.
  */
 export function parseHp(statusString: string): string {
-  if (statusString.includes(":")) {
-    return statusString.split(":")[1] ?? "100";
+  if (statusString.includes(':')) {
+    return statusString.split(':')[1] ?? '100';
   }
-  return "100";
+  return '100';
 }

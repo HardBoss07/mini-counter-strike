@@ -21,26 +21,16 @@ public class EconomyController {
 
     @GetMapping("/cases")
     public ResponseEntity<List<UserCaseInstanceDTO>> getUserCases() {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(inventoryService.getUserCases(username));
     }
 
     @PostMapping("/cases/{id}/open")
-    public ResponseEntity<OpenCaseResponse> openCase(
-        @PathVariable("id") Long userCaseInstanceId
-    ) {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
+    public ResponseEntity<OpenCaseResponse> openCase(@PathVariable("id") Long userCaseInstanceId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository
             .findByUsername(username)
-            .orElseThrow(() ->
-                new RuntimeException("User not found: " + username)
-            );
-        return ResponseEntity.ok(
-            inventoryService.openCase(user.getId(), userCaseInstanceId)
-        );
+            .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        return ResponseEntity.ok(inventoryService.openCase(user.getId(), userCaseInstanceId));
     }
 }

@@ -19,40 +19,27 @@ public class LoadoutServiceImpl implements LoadoutService {
 
     @Override
     @Transactional
-    public void saveFullLoadout(
-        String username,
-        List<Long> tLoadoutIds,
-        List<Long> ctLoadoutIds
-    ) {
-        User user = userRepository
-            .findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+    public void saveFullLoadout(String username, List<Long> tLoadoutIds, List<Long> ctLoadoutIds) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         updateSideLoadout(user, "T", tLoadoutIds);
         updateSideLoadout(user, "CT", ctLoadoutIds);
     }
 
-    private void updateSideLoadout(
-        User user,
-        String side,
-        List<Long> weaponInstanceIds
-    ) {
+    private void updateSideLoadout(User user, String side, List<Long> weaponInstanceIds) {
         // Fetch all weapon instances by ID
-        List<UserWeaponInstance> fetchedInstances =
-            weaponInstanceRepository.findAllById(weaponInstanceIds);
+        List<UserWeaponInstance> fetchedInstances = weaponInstanceRepository.findAllById(weaponInstanceIds);
 
         // Validate all constraints upfront
         LoadoutValidator.validateLoadout(fetchedInstances, side);
 
         // Build or retrieve loadout
-        Loadout loadout = loadoutRepository
-            .findByUserAndSide(user, side.toUpperCase())
-            .orElseGet(() -> {
-                Loadout l = new Loadout();
-                l.setUser(user);
-                l.setSide(side.toUpperCase());
-                return loadoutRepository.save(l);
-            });
+        Loadout loadout = loadoutRepository.findByUserAndSide(user, side.toUpperCase()).orElseGet(() -> {
+            Loadout l = new Loadout();
+            l.setUser(user);
+            l.setSide(side.toUpperCase());
+            return loadoutRepository.save(l);
+        });
 
         // Replace items
         loadout.getItems().clear();
@@ -62,28 +49,16 @@ public class LoadoutServiceImpl implements LoadoutService {
 
     @Override
     @Transactional
-    public Loadout assignWeapon(
-        Long userId,
-        String side,
-        int slot,
-        Long userWeaponInstanceId
-    ) {
-        User user = userRepository
-            .findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+    public Loadout assignWeapon(Long userId, String side, int slot, Long userWeaponInstanceId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         UserWeaponInstance weaponInstance = weaponInstanceRepository
             .findById(userWeaponInstanceId)
-            .orElseThrow(() ->
-                new RuntimeException("Weapon instance not found")
-            );
+            .orElseThrow(() -> new RuntimeException("Weapon instance not found"));
 
         // Validate faction compatibility
         String weaponSide = weaponInstance.getTemplate().getSide();
-        if (
-            !"ALL".equalsIgnoreCase(weaponSide) &&
-            !side.equalsIgnoreCase(weaponSide)
-        ) {
+        if (!"ALL".equalsIgnoreCase(weaponSide) && !side.equalsIgnoreCase(weaponSide)) {
             throw new IllegalArgumentException(
                 String.format(
                     "Cannot add %s weapon (%s) to %s loadout",
@@ -94,14 +69,12 @@ public class LoadoutServiceImpl implements LoadoutService {
             );
         }
 
-        Loadout loadout = loadoutRepository
-            .findByUserAndSide(user, side.toUpperCase())
-            .orElseGet(() -> {
-                Loadout newLoadout = new Loadout();
-                newLoadout.setUser(user);
-                newLoadout.setSide(side.toUpperCase());
-                return newLoadout;
-            });
+        Loadout loadout = loadoutRepository.findByUserAndSide(user, side.toUpperCase()).orElseGet(() -> {
+            Loadout newLoadout = new Loadout();
+            newLoadout.setUser(user);
+            newLoadout.setSide(side.toUpperCase());
+            return newLoadout;
+        });
 
         loadout.getItems().add(weaponInstance);
         return loadoutRepository.save(loadout);
@@ -109,12 +82,8 @@ public class LoadoutServiceImpl implements LoadoutService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, java.util.Set<UserWeaponInstance>> getFullLoadout(
-        String username
-    ) {
-        User user = userRepository
-            .findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+    public Map<String, java.util.Set<UserWeaponInstance>> getFullLoadout(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         // Fetch T side loadout items (defaulting to empty Set if none exists yet)
         java.util.Set<UserWeaponInstance> tItems = loadoutRepository

@@ -13,8 +13,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MatchmakingService {
 
-    private final ConcurrentLinkedQueue<Long> matchmakingQueue =
-        new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Long> matchmakingQueue = new ConcurrentLinkedQueue<>();
     private final Map<Long, Long> ticketToMatch = new ConcurrentHashMap<>();
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
@@ -28,7 +27,7 @@ public class MatchmakingService {
             // Check if the match they are attached to is actually ongoing
             boolean isActive = matchRepository
                 .findById(matchId)
-                .map(m -> "IN_PROGRESS".equals(m.getStatus()))
+                .map((m) -> "IN_PROGRESS".equals(m.getStatus()))
                 .orElse(false);
 
             if (isActive) {
@@ -55,8 +54,8 @@ public class MatchmakingService {
 
             return matchRepository
                 .findById(matchId)
-                .filter(m -> "IN_PROGRESS".equals(m.getStatus()))
-                .map(m -> "MATCH_FOUND")
+                .filter((m) -> "IN_PROGRESS".equals(m.getStatus()))
+                .map((m) -> "MATCH_FOUND")
                 .orElseGet(() -> {
                     ticketToMatch.remove(ticketId);
                     return "WAITING";

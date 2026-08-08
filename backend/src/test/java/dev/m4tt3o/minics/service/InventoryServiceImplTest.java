@@ -52,10 +52,7 @@ class InventoryServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        clock = Clock.fixed(
-            Instant.parse("2026-08-02T12:00:00Z"),
-            ZoneOffset.UTC
-        );
+        clock = Clock.fixed(Instant.parse("2026-08-02T12:00:00Z"), ZoneOffset.UTC);
         inventoryService = new InventoryServiceImpl(
             weaponInstanceRepository,
             userRepository,
@@ -97,26 +94,17 @@ class InventoryServiceImplTest {
         doReturn(Duration.ofHours(4)).when(gameConfig).getDropCooldown();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(
-            userCaseInstanceRepository.findById(userCaseInstanceId)
-        ).thenReturn(Optional.of(caseInstance));
-        when(
-            userCaseInstanceRepository.countByUserAndOpenedFalse(user)
-        ).thenReturn(0L);
+        when(userCaseInstanceRepository.findById(userCaseInstanceId)).thenReturn(Optional.of(caseInstance));
+        when(userCaseInstanceRepository.countByUserAndOpenedFalse(user)).thenReturn(0L);
 
         // When
-        OpenCaseResponse response = inventoryService.openCase(
-            userId,
-            userCaseInstanceId
-        );
+        OpenCaseResponse response = inventoryService.openCase(userId, userCaseInstanceId);
 
         // Then
         assertThat(response).isNotNull();
         assertThat(response.weaponName()).isEqualTo("AK-47 | Redline");
 
-        verify(weaponInstanceRepository, times(1)).save(
-            any(UserWeaponInstance.class)
-        );
+        verify(weaponInstanceRepository, times(1)).save(any(UserWeaponInstance.class));
         verify(userCaseInstanceRepository, times(1)).save(caseInstance);
         assertThat(caseInstance.isOpened()).isTrue();
 
@@ -124,8 +112,6 @@ class InventoryServiceImplTest {
         verify(userRepository, times(1)).save(userCaptor.capture());
 
         User savedUser = userCaptor.getValue();
-        assertThat(savedUser.getNextCaseAvailableAt()).isEqualTo(
-            LocalDateTime.of(2026, 8, 2, 16, 0, 0)
-        );
+        assertThat(savedUser.getNextCaseAvailableAt()).isEqualTo(LocalDateTime.of(2026, 8, 2, 16, 0, 0));
     }
 }

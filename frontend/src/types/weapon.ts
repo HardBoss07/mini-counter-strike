@@ -3,20 +3,20 @@
  * These map 1-to-1 to the backend WeaponArchetype rarity enum.
  */
 export type WeaponRarity =
-  | "BASE_GRADE"
-  | "CONSUMER_GRADE"
-  | "INDUSTRIAL_GRADE"
-  | "MIL_SPEC"
-  | "RESTRICTED"
-  | "CLASSIFIED"
-  | "COVERT"
-  | "CONTRABAND";
+  | 'BASE_GRADE'
+  | 'CONSUMER_GRADE'
+  | 'INDUSTRIAL_GRADE'
+  | 'MIL_SPEC'
+  | 'RESTRICTED'
+  | 'CLASSIFIED'
+  | 'COVERT'
+  | 'CONTRABAND';
 
 /** Which faction side a weapon is legal in. */
-export type WeaponSide = "T" | "CT" | "ALL";
+export type WeaponSide = 'T' | 'CT' | 'ALL';
 
 /** Whether an item is an active weapon or a utility/grenade. */
-export type WeaponType = "WEAPON" | "UTILITY";
+export type WeaponType = 'WEAPON' | 'UTILITY';
 
 /**
  * Canonical frontend representation of a weapon or utility item.
@@ -108,21 +108,17 @@ export function mapBackendWeapon(raw: RawWeaponPayload): Weapon {
 
   return {
     id: raw.id,
-    name: template.name ?? "Unknown Weapon",
-    type: (template.type ?? "WEAPON") as WeaponType,
-    side: (template.side ?? "ALL") as WeaponSide,
-    energyCost: getField("energyCost", "energy_cost", 0),
+    name: template.name ?? 'Unknown Weapon',
+    type: (template.type ?? 'WEAPON') as WeaponType,
+    side: (template.side ?? 'ALL') as WeaponSide,
+    energyCost: getField('energyCost', 'energy_cost', 0),
     damage: template.damage ?? 0,
-    drawWeight: getField("drawWeight", "draw_weight", 0),
-    critChance: getField("critChance", "crit_chance", 0),
-    critMultiplier: getField("critMultiplier", "crit_multiplier", 1.0),
-    statusEffect: getField("statusEffect", "status_effect", "NONE"),
-    rarity: getField<WeaponRarity>("rarity", "rarity", "BASE_GRADE"),
-    imageUrl: getField(
-      "imageUrl",
-      "image_url",
-      "/assets/placeholder-weapon.png",
-    ),
-    description: template.description ?? "No description available",
+    drawWeight: getField('drawWeight', 'draw_weight', 0),
+    critChance: getField('critChance', 'crit_chance', 0),
+    critMultiplier: getField('critMultiplier', 'crit_multiplier', 1.0),
+    statusEffect: getField('statusEffect', 'status_effect', 'NONE'),
+    rarity: getField<WeaponRarity>('rarity', 'rarity', 'BASE_GRADE'),
+    imageUrl: getField('imageUrl', 'image_url', '/assets/placeholder-weapon.png'),
+    description: template.description ?? 'No description available',
   };
 }

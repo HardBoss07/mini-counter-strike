@@ -20,10 +20,7 @@ public class MatchStateMapper {
         try {
             return objectMapper.readValue(logsJson, LiveMatchState.class);
         } catch (Exception e) {
-            throw new RuntimeException(
-                "Failed to deserialize match state: " + e.getMessage(),
-                e
-            );
+            throw new RuntimeException("Failed to deserialize match state: " + e.getMessage(), e);
         }
     }
 
@@ -31,18 +28,13 @@ public class MatchStateMapper {
         try {
             return objectMapper.writeValueAsString(state);
         } catch (Exception e) {
-            throw new RuntimeException(
-                "Failed to serialize match state: " + e.getMessage(),
-                e
-            );
+            throw new RuntimeException("Failed to serialize match state: " + e.getMessage(), e);
         }
     }
 
     public LiveMatchState readFromMatch(Match match) {
         if (match.getLogsJson() == null) {
-            throw new IllegalStateException(
-                "Match does not have a valid state stored"
-            );
+            throw new IllegalStateException("Match does not have a valid state stored");
         }
         return deserialize(match.getLogsJson());
     }

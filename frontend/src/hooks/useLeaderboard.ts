@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { api } from "../utils/api";
-import type { LeaderboardEntry } from "../types/user";
+import { useState, useEffect } from 'react';
+import { api } from '../utils/api';
+import type { LeaderboardEntry } from '../types/user';
 
 interface UseLeaderboardResult {
   leaderboard: LeaderboardEntry[];
@@ -30,9 +30,7 @@ export function useLeaderboard(): UseLeaderboardResult {
       .catch((fetchError: unknown) => {
         if (isMounted) {
           const message =
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Failed to load leaderboard";
+            fetchError instanceof Error ? fetchError.message : 'Failed to load leaderboard';
           setError(message);
           setLoading(false);
         }

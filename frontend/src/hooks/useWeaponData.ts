@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { api } from "../utils/api";
-import { mapBackendWeapon } from "../types/weapon";
-import type { Weapon } from "../types/weapon";
+import { useState, useEffect } from 'react';
+import { api } from '../utils/api';
+import { mapBackendWeapon } from '../types/weapon';
+import type { Weapon } from '../types/weapon';
 
 const weaponCache = new Map<number, Weapon>();
 

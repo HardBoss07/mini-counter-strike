@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { api } from "../utils/api";
-import type { UserProfile } from "../types/user";
+import { useState, useEffect } from 'react';
+import { api } from '../utils/api';
+import type { UserProfile } from '../types/user';
 
 /**
  * Module-level cache so multiple components (Navbar, Dashboard, Cases)
@@ -44,11 +44,9 @@ interface UseUserProfileResult {
  * Deduplicates concurrent calls and caches the result for the session.
  */
 export function useUserProfile(): UseUserProfileResult {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem('token');
   const [profile, setProfile] = useState<UserProfile | null>(profileCache);
-  const [loading, setLoading] = useState<boolean>(
-    profileCache === null && !!token,
-  );
+  const [loading, setLoading] = useState<boolean>(profileCache === null && !!token);
   const [error, setError] = useState<string | null>(null);
   const [refreshCounter, setRefreshCounter] = useState<number>(0);
 
@@ -56,7 +54,7 @@ export function useUserProfile(): UseUserProfileResult {
     if (!token) {
       setProfile(null);
       setLoading(false);
-      setError("No authentication token found.");
+      setError('No authentication token found.');
       return;
     }
 
@@ -74,9 +72,7 @@ export function useUserProfile(): UseUserProfileResult {
       .catch((fetchError: unknown) => {
         if (isMounted) {
           const message =
-            fetchError instanceof Error
-              ? fetchError.message
-              : "Failed to load profile";
+            fetchError instanceof Error ? fetchError.message : 'Failed to load profile';
           setError(message);
           setLoading(false);
         }

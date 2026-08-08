@@ -27,9 +27,7 @@ public class MatchEngine {
      */
     public List<WeaponArchetype> drawHand(List<WeaponArchetype> loadout) {
         if (loadout.size() != 5) {
-            throw new IllegalArgumentException(
-                "Loadout must contain exactly 5 items."
-            );
+            throw new IllegalArgumentException("Loadout must contain exactly 5 items.");
         }
 
         List<WeaponArchetype> hand = new ArrayList<>();
@@ -66,15 +64,11 @@ public class MatchEngine {
             int playerTurn = (turnNumber + 1) / 2;
             // Energy granted this turn: base + (turn - 1) * scalingFactor, capped at maxEnergyPerTurn
             int energyToAdd = Math.min(
-                gameConfig.getBaseEnergy() +
-                    (playerTurn - 1) * gameConfig.getEnergyScalingFactor(),
+                gameConfig.getBaseEnergy() + (playerTurn - 1) * gameConfig.getEnergyScalingFactor(),
                 gameConfig.getMaxEnergyPerTurn()
             );
             // Total held energy capped at maxEnergy (carry-over cap)
-            int currentEnergy = Math.min(
-                attacker.energy() + energyToAdd,
-                gameConfig.getMaxEnergy()
-            );
+            int currentEnergy = Math.min(attacker.energy() + energyToAdd, gameConfig.getMaxEnergy());
 
             // Draw Hand
             List<WeaponArchetype> hand = drawHand(attackerLoadout);
@@ -91,7 +85,7 @@ public class MatchEngine {
             final int currentEnergyForFilter = attacker.energy();
             WeaponArchetype selectedAction = hand
                 .stream()
-                .filter(w -> w.energyCost() <= currentEnergyForFilter)
+                .filter((w) -> w.energyCost() <= currentEnergyForFilter)
                 .max((w1, w2) -> Integer.compare(w1.damage(), w2.damage()))
                 .orElse(null);
 
@@ -107,12 +101,7 @@ public class MatchEngine {
                 );
                 logs.add(record);
             } else {
-                CombatRoundRecord record = resolveTurn(
-                    attacker,
-                    defender,
-                    selectedAction,
-                    turnNumber
-                );
+                CombatRoundRecord record = resolveTurn(attacker, defender, selectedAction, turnNumber);
                 logs.add(record);
                 attacker = record.playerA();
                 defender = record.playerB();
@@ -143,28 +132,19 @@ public class MatchEngine {
         int turnNumber
     ) {
         StringBuilder log = new StringBuilder();
-        Set<StatusEffect> attackerEffects = new HashSet<>(
-            attacker.activeEffects()
-        );
-        Set<StatusEffect> defenderEffects = new HashSet<>(
-            defender.activeEffects()
-        );
+        Set<StatusEffect> attackerEffects = new HashSet<>(attacker.activeEffects());
+        Set<StatusEffect> defenderEffects = new HashSet<>(defender.activeEffects());
 
         int attackerHp = attacker.hp();
         int defenderHp = defender.hp();
         int energySpent = action.energyCost();
 
         // 1. Apply burn damage at start of turn
-        int burnDamage = combatProcessor.applyBurnDamage(
-            attackerHp,
-            attackerEffects
-        );
+        int burnDamage = combatProcessor.applyBurnDamage(attackerHp, attackerEffects);
         if (burnDamage < attackerHp) {
             attackerHp = burnDamage;
             attackerEffects = combatProcessor.removeBurnEffect(attackerEffects);
-            log.append(
-                String.format("%s took 15 burn damage. ", attacker.username())
-            );
+            log.append(String.format("%s took 15 burn damage. ", attacker.username()));
         }
 
         // Burn killed the attacker before they could act - no energy is spent.
@@ -186,9 +166,7 @@ public class MatchEngine {
         // 2. Check for SKIP_TURN effect - attacker's action is cancelled, no energy spent.
         if (attackerEffects.contains(StatusEffect.SKIP_TURN)) {
             attackerEffects.remove(StatusEffect.SKIP_TURN);
-            log.append(
-                String.format("%s's turn was skipped!", attacker.username())
-            );
+            log.append(String.format("%s's turn was skipped!", attacker.username()));
             return createRecord(
                 turnNumber,
                 attacker,
@@ -204,35 +182,15 @@ public class MatchEngine {
         }
 
         // 3. Validate and deduct energy - only reached when the action actually fires.
-        int energyAfterDeduction = combatProcessor.validateAndDeductEnergy(
-            attacker.energy(),
-            energySpent
-        );
+        int energyAfterDeduction = combatProcessor.validateAndDeductEnergy(attacker.energy(), energySpent);
 
         // 4. Process weapon or utility action
         if (action.type() == ItemType.WEAPON) {
-            defenderHp = processWeaponAction(
-                action,
-                attacker,
-                attackerEffects,
-                defenderHp,
-                log
-            );
-            attackerEffects = combatProcessor.removeBlindnessEffect(
-                attackerEffects
-            );
+            defenderHp = processWeaponAction(action, attacker, attackerEffects, defenderHp, log);
+            attackerEffects = combatProcessor.removeBlindnessEffect(attackerEffects);
         } else {
-            defenderHp = processUtilityAction(
-                action,
-                attacker,
-                defenderHp,
-                defenderEffects,
-                log
-            );
-            defenderEffects = combatProcessor.applyStatusEffect(
-                action,
-                defenderEffects
-            );
+            defenderHp = processUtilityAction(action, attacker, defenderHp, defenderEffects, log);
+            defenderEffects = combatProcessor.applyStatusEffect(action, defenderEffects);
         }
 
         return createRecord(
@@ -265,10 +223,7 @@ public class MatchEngine {
 
         // Apply blindness penalty
         if (attackerEffects.contains(StatusEffect.BLIND_50)) {
-            damage = combatProcessor.applyBlindnessPenalty(
-                damage,
-                attackerEffects
-            );
+            damage = combatProcessor.applyBlindnessPenalty(damage, attackerEffects);
             log.append(
                 String.format(
                     "%s fired %s while blinded, dealing %d damage.",
@@ -278,14 +233,7 @@ public class MatchEngine {
                 )
             );
         } else {
-            log.append(
-                String.format(
-                    "%s fired %s, dealing %d damage.",
-                    attacker.username(),
-                    action.name(),
-                    damage
-                )
-            );
+            log.append(String.format("%s fired %s, dealing %d damage.", attacker.username(), action.name(), damage));
         }
 
         return Math.max(0, defenderHp - damage);
@@ -301,18 +249,9 @@ public class MatchEngine {
         int damage = action.damage();
         if (damage > 0) {
             defenderHp = Math.max(0, defenderHp - damage);
-            log.append(
-                String.format(
-                    "%s used %s, dealing %d damage.",
-                    attacker.username(),
-                    action.name(),
-                    damage
-                )
-            );
+            log.append(String.format("%s used %s, dealing %d damage.", attacker.username(), action.name(), damage));
         } else {
-            log.append(
-                String.format("%s used %s.", attacker.username(), action.name())
-            );
+            log.append(String.format("%s used %s.", attacker.username(), action.name()));
         }
         return defenderHp;
     }
@@ -329,38 +268,13 @@ public class MatchEngine {
         Set<StatusEffect> bEff,
         String log
     ) {
-        PlayerState newAttacker = new PlayerState(
-            a.playerId(),
-            a.username(),
-            aHp,
-            remainingEnergy,
-            a.hand(),
-            aEff
-        );
-        PlayerState newDefender = new PlayerState(
-            b.playerId(),
-            b.username(),
-            bHp,
-            b.energy(),
-            b.hand(),
-            bEff
-        );
-        return new CombatRoundRecord(
-            turn,
-            newAttacker,
-            newDefender,
-            log,
-            a.playerId(),
-            energySpent,
-            remainingEnergy
-        );
+        PlayerState newAttacker = new PlayerState(a.playerId(), a.username(), aHp, remainingEnergy, a.hand(), aEff);
+        PlayerState newDefender = new PlayerState(b.playerId(), b.username(), bHp, b.energy(), b.hand(), bEff);
+        return new CombatRoundRecord(turn, newAttacker, newDefender, log, a.playerId(), energySpent, remainingEnergy);
     }
 
     private WeaponArchetype selectByWeight(List<WeaponArchetype> pool) {
-        int totalWeight = pool
-            .stream()
-            .mapToInt(WeaponArchetype::drawWeight)
-            .sum();
+        int totalWeight = pool.stream().mapToInt(WeaponArchetype::drawWeight).sum();
         if (totalWeight == 0) return pool.get(random.nextInt(pool.size()));
 
         int r = random.nextInt(totalWeight);

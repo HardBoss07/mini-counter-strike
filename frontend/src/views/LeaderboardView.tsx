@@ -1,7 +1,7 @@
-import React from "react";
-import { useLeaderboard } from "../hooks/useLeaderboard";
-import LoadingSpinner from "../components/atoms/LoadingSpinner";
-import type { LeaderboardEntry } from "../types/user";
+import React from 'react';
+import { useLeaderboard } from '../hooks/useLeaderboard';
+import LoadingSpinner from '../components/atoms/LoadingSpinner';
+import type { LeaderboardEntry } from '../types/user';
 
 const LeaderboardView: React.FC = () => {
   const { leaderboard, loading } = useLeaderboard();
@@ -11,13 +11,11 @@ const LeaderboardView: React.FC = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h2 className="text-3xl font-black uppercase text-white mb-8">
-        Top Players
-      </h2>
-      <table className="w-full text-left border-collapse">
+    <div className="mx-auto max-w-2xl">
+      <h2 className="mb-8 text-3xl font-black uppercase text-white">Top Players</h2>
+      <table className="w-full border-collapse text-left">
         <thead>
-          <tr className="border-b border-white/10 text-gray-500 uppercase text-xs">
+          <tr className="border-b border-white/10 text-xs uppercase text-gray-500">
             <th className="p-4">Rank</th>
             <th className="p-4">Username</th>
             <th className="p-4">ELO</th>
@@ -25,15 +23,10 @@ const LeaderboardView: React.FC = () => {
         </thead>
         <tbody>
           {leaderboard.map((entry: LeaderboardEntry, index: number) => (
-            <tr
-              key={entry.username}
-              className="border-b border-white/5 hover:bg-white/5"
-            >
+            <tr key={entry.username} className="border-b border-white/5 hover:bg-white/5">
               <td className="p-4 font-mono">{index + 1}</td>
               <td className="p-4">{entry.username}</td>
-              <td className="p-4 font-bold text-tactical-accent">
-                {entry.elo}
-              </td>
+              <td className="p-4 font-bold text-tactical-accent">{entry.elo}</td>
             </tr>
           ))}
         </tbody>

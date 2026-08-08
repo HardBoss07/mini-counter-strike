@@ -1,3 +1,14 @@
-frontend/dist
-frontend/node_modules
+# Build outputs & dependencies
 **/target/
+**/dist/
+**/node_modules/
+**/.mvn/
+
+# Binary / Executables
+backend/mvnw
+backend/mvnw.cmd
+*.png
+*.svg
+
+# Package locks (handled by npm)
+package-lock.json

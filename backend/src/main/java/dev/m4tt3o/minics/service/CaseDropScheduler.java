@@ -27,8 +27,7 @@ public class CaseDropScheduler {
     @Transactional
     public void processPendingCaseDrops() {
         LocalDateTime now = LocalDateTime.now(clock);
-        List<User> eligibleUsers =
-            userRepository.findByNextCaseAvailableAtLessThanEqual(now);
+        List<User> eligibleUsers = userRepository.findByNextCaseAvailableAtLessThanEqual(now);
 
         if (eligibleUsers.isEmpty()) {
             return;
@@ -36,11 +35,7 @@ public class CaseDropScheduler {
 
         CaseTemplate defaultCase = caseTemplateRepository
             .findFirstByOrderByIdAsc()
-            .orElseThrow(() ->
-                new IllegalStateException(
-                    "No case template available for drop."
-                )
-            );
+            .orElseThrow(() -> new IllegalStateException("No case template available for drop."));
 
         for (User user : eligibleUsers) {
             UserCaseInstance newCase = new UserCaseInstance();

@@ -1,4 +1,4 @@
-import type { Weapon } from "./weapon";
+import type { Weapon } from './weapon';
 
 /**
  * A weapon that has been placed into a loadout slot.

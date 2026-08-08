@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { api, subscribeToMatchStream } from "../utils/api";
-import { useAuth } from "../contexts/AuthContext";
-import type { MatchStateResponse } from "../types/match";
+import { useState, useEffect } from 'react';
+import { api, subscribeToMatchStream } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
+import type { MatchStateResponse } from '../types/match';
 
 interface UseMatchStreamResult {
   matchState: MatchStateResponse | null;
@@ -21,18 +21,14 @@ interface UseMatchStreamResult {
  * - Registers a beforeunload keepalive surrender to handle tab closure.
  * - Exposes submitAction and surrender mutation callbacks.
  */
-export function useMatchStream(
-  matchId: string | undefined,
-): UseMatchStreamResult {
+export function useMatchStream(matchId: string | undefined): UseMatchStreamResult {
   const { user } = useAuth();
 
   const [matchState, setMatchState] = useState<MatchStateResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewerUsername, setViewerUsername] = useState<string>(
-    user?.username ?? "",
-  );
+  const [viewerUsername, setViewerUsername] = useState<string>(user?.username ?? '');
 
   // Resolve viewer identity: prefer AuthContext, fall back to API call.
   useEffect(() => {
@@ -47,7 +43,7 @@ export function useMatchStream(
         setViewerUsername(profile.username);
       })
       .catch((fetchError: unknown) => {
-        console.error("Could not resolve viewer identity:", fetchError);
+        console.error('Could not resolve viewer identity:', fetchError);
       });
   }, [user]);
 
@@ -66,15 +62,15 @@ export function useMatchStream(
 
   // Keepalive surrender on tab/window close.
   useEffect(() => {
-    if (!matchId || !matchState || matchState.status === "COMPLETED") return;
+    if (!matchId || !matchState || matchState.status === 'COMPLETED') return;
 
     const handleBeforeUnload = (): void => {
       api.keepaliveSurrender(matchId);
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [matchId, matchState]);
 
@@ -86,7 +82,7 @@ export function useMatchStream(
       // The SSE stream pushes the updated state automatically.
     } catch (actionError: unknown) {
       console.error(actionError);
-      setError("Failed to process battle action.");
+      setError('Failed to process battle action.');
     } finally {
       setSubmitting(false);
     }

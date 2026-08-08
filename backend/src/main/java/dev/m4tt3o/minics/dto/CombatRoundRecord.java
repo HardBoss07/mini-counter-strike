@@ -18,14 +18,10 @@ public record CombatRoundRecord(
     /** Compact constructor - energy bookkeeping values must be non-negative. */
     public CombatRoundRecord {
         if (energySpent < 0) {
-            throw new IllegalArgumentException(
-                "energySpent cannot be negative, got: " + energySpent
-            );
+            throw new IllegalArgumentException("energySpent cannot be negative, got: " + energySpent);
         }
         if (remainingEnergy < 0) {
-            throw new IllegalArgumentException(
-                "remainingEnergy cannot be negative, got: " + remainingEnergy
-            );
+            throw new IllegalArgumentException("remainingEnergy cannot be negative, got: " + remainingEnergy);
         }
     }
 }

@@ -26,19 +26,13 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http)
-        throws Exception {
-        http.csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .authorizeHttpRequests(auth ->
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf((csrf) -> csrf.disable())
+            .cors((cors) -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests((auth) ->
                 auth
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.OPTIONS,
-                        "/**"
-                    )
+                    .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
                     .permitAll()
                     .requestMatchers("/api/auth/**")
                     .permitAll()
@@ -55,10 +49,7 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated()
             )
-            .addFilterBefore(
-                jwtAuthFilter,
-                UsernamePasswordAuthenticationFilter.class
-            );
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -69,9 +60,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-        AuthenticationConfiguration config
-    ) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -79,22 +68,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(
-            List.of(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://frontend:5173"
-            )
+            List.of("http://localhost:3000", "http://localhost:5173", "http://frontend:5173")
         );
-        configuration.setAllowedMethods(
-            Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-        );
-        configuration.setAllowedHeaders(
-            Arrays.asList("Authorization", "Content-Type", "x-auth-token")
-        );
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "x-auth-token"));
         configuration.setExposedHeaders(List.of("x-auth-token"));
         configuration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource source =
-            new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

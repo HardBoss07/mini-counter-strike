@@ -1,8 +1,8 @@
-import React from "react";
-import { useInventory } from "../hooks/useInventory";
-import { WeaponCard } from "../components/molecules/WeaponCard";
-import { CardSorter } from "../components/organisms/CardSorter";
-import LoadingSpinner from "../components/atoms/LoadingSpinner";
+import React from 'react';
+import { useInventory } from '../hooks/useInventory';
+import { WeaponCard } from '../components/molecules/WeaponCard';
+import { CardSorter } from '../components/organisms/CardSorter';
+import LoadingSpinner from '../components/atoms/LoadingSpinner';
 
 const InventoryView: React.FC = () => {
   const { weapons, loading } = useInventory();
@@ -23,7 +23,7 @@ const InventoryView: React.FC = () => {
               isFlippable={true}
               backContent={
                 <div className="text-center">
-                  <h3 className="text-white font-bold mb-2">{weapon.name}</h3>
+                  <h3 className="mb-2 font-bold text-white">{weapon.name}</h3>
                   <p className="text-xs text-gray-400">{weapon.description}</p>
                 </div>
               }

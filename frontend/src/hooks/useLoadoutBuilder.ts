@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
-import type { DragStartEvent, DragEndEvent } from "@dnd-kit/core";
-import { api } from "../utils/api";
-import { mapBackendWeapon } from "../types/weapon";
-import type { Weapon } from "../types/weapon";
-import type { LoadoutItem } from "../types/loadout";
+import { useState, useEffect, useCallback } from 'react';
+import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
+import { api } from '../utils/api';
+import { mapBackendWeapon } from '../types/weapon';
+import type { Weapon } from '../types/weapon';
+import type { LoadoutItem } from '../types/loadout';
 
-type SaveStatus = "idle" | "saving" | "saved";
+type SaveStatus = 'idle' | 'saving' | 'saved';
 
 interface UseLoadoutBuilderResult {
   armoryWeapons: Weapon[];
@@ -26,7 +26,7 @@ function attachUniqueId(weapon: Weapon): LoadoutItem {
 }
 
 function getBaseWeaponName(fullName: string): string {
-  return fullName.split(" | ")[0];
+  return fullName.split(' | ')[0];
 }
 
 /**
@@ -41,7 +41,7 @@ export function useLoadoutBuilder(): UseLoadoutBuilderResult {
   const [ctLoadout, setCtLoadout] = useState<LoadoutItem[]>([]);
   const [activeWeapon, setActiveWeapon] = useState<Weapon | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [error, setError] = useState<string | null>(null);
 
   const showError = useCallback((message: string): void => {
@@ -54,28 +54,21 @@ export function useLoadoutBuilder(): UseLoadoutBuilderResult {
 
     const initialize = async (): Promise<void> => {
       try {
-        const [weaponsData, loadoutData] = await Promise.all([
-          api.getWeapons(),
-          api.getLoadouts(),
-        ]);
+        const [weaponsData, loadoutData] = await Promise.all([api.getWeapons(), api.getLoadouts()]);
 
         if (!isMounted) return;
 
         setArmoryWeapons(weaponsData.map(mapBackendWeapon));
 
         if (loadoutData.tLoadout) {
-          setTLoadout(
-            loadoutData.tLoadout.map(mapBackendWeapon).map(attachUniqueId),
-          );
+          setTLoadout(loadoutData.tLoadout.map(mapBackendWeapon).map(attachUniqueId));
         }
         if (loadoutData.ctLoadout) {
-          setCtLoadout(
-            loadoutData.ctLoadout.map(mapBackendWeapon).map(attachUniqueId),
-          );
+          setCtLoadout(loadoutData.ctLoadout.map(mapBackendWeapon).map(attachUniqueId));
         }
       } catch (initError: unknown) {
         if (isMounted) {
-          showError("Failed to connect to the tactical armory database.");
+          showError('Failed to connect to the tactical armory database.');
           console.error(initError);
         }
       } finally {
@@ -102,47 +95,41 @@ export function useLoadoutBuilder(): UseLoadoutBuilderResult {
 
       const weapon = active.data.current as Weapon;
       const targetZone = over.id as string;
-      const targetSide = over.data.current?.side as "T" | "CT";
+      const targetSide = over.data.current?.side as 'T' | 'CT';
 
-      if (weapon.side !== "ALL" && weapon.side !== targetSide) {
+      if (weapon.side !== 'ALL' && weapon.side !== targetSide) {
         showError(`Cannot add ${weapon.side} weapon to ${targetSide} loadout!`);
         return;
       }
 
-      const currentLoadout = targetSide === "T" ? tLoadout : ctLoadout;
+      const currentLoadout = targetSide === 'T' ? tLoadout : ctLoadout;
       const incomingBaseName = getBaseWeaponName(weapon.name);
 
       const hasDuplicateBase = currentLoadout.some(
         (item) => getBaseWeaponName(item.name) === incomingBaseName,
       );
       if (hasDuplicateBase) {
-        showError(
-          `You already have a variant of ${incomingBaseName} equipped!`,
-        );
+        showError(`You already have a variant of ${incomingBaseName} equipped!`);
         return;
       }
 
-      const weaponCount = currentLoadout.filter(
-        (item) => item.type === "WEAPON",
-      ).length;
-      const utilityCount = currentLoadout.filter(
-        (item) => item.type === "UTILITY",
-      ).length;
+      const weaponCount = currentLoadout.filter((item) => item.type === 'WEAPON').length;
+      const utilityCount = currentLoadout.filter((item) => item.type === 'UTILITY').length;
 
-      if (weapon.type === "WEAPON" && weaponCount >= 3) {
-        showError("Maximum 3 weapons allowed per loadout!");
+      if (weapon.type === 'WEAPON' && weaponCount >= 3) {
+        showError('Maximum 3 weapons allowed per loadout!');
         return;
       }
-      if (weapon.type === "UTILITY" && utilityCount >= 2) {
-        showError("Maximum 2 utility items allowed per loadout!");
+      if (weapon.type === 'UTILITY' && utilityCount >= 2) {
+        showError('Maximum 2 utility items allowed per loadout!');
         return;
       }
 
       const newItem = attachUniqueId(weapon);
 
-      if (targetZone === "t-loadout") {
+      if (targetZone === 't-loadout') {
         setTLoadout((previous) => [...previous, newItem]);
-      } else if (targetZone === "ct-loadout") {
+      } else if (targetZone === 'ct-loadout') {
         setCtLoadout((previous) => [...previous, newItem]);
       }
     },
@@ -150,24 +137,20 @@ export function useLoadoutBuilder(): UseLoadoutBuilderResult {
   );
 
   const handleRemoveItem = useCallback((uniqueId: string): void => {
-    setTLoadout((previous) =>
-      previous.filter((item) => item.uniqueId !== uniqueId),
-    );
-    setCtLoadout((previous) =>
-      previous.filter((item) => item.uniqueId !== uniqueId),
-    );
+    setTLoadout((previous) => previous.filter((item) => item.uniqueId !== uniqueId));
+    setCtLoadout((previous) => previous.filter((item) => item.uniqueId !== uniqueId));
   }, []);
 
   const handleSave = useCallback(async (): Promise<void> => {
-    setSaveStatus("saving");
+    setSaveStatus('saving');
     try {
       await api.saveLoadouts(tLoadout, ctLoadout);
-      setSaveStatus("saved");
-      setTimeout(() => setSaveStatus("idle"), 2000);
+      setSaveStatus('saved');
+      setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (saveError: unknown) {
-      showError("Failed to save loadouts.");
+      showError('Failed to save loadouts.');
       console.error(saveError);
-      setSaveStatus("idle");
+      setSaveStatus('idle');
     }
   }, [tLoadout, ctLoadout, showError]);
 

@@ -26,27 +26,20 @@ public class MatchController {
 
     @PostMapping("/queue")
     public ResponseEntity<Map<String, Long>> queue() {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username).orElseThrow();
         Long ticketId = matchmakingService.queueUser(user.getId());
         matchmakingService.tryMatchmaking(); // Attempt to match immediately
         return ResponseEntity.ok(Map.of("ticketId", ticketId));
     }
 
-    @GetMapping(
-        value = "/{matchId}/stream",
-        produces = MediaType.TEXT_EVENT_STREAM_VALUE
-    )
+    @GetMapping(value = "/{matchId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamMatchState(@PathVariable Long matchId) {
         return matchService.subscribeToMatch(matchId);
     }
 
     @GetMapping("/queue/status")
-    public ResponseEntity<Map<String, Object>> queueStatus(
-        @RequestParam Long ticketId
-    ) {
+    public ResponseEntity<Map<String, Object>> queueStatus(@RequestParam Long ticketId) {
         String status = matchmakingService.getStatus(ticketId);
         Map<String, Object> response = new java.util.HashMap<>();
         response.put("status", status);
@@ -57,45 +50,32 @@ public class MatchController {
     }
 
     @GetMapping("/{matchId}/state")
-    public ResponseEntity<MatchStateResponse> state(
-        @PathVariable Long matchId
-    ) {
+    public ResponseEntity<MatchStateResponse> state(@PathVariable Long matchId) {
         return ResponseEntity.ok(matchService.getMatchState(matchId));
     }
 
     @PostMapping("/{matchId}/action")
-    public ResponseEntity<Void> action(
-        @PathVariable Long matchId,
-        @RequestBody Map<String, Long> request
-    ) {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
+    public ResponseEntity<Void> action(@PathVariable Long matchId, @RequestBody Map<String, Long> request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         matchService.submitAction(matchId, username, request.get("weaponId"));
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{matchId}/surrender")
     public ResponseEntity<Void> surrender(@PathVariable Long matchId) {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         matchService.surrenderMatch(matchId, username);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{matchId}/logs")
-    public ResponseEntity<List<CombatRoundRecord>> logs(
-        @PathVariable Long matchId
-    ) {
+    public ResponseEntity<List<CombatRoundRecord>> logs(@PathVariable Long matchId) {
         return ResponseEntity.ok(matchService.getMatchLogs(matchId));
     }
 
     @PostMapping("/queue/leave")
     public ResponseEntity<Void> leaveQueue() {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username).orElseThrow();
 
         matchmakingService.leaveQueue(user.getId());
@@ -107,16 +87,8 @@ public class MatchController {
      * Intercepts unhandled tactical rule calculation breakdowns from MatchEngine
      * and reports them as clean bad requests instead of defaulting to a 403 Forbidden.
      */
-    @ExceptionHandler({
-        RuntimeException.class,
-        IllegalArgumentException.class,
-        IllegalStateException.class,
-    })
-    public ResponseEntity<Map<String, String>> handleMatchEngineExceptions(
-        Exception ex
-    ) {
-        return ResponseEntity.badRequest().body(
-            Map.of("message", ex.getMessage())
-        );
+    @ExceptionHandler({ RuntimeException.class, IllegalArgumentException.class, IllegalStateException.class })
+    public ResponseEntity<Map<String, String>> handleMatchEngineExceptions(Exception ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
     }
 }

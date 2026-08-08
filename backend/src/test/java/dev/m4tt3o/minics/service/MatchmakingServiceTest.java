@@ -59,7 +59,7 @@ class MatchmakingServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(playerA));
         when(userRepository.findById(2L)).thenReturn(Optional.of(playerB));
-        when(matchService.createMatch("Alpha", "Bravo")).thenAnswer(inv -> {
+        when(matchService.createMatch("Alpha", "Bravo")).thenAnswer((inv) -> {
             Match match = new Match();
             match.setId(99L);
             match.setStatus("IN_PROGRESS");
@@ -70,9 +70,7 @@ class MatchmakingServiceTest {
         matchmakingService.queueUser(2L);
         matchmakingService.tryMatchmaking();
 
-        when(matchRepository.findById(99L)).thenReturn(
-            Optional.of(activeMatch)
-        );
+        when(matchRepository.findById(99L)).thenReturn(Optional.of(activeMatch));
 
         Long ticket = matchmakingService.queueUser(1L);
 
@@ -97,7 +95,7 @@ class MatchmakingServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(playerA));
         when(userRepository.findById(2L)).thenReturn(Optional.of(playerB));
-        when(matchService.createMatch("Alpha", "Bravo")).thenAnswer(inv -> {
+        when(matchService.createMatch("Alpha", "Bravo")).thenAnswer((inv) -> {
             Match match = new Match();
             match.setId(42L);
             match.setStatus("IN_PROGRESS");
@@ -108,9 +106,7 @@ class MatchmakingServiceTest {
         matchmakingService.queueUser(2L);
         matchmakingService.tryMatchmaking();
 
-        when(matchRepository.findById(42L)).thenReturn(
-            Optional.of(activeMatch)
-        );
+        when(matchRepository.findById(42L)).thenReturn(Optional.of(activeMatch));
 
         assertThat(matchmakingService.getStatus(1L)).isEqualTo("MATCH_FOUND");
         assertThat(matchmakingService.getMatchId(1L)).isEqualTo(42L);
@@ -124,22 +120,18 @@ class MatchmakingServiceTest {
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(playerA));
         when(userRepository.findById(2L)).thenReturn(Optional.of(playerB));
-        when(matchService.createMatch(anyString(), anyString())).thenAnswer(
-            inv -> {
-                Match match = new Match();
-                match.setId(42L);
-                match.setStatus("IN_PROGRESS");
-                return match;
-            }
-        );
+        when(matchService.createMatch(anyString(), anyString())).thenAnswer((inv) -> {
+            Match match = new Match();
+            match.setId(42L);
+            match.setStatus("IN_PROGRESS");
+            return match;
+        });
 
         matchmakingService.queueUser(1L);
         matchmakingService.queueUser(2L);
         matchmakingService.tryMatchmaking();
 
-        when(matchRepository.findById(42L)).thenReturn(
-            Optional.of(completedMatch)
-        );
+        when(matchRepository.findById(42L)).thenReturn(Optional.of(completedMatch));
 
         assertThat(matchmakingService.getStatus(1L)).isEqualTo("WAITING");
         assertThat(matchmakingService.getMatchId(1L)).isNull();
@@ -149,7 +141,7 @@ class MatchmakingServiceTest {
     void tryMatchmaking_pairsTwoUsersAndCreatesMatch() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(playerA));
         when(userRepository.findById(2L)).thenReturn(Optional.of(playerB));
-        when(matchService.createMatch("Alpha", "Bravo")).thenAnswer(inv -> {
+        when(matchService.createMatch("Alpha", "Bravo")).thenAnswer((inv) -> {
             Match match = new Match();
             match.setId(100L);
             match.setStatus("IN_PROGRESS");

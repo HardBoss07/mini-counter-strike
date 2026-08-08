@@ -21,15 +21,10 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileResponse> getMe() {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
-        User user = userRepository
-            .findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
-        int caseCount =
-            (int) userCaseInstanceRepository.countByUserAndOpenedFalse(user);
+        int caseCount = (int) userCaseInstanceRepository.countByUserAndOpenedFalse(user);
 
         return ResponseEntity.ok(
             new UserProfileResponse(

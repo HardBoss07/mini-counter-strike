@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { api } from "../utils/api";
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 interface UseMatchmakingResult {
   isCancelling: boolean;
@@ -36,13 +36,13 @@ export function useMatchmaking(): UseMatchmakingResult {
 
         try {
           const result = await api.getQueueStatus(ticketId!);
-          if (result.status === "MATCH_FOUND" && result.matchId !== undefined) {
+          if (result.status === 'MATCH_FOUND' && result.matchId !== undefined) {
             matchFoundRef.current = true;
             clearInterval(intervalHandle);
             navigate(`/battle/${result.matchId}`);
           }
         } catch (pollError: unknown) {
-          console.error("Error polling queue status:", pollError);
+          console.error('Error polling queue status:', pollError);
         }
       }, 500);
     };
@@ -56,7 +56,7 @@ export function useMatchmaking(): UseMatchmakingResult {
         ticketId = response.ticketId;
         pollStatus();
       } catch (queueError: unknown) {
-        console.error("Failed to join matchmaking queue:", queueError);
+        console.error('Failed to join matchmaking queue:', queueError);
       }
     };
 
@@ -71,7 +71,7 @@ export function useMatchmaking(): UseMatchmakingResult {
         api
           .leaveQueue()
           .catch((leaveError: unknown) =>
-            console.error("Failed to leave queue on cleanup:", leaveError),
+            console.error('Failed to leave queue on cleanup:', leaveError),
           );
       }
     };
@@ -82,9 +82,9 @@ export function useMatchmaking(): UseMatchmakingResult {
     try {
       await api.leaveQueue();
       matchFoundRef.current = true;
-      navigate("/");
+      navigate('/');
     } catch (cancelError: unknown) {
-      console.error("Failed to cancel matchmaking:", cancelError);
+      console.error('Failed to cancel matchmaking:', cancelError);
       setIsCancelling(false);
     }
   };

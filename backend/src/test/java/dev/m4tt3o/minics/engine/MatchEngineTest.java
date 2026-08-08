@@ -22,9 +22,7 @@ class MatchEngineTest {
 
     @BeforeEach
     void setUp() {
-        combatProcessor = new CombatMechanicsProcessor(
-            new ControllableRandom()
-        );
+        combatProcessor = new CombatMechanicsProcessor(new ControllableRandom());
         matchEngine = new MatchEngine(
             ControllableRandom.withInts(0),
             combatProcessor,
@@ -59,61 +57,11 @@ class MatchEngineTest {
     @Test
     void drawHand_usesUniformSelectionWhenTotalWeightIsZero() {
         List<WeaponArchetype> loadout = List.of(
-            TestFixtures.weapon(
-                1L,
-                "A",
-                ItemType.WEAPON,
-                1,
-                10,
-                0,
-                0,
-                1,
-                "NONE"
-            ),
-            TestFixtures.weapon(
-                2L,
-                "B",
-                ItemType.WEAPON,
-                1,
-                10,
-                0,
-                0,
-                1,
-                "NONE"
-            ),
-            TestFixtures.weapon(
-                3L,
-                "C",
-                ItemType.WEAPON,
-                1,
-                10,
-                0,
-                0,
-                1,
-                "NONE"
-            ),
-            TestFixtures.weapon(
-                4L,
-                "D",
-                ItemType.WEAPON,
-                1,
-                10,
-                0,
-                0,
-                1,
-                "NONE"
-            ),
-            TestFixtures.weapon(
-                5L,
-                "E",
-                ItemType.WEAPON,
-                1,
-                10,
-                0,
-                0,
-                1,
-                "NONE"
-            )
+            TestFixtures.weapon(1L, "A", ItemType.WEAPON, 1, 10, 0, 0, 1, "NONE"),
+            TestFixtures.weapon(2L, "B", ItemType.WEAPON, 1, 10, 0, 0, 1, "NONE"),
+            TestFixtures.weapon(3L, "C", ItemType.WEAPON, 1, 10, 0, 0, 1, "NONE"),
+            TestFixtures.weapon(4L, "D", ItemType.WEAPON, 1, 10, 0, 0, 1, "NONE"),
+            TestFixtures.weapon(5L, "E", ItemType.WEAPON, 1, 10, 0, 0, 1, "NONE")
         );
         matchEngine = new MatchEngine(
             ControllableRandom.withInts(0, 1, 2),
@@ -131,20 +79,10 @@ class MatchEngineTest {
     @Test
     void resolveTurn_appliesWeaponDamageToDefender() {
         WeaponArchetype rifle = TestFixtures.rifle(1L);
-        PlayerState attacker = TestFixtures.playerState(
-            1L,
-            "Alpha",
-            100,
-            rifle
-        );
+        PlayerState attacker = TestFixtures.playerState(1L, "Alpha", 100, rifle);
         PlayerState defender = TestFixtures.playerState(2L, "Bravo", 100);
 
-        CombatRoundRecord record = matchEngine.resolveTurn(
-            attacker,
-            defender,
-            rifle,
-            1
-        );
+        CombatRoundRecord record = matchEngine.resolveTurn(attacker, defender, rifle, 1);
 
         assertThat(record.playerA().hp()).isEqualTo(100);
         assertThat(record.playerB().hp()).isEqualTo(70);
@@ -154,25 +92,13 @@ class MatchEngineTest {
     @Test
     void resolveTurn_appliesUtilityDamageAndStatusEffect() {
         WeaponArchetype molotov = TestFixtures.molotov(1L);
-        PlayerState attacker = TestFixtures.playerState(
-            1L,
-            "Alpha",
-            100,
-            molotov
-        );
+        PlayerState attacker = TestFixtures.playerState(1L, "Alpha", 100, molotov);
         PlayerState defender = TestFixtures.playerState(2L, "Bravo", 100);
 
-        CombatRoundRecord record = matchEngine.resolveTurn(
-            attacker,
-            defender,
-            molotov,
-            1
-        );
+        CombatRoundRecord record = matchEngine.resolveTurn(attacker, defender, molotov, 1);
 
         assertThat(record.playerB().hp()).isEqualTo(90);
-        assertThat(record.playerB().activeEffects()).contains(
-            StatusEffect.BURN_15
-        );
+        assertThat(record.playerB().activeEffects()).contains(StatusEffect.BURN_15);
         assertThat(record.actionLog()).contains("used Molotov");
     }
 
@@ -189,12 +115,7 @@ class MatchEngineTest {
         );
         PlayerState defender = TestFixtures.playerState(2L, "Bravo", 100);
 
-        CombatRoundRecord record = matchEngine.resolveTurn(
-            attacker,
-            defender,
-            rifle,
-            1
-        );
+        CombatRoundRecord record = matchEngine.resolveTurn(attacker, defender, rifle, 1);
 
         assertThat(record.playerA().energy()).isEqualTo(10);
         assertThat(record.playerB().hp()).isEqualTo(100);
@@ -214,12 +135,7 @@ class MatchEngineTest {
         );
         PlayerState defender = TestFixtures.playerState(2L, "Bravo", 100);
 
-        CombatRoundRecord record = matchEngine.resolveTurn(
-            attacker,
-            defender,
-            rifle,
-            1
-        );
+        CombatRoundRecord record = matchEngine.resolveTurn(attacker, defender, rifle, 1);
 
         assertThat(record.playerB().hp()).isEqualTo(85);
         assertThat(record.actionLog()).contains("while blinded");
@@ -238,18 +154,11 @@ class MatchEngineTest {
         );
         PlayerState defender = TestFixtures.playerState(1L, "Alpha", 100);
 
-        CombatRoundRecord record = matchEngine.resolveTurn(
-            attacker,
-            defender,
-            rifle,
-            3
-        );
+        CombatRoundRecord record = matchEngine.resolveTurn(attacker, defender, rifle, 3);
 
         assertThat(record.playerA().hp()).isZero();
         assertThat(record.playerB().hp()).isEqualTo(100);
-        assertThat(record.playerA().activeEffects()).doesNotContain(
-            StatusEffect.BURN_15
-        );
+        assertThat(record.playerA().activeEffects()).doesNotContain(StatusEffect.BURN_15);
         assertThat(record.actionLog()).contains("15 burn damage");
         assertThat(record.playerA().energy()).isEqualTo(10);
     }
@@ -267,12 +176,7 @@ class MatchEngineTest {
         );
         PlayerState defender = TestFixtures.playerState(1L, "Alpha", 100);
 
-        CombatRoundRecord record = matchEngine.resolveTurn(
-            attacker,
-            defender,
-            rifle,
-            3
-        );
+        CombatRoundRecord record = matchEngine.resolveTurn(attacker, defender, rifle, 3);
 
         assertThat(record.playerA().hp()).isEqualTo(25);
         assertThat(record.playerB().hp()).isEqualTo(70);
@@ -288,53 +192,16 @@ class MatchEngineTest {
             new dev.m4tt3o.minics.config.GameConfig()
         );
 
-        WeaponArchetype lethal = TestFixtures.weapon(
-            1L,
-            "AWP",
-            ItemType.WEAPON,
-            1,
-            100,
-            100,
-            0.0,
-            1.0,
-            "NONE"
-        );
-        List<WeaponArchetype> loadout = List.of(
-            lethal,
-            lethal,
-            lethal,
-            lethal,
-            lethal
-        );
+        WeaponArchetype lethal = TestFixtures.weapon(1L, "AWP", ItemType.WEAPON, 1, 100, 100, 0.0, 1.0, "NONE");
+        List<WeaponArchetype> loadout = List.of(lethal, lethal, lethal, lethal, lethal);
 
-        PlayerState p1 = TestFixtures.playerState(
-            1L,
-            "Alpha",
-            100,
-            10,
-            loadout,
-            Set.of()
-        );
-        PlayerState p2 = TestFixtures.playerState(
-            2L,
-            "Bravo",
-            100,
-            10,
-            loadout,
-            Set.of()
-        );
+        PlayerState p1 = TestFixtures.playerState(1L, "Alpha", 100, 10, loadout, Set.of());
+        PlayerState p2 = TestFixtures.playerState(2L, "Bravo", 100, 10, loadout, Set.of());
 
-        List<CombatRoundRecord> logs = matchEngine.simulateMatch(
-            p1,
-            loadout,
-            p2,
-            loadout
-        );
+        List<CombatRoundRecord> logs = matchEngine.simulateMatch(p1, loadout, p2, loadout);
 
         assertThat(logs).isNotEmpty();
         CombatRoundRecord last = logs.get(logs.size() - 1);
-        assertThat(
-            last.playerA().hp() <= 0 || last.playerB().hp() <= 0
-        ).isTrue();
+        assertThat(last.playerA().hp() <= 0 || last.playerB().hp() <= 0).isTrue();
     }
 }

@@ -16,22 +16,11 @@ public class LoadoutArchetypeMapper {
     /**
      * Converts a UserWeaponInstance (with modifiers) to a WeaponArchetype (runtime DTO).
      */
-    public static WeaponArchetype mapInstanceToArchetype(
-        UserWeaponInstance instance
-    ) {
+    public static WeaponArchetype mapInstanceToArchetype(UserWeaponInstance instance) {
         WeaponTemplate template = instance.getTemplate();
-        int energyCost = Math.max(
-            0,
-            template.getEnergyCost() + instance.getCostModifier()
-        );
-        int damage = Math.max(
-            0,
-            template.getDamage() + instance.getDamageModifier()
-        );
-        int drawWeight = Math.max(
-            1,
-            template.getDrawWeight() + instance.getDrawWeightModifier()
-        );
+        int energyCost = Math.max(0, template.getEnergyCost() + instance.getCostModifier());
+        int damage = Math.max(0, template.getDamage() + instance.getDamageModifier());
+        int drawWeight = Math.max(1, template.getDrawWeight() + instance.getDrawWeightModifier());
 
         return new WeaponArchetype(
             template.getId(),
@@ -42,12 +31,8 @@ public class LoadoutArchetypeMapper {
             damage,
             drawWeight,
             template.getCritChance() != null ? template.getCritChance() : 0.0,
-            template.getCritMultiplier() != null
-                ? template.getCritMultiplier()
-                : 1.0,
-            template.getStatusEffect() != null
-                ? template.getStatusEffect()
-                : "NONE",
+            template.getCritMultiplier() != null ? template.getCritMultiplier() : 1.0,
+            template.getStatusEffect() != null ? template.getStatusEffect() : "NONE",
             template.getRarity(),
             template.getImageUrl(),
             template.getDescription()
@@ -57,9 +42,7 @@ public class LoadoutArchetypeMapper {
     /**
      * Converts a WeaponTemplate to a WeaponArchetype (baseline DTO).
      */
-    public static WeaponArchetype mapTemplateToArchetype(
-        WeaponTemplate template
-    ) {
+    public static WeaponArchetype mapTemplateToArchetype(WeaponTemplate template) {
         return new WeaponArchetype(
             template.getId(),
             template.getName(),
@@ -69,12 +52,8 @@ public class LoadoutArchetypeMapper {
             template.getDamage(),
             template.getDrawWeight(),
             template.getCritChance() != null ? template.getCritChance() : 0.0,
-            template.getCritMultiplier() != null
-                ? template.getCritMultiplier()
-                : 1.0,
-            template.getStatusEffect() != null
-                ? template.getStatusEffect()
-                : "NONE",
+            template.getCritMultiplier() != null ? template.getCritMultiplier() : 1.0,
+            template.getStatusEffect() != null ? template.getStatusEffect() : "NONE",
             template.getRarity(),
             template.getImageUrl(),
             template.getDescription()

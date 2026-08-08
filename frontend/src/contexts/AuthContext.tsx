@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { api } from "../utils/api";
-import type { AuthUser } from "../types/user";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { api } from '../utils/api';
+import type { AuthUser } from '../types/user';
 
 interface AuthContextType {
   token: string | null;
@@ -13,19 +13,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("token"),
-  );
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [user, setUser] = useState<AuthUser | null>(null);
 
   useEffect(() => {
     if (token) {
-      localStorage.setItem("token", token);
+      localStorage.setItem('token', token);
     } else {
-      localStorage.removeItem("token");
+      localStorage.removeItem('token');
       setUser(null);
     }
   }, [token]);
@@ -36,10 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser({ username });
   };
 
-  const register = async (
-    username: string,
-    password: string,
-  ): Promise<void> => {
+  const register = async (username: string, password: string): Promise<void> => {
     const response = await api.register(username, password);
     setToken(response.token);
     setUser({ username });
@@ -61,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };

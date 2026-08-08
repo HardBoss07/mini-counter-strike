@@ -42,16 +42,8 @@ class CaseDropSchedulerTest {
 
     @BeforeEach
     void setUp() {
-        clock = Clock.fixed(
-            Instant.parse("2026-08-02T16:05:00Z"),
-            ZoneOffset.UTC
-        );
-        scheduler = new CaseDropScheduler(
-            userRepository,
-            caseInstanceRepository,
-            caseTemplateRepository,
-            clock
-        );
+        clock = Clock.fixed(Instant.parse("2026-08-02T16:05:00Z"), ZoneOffset.UTC);
+        scheduler = new CaseDropScheduler(userRepository, caseInstanceRepository, caseTemplateRepository, clock);
     }
 
     @Test
@@ -71,20 +63,14 @@ class CaseDropSchedulerTest {
 
         LocalDateTime now = LocalDateTime.now(clock);
 
-        when(
-            userRepository.findByNextCaseAvailableAtLessThanEqual(now)
-        ).thenReturn(eligibleUsers);
-        when(caseTemplateRepository.findFirstByOrderByIdAsc()).thenReturn(
-            Optional.of(defaultCase)
-        );
+        when(userRepository.findByNextCaseAvailableAtLessThanEqual(now)).thenReturn(eligibleUsers);
+        when(caseTemplateRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(defaultCase));
 
         // When
         scheduler.processPendingCaseDrops();
 
         // Then
-        ArgumentCaptor<UserCaseInstance> caseCaptor = ArgumentCaptor.forClass(
-            UserCaseInstance.class
-        );
+        ArgumentCaptor<UserCaseInstance> caseCaptor = ArgumentCaptor.forClass(UserCaseInstance.class);
         verify(caseInstanceRepository, times(1)).save(caseCaptor.capture());
 
         UserCaseInstance savedCase = caseCaptor.getValue();

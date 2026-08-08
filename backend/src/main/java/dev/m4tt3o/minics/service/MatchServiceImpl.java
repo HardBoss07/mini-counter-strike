@@ -31,8 +31,7 @@ public class MatchServiceImpl implements MatchService {
     private final GameConfig gameConfig;
     private final MatchStateMapper matchStateMapper;
     private final CombatRoundProcessor combatRoundProcessor;
-    private final ConcurrentHashMap<Long, Map<String, SseEmitter>> emitters =
-        new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, Map<String, SseEmitter>> emitters = new ConcurrentHashMap<>();
 
     @Override
     @Transactional
@@ -51,16 +50,8 @@ public class MatchServiceImpl implements MatchService {
 
         boolean playerAIsT = new java.security.SecureRandom().nextBoolean();
 
-        Loadout loadoutA = resolveLoadout(
-            playerA,
-            playerAIsT ? "T" : "CT",
-            playerAUsername
-        );
-        Loadout loadoutB = resolveLoadout(
-            playerB,
-            !playerAIsT ? "T" : "CT",
-            playerBUsername
-        );
+        Loadout loadoutA = resolveLoadout(playerA, playerAIsT ? "T" : "CT", playerAUsername);
+        Loadout loadoutB = resolveLoadout(playerB, !playerAIsT ? "T" : "CT", playerBUsername);
 
         List<WeaponArchetype> itemsA = loadoutA
             .getItems()
@@ -106,9 +97,7 @@ public class MatchServiceImpl implements MatchService {
     @Override
     @Transactional(readOnly = true)
     public MatchStateResponse getMatchState(Long matchId) {
-        Match match = matchRepository
-            .findById(matchId)
-            .orElseThrow(() -> new RuntimeException("Match not found"));
+        Match match = matchRepository.findById(matchId).orElseThrow(() -> new RuntimeException("Match not found"));
 
         String currentUsername = getCurrentUsername();
         return getMatchStateForUser(match, currentUsername);
@@ -117,9 +106,7 @@ public class MatchServiceImpl implements MatchService {
     @Override
     @Transactional
     public void submitAction(Long matchId, String username, Long weaponId) {
-        Match match = matchRepository
-            .findById(matchId)
-            .orElseThrow(() -> new RuntimeException("Match not found"));
+        Match match = matchRepository.findById(matchId).orElseThrow(() -> new RuntimeException("Match not found"));
 
         if (!"IN_PROGRESS".equals(match.getStatus())) {
             throw new IllegalStateException("Match has concluded.");
@@ -131,30 +118,16 @@ public class MatchServiceImpl implements MatchService {
             .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!live.activePlayerId().equals(actingUser.getId())) {
-            throw new IllegalArgumentException(
-                "It is not your strategic turn!"
-            );
+            throw new IllegalArgumentException("It is not your strategic turn!");
         }
 
-        boolean isPlayerA = match
-            .getPlayerA()
-            .getId()
-            .equals(actingUser.getId());
-        PlayerState attacker = isPlayerA
-            ? live.playerAState()
-            : live.playerBState();
-        PlayerState defender = isPlayerA
-            ? live.playerBState()
-            : live.playerAState();
+        boolean isPlayerA = match.getPlayerA().getId().equals(actingUser.getId());
+        PlayerState attacker = isPlayerA ? live.playerAState() : live.playerBState();
+        PlayerState defender = isPlayerA ? live.playerBState() : live.playerAState();
 
         // Process the combat turn
         String activeSide = resolveActiveSide(isPlayerA, live.playerAIsT());
-        var turnResult = combatRoundProcessor.processTurn(
-            live,
-            actingUser,
-            weaponId,
-            activeSide
-        );
+        var turnResult = combatRoundProcessor.processTurn(live, actingUser, weaponId, activeSide);
 
         PlayerState newAttacker = turnResult.newAttacker();
         PlayerState newDefender = turnResult.newDefender();
@@ -163,12 +136,7 @@ public class MatchServiceImpl implements MatchService {
         live.textLogs().add(turnResult.actionLog());
 
         // Determine next active player and handle round/energy replenishment
-        Long nextActivePlayerId = combatRoundProcessor.resolveNextActivePlayer(
-            newAttacker,
-            newDefender,
-            action,
-            live
-        );
+        Long nextActivePlayerId = combatRoundProcessor.resolveNextActivePlayer(newAttacker, newDefender, action, live);
 
         int nextRound = live.round();
         if (!nextActivePlayerId.equals(attacker.playerId())) {
@@ -180,14 +148,10 @@ public class MatchServiceImpl implements MatchService {
             if (nextRound > 2) {
                 int playerTurn = (nextRound + 1) / 2;
                 int energyToAdd = Math.min(
-                    gameConfig.getBaseEnergy() +
-                        (playerTurn - 1) * gameConfig.getEnergyScalingFactor(),
+                    gameConfig.getBaseEnergy() + (playerTurn - 1) * gameConfig.getEnergyScalingFactor(),
                     gameConfig.getMaxEnergyPerTurn()
                 );
-                int replenishedEnergy = Math.min(
-                    newDefender.energy() + energyToAdd,
-                    gameConfig.getMaxEnergy()
-                );
+                int replenishedEnergy = Math.min(newDefender.energy() + energyToAdd, gameConfig.getMaxEnergy());
 
                 newDefender = new PlayerState(
                     newDefender.playerId(),
@@ -202,21 +166,14 @@ public class MatchServiceImpl implements MatchService {
 
         // Apply skip turn penalty if needed
         if (newDefender.activeEffects().contains(StatusEffect.SKIP_TURN)) {
-            newDefender = combatRoundProcessor.applySkipTurnPenalty(
-                newDefender,
-                live
-            );
-            live.textLogs().add(
-                newDefender.username() +
-                    " lost their turn to the Smoke Grenade!"
-            );
+            newDefender = combatRoundProcessor.applySkipTurnPenalty(newDefender, live);
+            live.textLogs().add(newDefender.username() + " lost their turn to the Smoke Grenade!");
         }
 
         // Update match state
         boolean defenderDead = newDefender.hp() <= 0;
         boolean attackerDead = newAttacker.hp() <= 0;
-        String nextStatus =
-            defenderDead || attackerDead ? "COMPLETED" : "IN_PROGRESS";
+        String nextStatus = defenderDead || attackerDead ? "COMPLETED" : "IN_PROGRESS";
         User winner = null;
         if (defenderDead) {
             winner = actingUser;
@@ -242,28 +199,16 @@ public class MatchServiceImpl implements MatchService {
         broadcastMatchState(matchId, match);
     }
 
-    private MatchStateResponse getMatchStateForUser(
-        Match match,
-        String targetUsername
-    ) {
+    private MatchStateResponse getMatchStateForUser(Match match, String targetUsername) {
         try {
             LiveMatchState live = matchStateMapper.readFromMatch(match);
 
-            boolean isPlayerA = match
-                .getPlayerA()
-                .getUsername()
-                .equalsIgnoreCase(targetUsername);
-            PlayerState myState = isPlayerA
-                ? live.playerAState()
-                : live.playerBState();
+            boolean isPlayerA = match.getPlayerA().getUsername().equalsIgnoreCase(targetUsername);
+            PlayerState myState = isPlayerA ? live.playerAState() : live.playerBState();
 
             boolean isMyTurn = live
                 .activePlayerId()
-                .equals(
-                    isPlayerA
-                        ? match.getPlayerA().getId()
-                        : match.getPlayerB().getId()
-                );
+                .equals(isPlayerA ? match.getPlayerA().getId() : match.getPlayerB().getId());
 
             String lastLog = live.textLogs().isEmpty()
                 ? "Encounter ongoing."
@@ -290,11 +235,7 @@ public class MatchServiceImpl implements MatchService {
             );
         } catch (Exception e) {
             boolean iAmWinner =
-                match.getWinner() != null &&
-                match
-                    .getWinner()
-                    .getUsername()
-                    .equalsIgnoreCase(targetUsername);
+                match.getWinner() != null && match.getWinner().getUsername().equalsIgnoreCase(targetUsername);
             return new MatchStateResponse(
                 1,
                 iAmWinner ? "HP:100" : "HP:0",
@@ -314,16 +255,11 @@ public class MatchServiceImpl implements MatchService {
     @Override
     @Transactional
     public void surrenderMatch(Long matchId, String username) {
-        Match match = matchRepository
-            .findById(matchId)
-            .orElseThrow(() -> new RuntimeException("Match not found"));
+        Match match = matchRepository.findById(matchId).orElseThrow(() -> new RuntimeException("Match not found"));
 
         if ("COMPLETED".equals(match.getStatus())) return;
 
-        boolean isPlayerA = match
-            .getPlayerA()
-            .getUsername()
-            .equalsIgnoreCase(username);
+        boolean isPlayerA = match.getPlayerA().getUsername().equalsIgnoreCase(username);
         User winner = isPlayerA ? match.getPlayerB() : match.getPlayerA();
 
         match.setWinner(winner);
@@ -351,13 +287,7 @@ public class MatchServiceImpl implements MatchService {
                     Collections.emptyList(),
                     Collections.emptySet()
                 ),
-                new ArrayList<>(
-                    List.of(
-                        "Match concluded via tactical retreat by " +
-                            username +
-                            "."
-                    )
-                )
+                new ArrayList<>(List.of("Match concluded via tactical retreat by " + username + "."))
             );
             matchStateMapper.writeToMatch(match, finalState);
         } catch (Exception e) {
@@ -373,9 +303,7 @@ public class MatchServiceImpl implements MatchService {
     public SseEmitter subscribeToMatch(Long matchId) {
         String username = getCurrentUsername();
         SseEmitter emitter = new SseEmitter(-1L);
-        emitters
-            .computeIfAbsent(matchId, k -> new ConcurrentHashMap<>())
-            .put(username, emitter);
+        emitters.computeIfAbsent(matchId, (k) -> new ConcurrentHashMap<>()).put(username, emitter);
 
         Runnable cleanup = () -> {
             Map<String, SseEmitter> matchEmitters = emitters.get(matchId);
@@ -389,14 +317,11 @@ public class MatchServiceImpl implements MatchService {
 
         emitter.onCompletion(cleanup);
         emitter.onTimeout(cleanup);
-        emitter.onError(e -> cleanup.run());
+        emitter.onError((e) -> cleanup.run());
 
         try {
             Match match = matchRepository.findById(matchId).orElseThrow();
-            MatchStateResponse currentState = getMatchStateForUser(
-                match,
-                username
-            );
+            MatchStateResponse currentState = getMatchStateForUser(match, username);
             emitter.send(SseEmitter.event().name("message").data(currentState));
         } catch (Exception e) {
             emitter.completeWithError(e);
@@ -408,15 +333,9 @@ public class MatchServiceImpl implements MatchService {
     // Interface contract methods (currently unused but kept for API compatibility)
 
     @Override
-    public CombatRoundRecord executeTurn(
-        Long matchId,
-        Long playerId,
-        Long actionId
-    ) {
+    public CombatRoundRecord executeTurn(Long matchId, Long playerId, Long actionId) {
         // Legacy method - use submitAction() instead
-        throw new UnsupportedOperationException(
-            "Use submitAction() for turn execution"
-        );
+        throw new UnsupportedOperationException("Use submitAction() for turn execution");
     }
 
     @Override
@@ -456,12 +375,7 @@ public class MatchServiceImpl implements MatchService {
             .orElseGet(() ->
                 loadoutRepository
                     .findByUserAndSide(user, side.toLowerCase())
-                    .orElseThrow(() ->
-                        new RuntimeException(
-                            "Loadout missing for side configuration: " +
-                                username
-                        )
-                    )
+                    .orElseThrow(() -> new RuntimeException("Loadout missing for side configuration: " + username))
             );
     }
 
@@ -474,11 +388,7 @@ public class MatchServiceImpl implements MatchService {
         if (matchEmitters != null) {
             matchEmitters.forEach((targetUsername, emitter) -> {
                 try {
-                    emitter.send(
-                        SseEmitter.event()
-                            .name("message")
-                            .data(getMatchStateForUser(match, targetUsername))
-                    );
+                    emitter.send(SseEmitter.event().name("message").data(getMatchStateForUser(match, targetUsername)));
                 } catch (Exception e) {
                     emitter.completeWithError(e);
                 }

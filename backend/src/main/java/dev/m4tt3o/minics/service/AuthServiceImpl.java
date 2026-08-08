@@ -35,22 +35,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 2. Provision Starter Weapons
         if (loadoutRepository.findByUser_Id(user.getId()).isEmpty()) {
-            provisionStarterLoadout(
-                user,
-                "T",
-                List.of(
-                    "Glock-18",
-                    "MAC-10",
-                    "Galil AR",
-                    "Molotov",
-                    "Smoke Grenade"
-                )
-            );
-            provisionStarterLoadout(
-                user,
-                "CT",
-                List.of("USP-S", "MP9", "FAMAS", "HE Grenade", "Flashbang")
-            );
+            provisionStarterLoadout(user, "T", List.of("Glock-18", "MAC-10", "Galil AR", "Molotov", "Smoke Grenade"));
+            provisionStarterLoadout(user, "CT", List.of("USP-S", "MP9", "FAMAS", "HE Grenade", "Flashbang"));
         }
 
         return jwtUtil.generateToken(user.getId(), user.getUsername());
@@ -60,9 +46,7 @@ public class AuthServiceImpl implements AuthService {
     public String login(String username, String password) {
         User user = userRepository
             .findByUsername(username)
-            .orElseThrow(() ->
-                new RuntimeException("Invalid username or password")
-            );
+            .orElseThrow(() -> new RuntimeException("Invalid username or password"));
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new RuntimeException("Invalid username or password");
@@ -71,25 +55,19 @@ public class AuthServiceImpl implements AuthService {
         return jwtUtil.generateToken(user.getId(), user.getUsername());
     }
 
-    private void provisionStarterLoadout(
-        User user,
-        String side,
-        List<String> itemNames
-    ) {
+    private void provisionStarterLoadout(User user, String side, List<String> itemNames) {
         Loadout loadout = new Loadout();
         loadout.setUser(user);
         loadout.setSide(side);
         loadout = loadoutRepository.save(loadout);
 
         for (String name : itemNames) {
-            WeaponTemplate template = templateRepository
-                .findByName(name)
-                .orElseThrow(() -> {
-                    String errorMessage = "Starter item not found: " + name;
-                    // Assuming a logger is not easily available, using System.err for now
-                    System.err.println(errorMessage);
-                    return new RuntimeException(errorMessage);
-                });
+            WeaponTemplate template = templateRepository.findByName(name).orElseThrow(() -> {
+                String errorMessage = "Starter item not found: " + name;
+                // Assuming a logger is not easily available, using System.err for now
+                System.err.println(errorMessage);
+                return new RuntimeException(errorMessage);
+            });
 
             UserWeaponInstance instance = new UserWeaponInstance();
             instance.setUser(user);

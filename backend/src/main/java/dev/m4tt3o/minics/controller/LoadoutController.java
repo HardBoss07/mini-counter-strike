@@ -18,31 +18,16 @@ public class LoadoutController {
     private final LoadoutService loadoutService;
 
     @GetMapping
-    public ResponseEntity<
-        Map<String, Set<UserWeaponInstance>>
-    > getUserLoadout() {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
-        Map<String, Set<UserWeaponInstance>> loadouts =
-            loadoutService.getFullLoadout(username);
+    public ResponseEntity<Map<String, Set<UserWeaponInstance>>> getUserLoadout() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Map<String, Set<UserWeaponInstance>> loadouts = loadoutService.getFullLoadout(username);
         return ResponseEntity.ok(loadouts);
     }
 
     @PostMapping("/save")
-    public ResponseEntity<Map<String, String>> saveLoadout(
-        @RequestBody SaveLoadoutRequest request
-    ) {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
-        loadoutService.saveFullLoadout(
-            username,
-            request.tLoadoutIds(),
-            request.ctLoadoutIds()
-        );
-        return ResponseEntity.ok(
-            Map.of("message", "Loadout saved successfully")
-        );
+    public ResponseEntity<Map<String, String>> saveLoadout(@RequestBody SaveLoadoutRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        loadoutService.saveFullLoadout(username, request.tLoadoutIds(), request.ctLoadoutIds());
+        return ResponseEntity.ok(Map.of("message", "Loadout saved successfully"));
     }
 }

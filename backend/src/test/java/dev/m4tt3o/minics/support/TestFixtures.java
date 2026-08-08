@@ -47,59 +47,19 @@ public final class TestFixtures {
     }
 
     public static WeaponArchetype rifle(long id) {
-        return weapon(
-            id,
-            "AK-47",
-            ItemType.WEAPON,
-            3,
-            30,
-            50,
-            0.0,
-            1.0,
-            "NONE"
-        );
+        return weapon(id, "AK-47", ItemType.WEAPON, 3, 30, 50, 0.0, 1.0, "NONE");
     }
 
     public static WeaponArchetype molotov(long id) {
-        return weapon(
-            id,
-            "Molotov",
-            ItemType.UTILITY,
-            3,
-            10,
-            30,
-            0.0,
-            1.0,
-            "BURN_15"
-        );
+        return weapon(id, "Molotov", ItemType.UTILITY, 3, 10, 30, 0.0, 1.0, "BURN_15");
     }
 
     public static WeaponArchetype flashbang(long id) {
-        return weapon(
-            id,
-            "Flashbang",
-            ItemType.UTILITY,
-            2,
-            0,
-            20,
-            0.0,
-            1.0,
-            "BLIND_50"
-        );
+        return weapon(id, "Flashbang", ItemType.UTILITY, 2, 0, 20, 0.0, 1.0, "BLIND_50");
     }
 
     public static WeaponArchetype smokeGrenade(long id) {
-        return weapon(
-            id,
-            "Smoke Grenade",
-            ItemType.UTILITY,
-            2,
-            0,
-            20,
-            0.0,
-            1.0,
-            "SKIP_TURN"
-        );
+        return weapon(id, "Smoke Grenade", ItemType.UTILITY, 2, 0, 20, 0.0, 1.0, "SKIP_TURN");
     }
 
     public static PlayerState playerState(
@@ -113,20 +73,8 @@ public final class TestFixtures {
         return new PlayerState(id, username, hp, energy, hand, effects);
     }
 
-    public static PlayerState playerState(
-        long id,
-        String username,
-        int hp,
-        WeaponArchetype... hand
-    ) {
-        return playerState(
-            id,
-            username,
-            hp,
-            10,
-            List.of(hand),
-            Collections.emptySet()
-        );
+    public static PlayerState playerState(long id, String username, int hp, WeaponArchetype... hand) {
+        return playerState(id, username, hp, 10, List.of(hand), Collections.emptySet());
     }
 
     public static LiveMatchState liveMatchState(
@@ -153,12 +101,7 @@ public final class TestFixtures {
         return user;
     }
 
-    public static UserWeaponInstance loadoutWeaponInstance(
-        long id,
-        String name,
-        ItemType type,
-        String side
-    ) {
+    public static UserWeaponInstance loadoutWeaponInstance(long id, String name, ItemType type, String side) {
         WeaponTemplate template = new WeaponTemplate();
         template.setId(id);
         template.setName(name);
@@ -179,12 +122,6 @@ public final class TestFixtures {
     }
 
     public static List<WeaponArchetype> standardLoadout() {
-        return List.of(
-            rifle(1L),
-            rifle(2L),
-            rifle(3L),
-            molotov(4L),
-            smokeGrenade(5L)
-        );
+        return List.of(rifle(1L), rifle(2L), rifle(3L), molotov(4L), smokeGrenade(5L));
     }
 }

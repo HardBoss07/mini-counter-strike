@@ -6,8 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CaseTemplateRepository
-    extends JpaRepository<CaseTemplate, Long>
-{
+public interface CaseTemplateRepository extends JpaRepository<CaseTemplate, Long> {
     Optional<CaseTemplate> findFirstByOrderByIdAsc();
 }

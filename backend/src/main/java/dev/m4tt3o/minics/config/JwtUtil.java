@@ -18,9 +18,7 @@ public class JwtUtil {
     private final SecretKey key;
     private final long expiration = 86400000; // 24 hours
 
-    public JwtUtil(
-        @Value("${jwt.secret:TacticalStrikeDefaultDevSecret32Ch}") String secret
-    ) {
+    public JwtUtil(@Value("${jwt.secret:TacticalStrikeDefaultDevSecret32Ch}") String secret) {
         // Ensure the secret is at least 32 bytes for HS256
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
@@ -58,20 +56,13 @@ public class JwtUtil {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public <T> T extractClaim(
-        String token,
-        Function<Claims, T> claimsResolver
-    ) {
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-            .verifyWith(key)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
+        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 
     private Boolean isTokenExpired(String token) {

@@ -24,7 +24,7 @@ public class LeaderboardController {
             userRepository
                 .findAll()
                 .stream()
-                .map(user -> new LeaderboardEntry(user.getUsername(), 1000))
+                .map((user) -> new LeaderboardEntry(user.getUsername(), 1000))
                 .collect(Collectors.toList())
         );
     }

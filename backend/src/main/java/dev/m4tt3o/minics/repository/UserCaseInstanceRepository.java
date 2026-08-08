@@ -7,9 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserCaseInstanceRepository
-    extends JpaRepository<UserCaseInstance, Long>
-{
+public interface UserCaseInstanceRepository extends JpaRepository<UserCaseInstance, Long> {
     List<UserCaseInstance> findByUserId(Long userId);
     List<UserCaseInstance> findByUserIdAndOpenedFalse(Long userId);
     long countByUserId(Long userId);

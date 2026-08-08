@@ -25,11 +25,7 @@ public class WeaponController {
      */
     @GetMapping
     public ResponseEntity<List<WeaponArchetype>> getAllWeapons() {
-        List<WeaponArchetype> weapons = weaponTemplateRepository
-            .findAll()
-            .stream()
-            .map(this::mapToArchetype)
-            .toList();
+        List<WeaponArchetype> weapons = weaponTemplateRepository.findAll().stream().map(this::mapToArchetype).toList();
         return ResponseEntity.ok(weapons);
     }
 

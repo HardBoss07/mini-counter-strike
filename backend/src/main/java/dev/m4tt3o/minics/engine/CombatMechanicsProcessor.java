@@ -35,16 +35,10 @@ public class CombatMechanicsProcessor {
     /**
      * Applies status effect from a utility weapon to defender.
      */
-    public Set<StatusEffect> applyStatusEffect(
-        WeaponArchetype weapon,
-        Set<StatusEffect> defenderEffects
-    ) {
+    public Set<StatusEffect> applyStatusEffect(WeaponArchetype weapon, Set<StatusEffect> defenderEffects) {
         Set<StatusEffect> updatedEffects = new HashSet<>(defenderEffects);
 
-        if (
-            weapon.statusEffect() == null ||
-            "NONE".equalsIgnoreCase(weapon.statusEffect())
-        ) {
+        if (weapon.statusEffect() == null || "NONE".equalsIgnoreCase(weapon.statusEffect())) {
             return updatedEffects;
         }
 
@@ -108,11 +102,7 @@ public class CombatMechanicsProcessor {
     public int validateAndDeductEnergy(int currentEnergy, int cost) {
         if (currentEnergy < cost) {
             throw new IllegalStateException(
-                String.format(
-                    "Insufficient energy: action costs %d but player only has %d.",
-                    cost,
-                    currentEnergy
-                )
+                String.format("Insufficient energy: action costs %d but player only has %d.", cost, currentEnergy)
             );
         }
         return currentEnergy - cost;

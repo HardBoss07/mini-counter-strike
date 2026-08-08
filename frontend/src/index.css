@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-tactical-dark text-white font-sans antialiased;
+    @apply bg-tactical-dark font-sans text-white antialiased;
   }
 }
 
@@ -17,5 +17,5 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-tactical-gray rounded-full;
+  @apply rounded-full bg-tactical-gray;
 }

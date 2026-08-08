@@ -22,10 +22,7 @@ public class LoadoutValidator {
     /**
      * Validates that loadout respects all game design constraints.
      */
-    public static void validateLoadout(
-        List<UserWeaponInstance> weapons,
-        String side
-    ) {
+    public static void validateLoadout(List<UserWeaponInstance> weapons, String side) {
         validateLoadoutSize(weapons);
         validateFactionCompatibility(weapons, side);
         validateWeaponDuplicates(weapons);
@@ -38,10 +35,7 @@ public class LoadoutValidator {
     private static void validateLoadoutSize(List<UserWeaponInstance> weapons) {
         if (weapons.size() > MAX_TOTAL_ITEMS) {
             throw new IllegalArgumentException(
-                "Loadout cannot exceed " +
-                    MAX_TOTAL_ITEMS +
-                    " items total. Provided: " +
-                    weapons.size()
+                "Loadout cannot exceed " + MAX_TOTAL_ITEMS + " items total. Provided: " + weapons.size()
             );
         }
     }
@@ -49,22 +43,12 @@ public class LoadoutValidator {
     /**
      * Validates all weapons are compatible with the target side.
      */
-    private static void validateFactionCompatibility(
-        List<UserWeaponInstance> weapons,
-        String side
-    ) {
+    private static void validateFactionCompatibility(List<UserWeaponInstance> weapons, String side) {
         for (UserWeaponInstance inst : weapons) {
             String weaponSide = inst.getTemplate().getSide();
-            if (
-                !"ALL".equalsIgnoreCase(weaponSide) &&
-                !side.equalsIgnoreCase(weaponSide)
-            ) {
+            if (!"ALL".equalsIgnoreCase(weaponSide) && !side.equalsIgnoreCase(weaponSide)) {
                 throw new IllegalArgumentException(
-                    "Weapon " +
-                        inst.getTemplate().getName() +
-                        " cannot be used on " +
-                        side +
-                        " side."
+                    "Weapon " + inst.getTemplate().getName() + " cannot be used on " + side + " side."
                 );
             }
         }
@@ -73,9 +57,7 @@ public class LoadoutValidator {
     /**
      * Ensures no duplicate weapon variants (e.g., two AK-47 skins).
      */
-    private static void validateWeaponDuplicates(
-        List<UserWeaponInstance> weapons
-    ) {
+    private static void validateWeaponDuplicates(List<UserWeaponInstance> weapons) {
         Set<String> equippedBaseWeapons = new HashSet<>();
 
         for (UserWeaponInstance inst : weapons) {
@@ -84,9 +66,7 @@ public class LoadoutValidator {
 
             if (!equippedBaseWeapons.add(baseName)) {
                 throw new IllegalArgumentException(
-                    "Validation Error: You can only equip one variant of " +
-                        baseName +
-                        " per loadout."
+                    "Validation Error: You can only equip one variant of " + baseName + " per loadout."
                 );
             }
         }
@@ -98,27 +78,21 @@ public class LoadoutValidator {
     private static void validateItemCounting(List<UserWeaponInstance> weapons) {
         long weaponCount = weapons
             .stream()
-            .filter(w -> w.getTemplate().getType() == ItemType.WEAPON)
+            .filter((w) -> w.getTemplate().getType() == ItemType.WEAPON)
             .count();
         long utilityCount = weapons
             .stream()
-            .filter(w -> w.getTemplate().getType() == ItemType.UTILITY)
+            .filter((w) -> w.getTemplate().getType() == ItemType.UTILITY)
             .count();
 
         if (weaponCount > MAX_WEAPONS) {
             throw new IllegalArgumentException(
-                "Validation Error: Maximum of " +
-                    MAX_WEAPONS +
-                    " primary weapons allowed. Provided: " +
-                    weaponCount
+                "Validation Error: Maximum of " + MAX_WEAPONS + " primary weapons allowed. Provided: " + weaponCount
             );
         }
         if (utilityCount > MAX_UTILITY) {
             throw new IllegalArgumentException(
-                "Validation Error: Maximum of " +
-                    MAX_UTILITY +
-                    " utility items allowed. Provided: " +
-                    utilityCount
+                "Validation Error: Maximum of " + MAX_UTILITY + " utility items allowed. Provided: " + utilityCount
             );
         }
     }

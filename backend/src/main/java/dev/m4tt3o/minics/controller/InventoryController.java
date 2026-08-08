@@ -22,36 +22,22 @@ public class InventoryController {
 
     @GetMapping("/weapons")
     public ResponseEntity<List<WeaponInstanceDTO>> getWeapons() {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(inventoryService.getWeaponsForUser(username));
     }
 
     // Loadout saving endpoint moved here from LoadoutController
     @PostMapping("/loadouts/save")
-    public ResponseEntity<Map<String, String>> saveLoadout(
-        @RequestBody SaveLoadoutRequest request
-    ) {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
-        loadoutService.saveFullLoadout(
-            username,
-            request.tLoadoutIds(),
-            request.ctLoadoutIds()
-        );
-        return ResponseEntity.ok(
-            Map.of("message", "Loadout saved successfully")
-        );
+    public ResponseEntity<Map<String, String>> saveLoadout(@RequestBody SaveLoadoutRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        loadoutService.saveFullLoadout(username, request.tLoadoutIds(), request.ctLoadoutIds());
+        return ResponseEntity.ok(Map.of("message", "Loadout saved successfully"));
     }
 
     // Cases retrieval endpoint moved here from CaseController
     @GetMapping("/cases")
     public ResponseEntity<List<UserCaseInstanceDTO>> getUserCases() {
-        String username = SecurityContextHolder.getContext()
-            .getAuthentication()
-            .getName();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         return ResponseEntity.ok(inventoryService.getUserCases(username));
     }

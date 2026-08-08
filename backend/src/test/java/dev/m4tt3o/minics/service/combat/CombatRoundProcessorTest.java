@@ -48,11 +48,7 @@ class CombatRoundProcessorTest {
             new CombatMechanicsProcessor(new ControllableRandom()),
             gameConfig
         );
-        combatRoundProcessor = new CombatRoundProcessor(
-            matchEngine,
-            gameConfig,
-            loadoutRepository
-        );
+        combatRoundProcessor = new CombatRoundProcessor(matchEngine, gameConfig, loadoutRepository);
 
         alpha = TestFixtures.user(1L, "Alpha");
         bravo = TestFixtures.user(2L, "Bravo");
@@ -70,52 +66,27 @@ class CombatRoundProcessorTest {
             TestFixtures.playerState(2L, "Bravo", 100)
         );
 
-        assertThatThrownBy(() ->
-            combatRoundProcessor.processTurn(state, alpha, 999L, "T")
-        )
+        assertThatThrownBy(() -> combatRoundProcessor.processTurn(state, alpha, 999L, "T"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Weapon not in current hand");
     }
 
     @Test
     void processTurn_delegatesToEngineAndReplenishesHand() {
-        PlayerState attacker = TestFixtures.playerState(
-            1L,
-            "Alpha",
-            100,
-            rifle
-        );
+        PlayerState attacker = TestFixtures.playerState(1L, "Alpha", 100, rifle);
         PlayerState defender = TestFixtures.playerState(2L, "Bravo", 100);
-        LiveMatchState state = TestFixtures.liveMatchState(
-            1,
-            1L,
-            true,
-            attacker,
-            defender
-        );
+        LiveMatchState state = TestFixtures.liveMatchState(1, 1L, true, attacker, defender);
 
         Loadout loadout = new Loadout();
         loadout.setItems(
             new HashSet<>(
                 List.of(
-                    TestFixtures.loadoutWeaponInstance(
-                        10L,
-                        "AK-47",
-                        ItemType.WEAPON,
-                        "T"
-                    ),
-                    TestFixtures.loadoutWeaponInstance(
-                        11L,
-                        "Molotov",
-                        ItemType.UTILITY,
-                        "ALL"
-                    )
+                    TestFixtures.loadoutWeaponInstance(10L, "AK-47", ItemType.WEAPON, "T"),
+                    TestFixtures.loadoutWeaponInstance(11L, "Molotov", ItemType.UTILITY, "ALL")
                 )
             )
         );
-        when(loadoutRepository.findByUserAndSide(alpha, "T")).thenReturn(
-            Optional.of(loadout)
-        );
+        when(loadoutRepository.findByUserAndSide(alpha, "T")).thenReturn(Optional.of(loadout));
 
         var result = combatRoundProcessor.processTurn(state, alpha, 10L, "T");
 
@@ -130,20 +101,9 @@ class CombatRoundProcessorTest {
     void resolveNextActivePlayer_keepsTurnOnAttackerForUtility() {
         PlayerState attacker = TestFixtures.playerState(1L, "Alpha", 100);
         PlayerState defender = TestFixtures.playerState(2L, "Bravo", 100);
-        LiveMatchState state = TestFixtures.liveMatchState(
-            1,
-            1L,
-            true,
-            attacker,
-            defender
-        );
+        LiveMatchState state = TestFixtures.liveMatchState(1, 1L, true, attacker, defender);
 
-        Long next = combatRoundProcessor.resolveNextActivePlayer(
-            attacker,
-            defender,
-            molotov,
-            state
-        );
+        Long next = combatRoundProcessor.resolveNextActivePlayer(attacker, defender, molotov, state);
 
         assertThat(next).isEqualTo(1L);
     }
@@ -159,20 +119,9 @@ class CombatRoundProcessorTest {
             List.of(),
             Set.of(StatusEffect.SKIP_TURN)
         );
-        LiveMatchState state = TestFixtures.liveMatchState(
-            1,
-            1L,
-            true,
-            attacker,
-            defender
-        );
+        LiveMatchState state = TestFixtures.liveMatchState(1, 1L, true, attacker, defender);
 
-        Long next = combatRoundProcessor.resolveNextActivePlayer(
-            attacker,
-            defender,
-            rifle,
-            state
-        );
+        Long next = combatRoundProcessor.resolveNextActivePlayer(attacker, defender, rifle, state);
 
         assertThat(next).isEqualTo(1L);
     }
@@ -181,20 +130,9 @@ class CombatRoundProcessorTest {
     void resolveNextActivePlayer_passesTurnToDefenderForWeaponAction() {
         PlayerState attacker = TestFixtures.playerState(1L, "Alpha", 100);
         PlayerState defender = TestFixtures.playerState(2L, "Bravo", 100);
-        LiveMatchState state = TestFixtures.liveMatchState(
-            1,
-            1L,
-            true,
-            attacker,
-            defender
-        );
+        LiveMatchState state = TestFixtures.liveMatchState(1, 1L, true, attacker, defender);
 
-        Long next = combatRoundProcessor.resolveNextActivePlayer(
-            attacker,
-            defender,
-            rifle,
-            state
-        );
+        Long next = combatRoundProcessor.resolveNextActivePlayer(attacker, defender, rifle, state);
 
         assertThat(next).isEqualTo(2L);
     }
@@ -217,10 +155,7 @@ class CombatRoundProcessorTest {
             defender
         );
 
-        PlayerState updated = combatRoundProcessor.applySkipTurnPenalty(
-            defender,
-            state
-        );
+        PlayerState updated = combatRoundProcessor.applySkipTurnPenalty(defender, state);
 
         assertThat(updated.activeEffects()).isEmpty();
     }
@@ -236,10 +171,7 @@ class CombatRoundProcessorTest {
             defender
         );
 
-        PlayerState updated = combatRoundProcessor.applySkipTurnPenalty(
-            defender,
-            state
-        );
+        PlayerState updated = combatRoundProcessor.applySkipTurnPenalty(defender, state);
 
         assertThat(updated).isEqualTo(defender);
     }

@@ -1,5 +1,5 @@
-import React from "react";
-import { ShieldAlert } from "lucide-react";
+import React from 'react';
+import { ShieldAlert } from 'lucide-react';
 
 interface ErrorToastProps {
   message: string;
@@ -18,15 +18,15 @@ interface ErrorToastProps {
 const ErrorToast: React.FC<ErrorToastProps> = ({ message, fixed = false }) => {
   if (fixed) {
     return (
-      <div className="fixed top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded shadow-2xl flex items-center gap-3 z-50">
+      <div className="fixed left-1/2 top-8 z-50 flex -translate-x-1/2 items-center gap-3 rounded bg-red-600 px-6 py-3 text-white shadow-2xl">
         <ShieldAlert size={20} />
-        <span className="font-bold text-sm uppercase">{message}</span>
+        <span className="text-sm font-bold uppercase">{message}</span>
       </div>
     );
   }
 
   return (
-    <div className="bg-red-600 text-white text-center font-bold uppercase tracking-wider p-2 text-xs">
+    <div className="bg-red-600 p-2 text-center text-xs font-bold uppercase tracking-wider text-white">
       {message}
     </div>
   );

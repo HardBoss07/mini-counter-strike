@@ -7,8 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserWeaponInstanceRepository
-    extends JpaRepository<UserWeaponInstance, Long>
-{
+public interface UserWeaponInstanceRepository extends JpaRepository<UserWeaponInstance, Long> {
     List<UserWeaponInstance> findByUser(User user);
 }

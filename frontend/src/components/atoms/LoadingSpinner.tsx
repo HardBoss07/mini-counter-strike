@@ -1,5 +1,5 @@
-import React from "react";
-import { Loader2 } from "lucide-react";
+import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface LoadingSpinnerProps {
   /** When true, renders full-viewport centered layout. Defaults to false (inline). */
@@ -23,7 +23,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     <>
       <Loader2 size={size} className="animate-spin text-tactical-accent" />
       {label && (
-        <span className="font-bold uppercase tracking-widest text-sm text-tactical-accent">
+        <span className="text-sm font-bold uppercase tracking-widest text-tactical-accent">
           {label}
         </span>
       )}
@@ -32,17 +32,13 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   if (fullScreen) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4 bg-tactical-dark">
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-tactical-dark">
         {spinner}
       </div>
     );
   }
 
-  return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16">
-      {spinner}
-    </div>
-  );
+  return <div className="flex flex-col items-center justify-center gap-4 py-16">{spinner}</div>;
 };
 
 export default LoadingSpinner;

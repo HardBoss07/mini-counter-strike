@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
-import { api } from "../utils/api";
-import { invalidateProfileCache } from "./useUserProfile";
-import type { Weapon } from "../types/weapon";
-import type { UserCaseInstance } from "../types/case";
+import { useState, useRef } from 'react';
+import { api } from '../utils/api';
+import { invalidateProfileCache } from './useUserProfile';
+import type { Weapon } from '../types/weapon';
+import type { UserCaseInstance } from '../types/case';
 
 interface UseCaseUnboxingProps {
   weaponPool: Weapon[];
@@ -38,24 +38,22 @@ export const useCaseUnboxing = ({
     try {
       const response = await api.openCase(selectedInstanceId);
 
-      const wonWeaponStats = weaponPool.find(
-        (w) => w.name === response.weaponName,
-      );
+      const wonWeaponStats = weaponPool.find((w) => w.name === response.weaponName);
 
       const actualWinner: Weapon = {
         id: Date.now(), // Ephemeral ID for UI rendering
         name: response.weaponName,
-        type: wonWeaponStats?.type ?? "WEAPON",
-        side: wonWeaponStats?.side ?? "ALL",
+        type: wonWeaponStats?.type ?? 'WEAPON',
+        side: wonWeaponStats?.side ?? 'ALL',
         energyCost: wonWeaponStats?.energyCost ?? 0,
         damage: wonWeaponStats?.damage ?? 0,
         drawWeight: wonWeaponStats?.drawWeight ?? 0,
         critChance: wonWeaponStats?.critChance ?? 0,
         critMultiplier: wonWeaponStats?.critMultiplier ?? 1.0,
-        statusEffect: wonWeaponStats?.statusEffect ?? "NONE",
+        statusEffect: wonWeaponStats?.statusEffect ?? 'NONE',
         rarity: response.rarity as any,
         imageUrl: response.imageUrl,
-        description: wonWeaponStats?.description ?? "Case drop",
+        description: wonWeaponStats?.description ?? 'Case drop',
       };
 
       const CAROUSEL_STOP_INDEX = 45;
@@ -86,15 +84,14 @@ export const useCaseUnboxing = ({
           const containerWidth = carouselContainerRef.current.offsetWidth;
           const cardWidthWithGap = 200;
           const targetX =
-            CAROUSEL_STOP_INDEX * cardWidthWithGap -
-            (containerWidth / 2 - cardWidthWithGap / 2);
+            CAROUSEL_STOP_INDEX * cardWidthWithGap - (containerWidth / 2 - cardWidthWithGap / 2);
 
           const jitter = Math.floor(Math.random() * 160) - 80;
           setTranslateX(-(targetX + jitter));
         }
       }, 50);
     } catch (error) {
-      console.error("Unboxing error:", error);
+      console.error('Unboxing error:', error);
       setIsOpening(false);
     }
   };

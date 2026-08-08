@@ -44,48 +44,31 @@ public class CombatRoundProcessor {
         String activeSide // <-- Accept the resolved activeSide directly
     ) {
         // Use the entity's ID for the check
-        boolean isPlayerA = actingUser
-            .getId()
-            .equals(currentState.playerAState().playerId());
+        boolean isPlayerA = actingUser.getId().equals(currentState.playerAState().playerId());
 
-        PlayerState attacker = isPlayerA
-            ? currentState.playerAState()
-            : currentState.playerBState();
-        PlayerState defender = isPlayerA
-            ? currentState.playerBState()
-            : currentState.playerAState();
+        PlayerState attacker = isPlayerA ? currentState.playerAState() : currentState.playerBState();
+        PlayerState defender = isPlayerA ? currentState.playerBState() : currentState.playerAState();
 
         // Find the selected weapon in hand
         WeaponArchetype action = attacker
             .hand()
             .stream()
-            .filter(w -> w.id().equals(weaponId))
+            .filter((w) -> w.id().equals(weaponId))
             .findFirst()
-            .orElseThrow(() ->
-                new IllegalArgumentException("Weapon not in current hand!")
-            );
+            .orElseThrow(() -> new IllegalArgumentException("Weapon not in current hand!"));
 
         // Resolve the combat turn
-        CombatRoundRecord result = matchEngine.resolveTurn(
-            attacker,
-            defender,
-            action,
-            currentState.round()
-        );
+        CombatRoundRecord result = matchEngine.resolveTurn(attacker, defender, action, currentState.round());
 
         // Remove the played card from hand
-        List<WeaponArchetype> currentHand = new ArrayList<>(
-            result.playerA().hand()
-        );
-        currentHand.removeIf(w -> w.id().equals(weaponId));
+        List<WeaponArchetype> currentHand = new ArrayList<>(result.playerA().hand());
+        currentHand.removeIf((w) -> w.id().equals(weaponId));
 
         // Replenish hand from loadout
         // <-- FIX: Pass the fully managed actingUser entity here
         Loadout userLoadout = loadoutRepository
             .findByUserAndSide(actingUser, activeSide)
-            .orElseThrow(() ->
-                new RuntimeException("Loadout missing for side: " + activeSide)
-            );
+            .orElseThrow(() -> new RuntimeException("Loadout missing for side: " + activeSide));
 
         List<WeaponArchetype> loadoutItems = userLoadout
             .getItems()
@@ -95,17 +78,11 @@ public class CombatRoundProcessor {
 
         List<WeaponArchetype> remainingPool = loadoutItems
             .stream()
-            .filter(item ->
-                currentHand
-                    .stream()
-                    .noneMatch(handItem -> handItem.id().equals(item.id()))
-            )
+            .filter((item) -> currentHand.stream().noneMatch((handItem) -> handItem.id().equals(item.id())))
             .toList();
 
         if (!remainingPool.isEmpty()) {
-            WeaponArchetype replacement = selectReplacementWeapon(
-                remainingPool
-            );
+            WeaponArchetype replacement = selectReplacementWeapon(remainingPool);
             currentHand.add(replacement);
         }
 
@@ -120,12 +97,7 @@ public class CombatRoundProcessor {
         );
         PlayerState newDefender = result.playerB();
 
-        return new TurnProcessingResult(
-            newAttacker,
-            newDefender,
-            result.actionLog(),
-            action
-        );
+        return new TurnProcessingResult(newAttacker, newDefender, result.actionLog(), action);
     }
 
     /**
@@ -152,17 +124,12 @@ public class CombatRoundProcessor {
     /**
      * Applies SKIP_TURN penalty if applicable.
      */
-    public PlayerState applySkipTurnPenalty(
-        PlayerState defender,
-        LiveMatchState currentState
-    ) {
+    public PlayerState applySkipTurnPenalty(PlayerState defender, LiveMatchState currentState) {
         if (!defender.activeEffects().contains(StatusEffect.SKIP_TURN)) {
             return defender;
         }
 
-        Set<StatusEffect> clearedEffects = new HashSet<>(
-            defender.activeEffects()
-        );
+        Set<StatusEffect> clearedEffects = new HashSet<>(defender.activeEffects());
         clearedEffects.remove(StatusEffect.SKIP_TURN);
 
         return new PlayerState(
@@ -175,13 +142,8 @@ public class CombatRoundProcessor {
         );
     }
 
-    private WeaponArchetype selectReplacementWeapon(
-        List<WeaponArchetype> pool
-    ) {
-        int totalWeight = pool
-            .stream()
-            .mapToInt(WeaponArchetype::drawWeight)
-            .sum();
+    private WeaponArchetype selectReplacementWeapon(List<WeaponArchetype> pool) {
+        int totalWeight = pool.stream().mapToInt(WeaponArchetype::drawWeight).sum();
 
         if (totalWeight <= 0) {
             return pool.get(random.nextInt(pool.size()));

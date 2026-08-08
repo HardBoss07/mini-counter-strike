@@ -17,9 +17,7 @@ public record PlayerState(
     /** Compact constructor - energy must be non-negative. */
     public PlayerState {
         if (energy < 0) {
-            throw new IllegalArgumentException(
-                "Player energy cannot be negative, got: " + energy
-            );
+            throw new IllegalArgumentException("Player energy cannot be negative, got: " + energy);
         }
     }
 }

@@ -20,18 +20,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(
-        HttpServletRequest request,
-        HttpServletResponse response,
-        FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+        throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        System.out.println(
-            "[Security Debug] Request URL: " + request.getRequestURI()
-        );
-        System.out.println(
-            "[Security Debug] Authorization header: " + authHeader
-        );
+        System.out.println("[Security Debug] Request URL: " + request.getRequestURI());
+        System.out.println("[Security Debug] Authorization header: " + authHeader);
 
         final String jwt;
         final String username;
@@ -44,42 +37,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
         try {
             username = jwtUtil.extractUsername(jwt);
-            System.out.println(
-                "[Security Debug] Extracted username: " + username
-            );
+            System.out.println("[Security Debug] Extracted username: " + username);
 
-            if (
-                username != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null
-            ) {
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 if (jwtUtil.validateToken(jwt, username)) {
-                    System.out.println(
-                        "[Security Debug] Token validation successful."
+                    System.out.println("[Security Debug] Token validation successful.");
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        username,
+                        null,
+                        new ArrayList<>()
                     );
-                    UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                            username,
-                            null,
-                            new ArrayList<>()
-                        );
-                    authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(
-                            request
-                        )
-                    );
-                    SecurityContextHolder.getContext().setAuthentication(
-                        authToken
-                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
-                    System.out.println(
-                        "[Security Debug] Token validation failed."
-                    );
+                    System.out.println("[Security Debug] Token validation failed.");
                 }
             }
         } catch (Exception e) {
-            System.err.println(
-                "[Security Debug] Token processing error: " + e.getMessage()
-            );
+            System.err.println("[Security Debug] Token processing error: " + e.getMessage());
             e.printStackTrace();
         }
 
