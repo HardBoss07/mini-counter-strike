@@ -1,5 +1,7 @@
 # Mini Counter Strike
 
+[![Test Suite](https://github.com/HardBoss07/mini-counter-strike/actions/workflows/ci.yml/badge.svg)](https://github.com/HardBoss07/mini-counter-strike/actions/workflows/ci.yml)
+
 This is a Counter Strike inspired turn-based card game. Designed as an asynchronous, turn-based tactical deckbuilder, the game focuses on loadout optimization and strategic combat.
 
 ## Core Gameplay
