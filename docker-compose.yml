@@ -10,6 +10,15 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql
+      - ./backend/src/main/resources/data-01-templates.sql:/docker-entrypoint-initdb.d/002_data-01-templates.sql
+      - ./backend/src/main/resources/data-02-cases.sql:/docker-entrypoint-initdb.d/003_data-02-cases.sql
+      - ./backend/src/main/resources/data-03-users-and-seeds.sql:/docker-entrypoint-initdb.d/004_data-03-users-and-seeds.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d minics']
+      interval: 3s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
 
   backend:
@@ -22,11 +31,11 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/minics
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_SQL_INIT_DATA_LOCATIONS: classpath:data-01-templates.sql,classpath:data-02-cases.sql,classpath:data-03-users-and-seeds.sql
-      SPRING_SQL_INIT_MODE: always
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_SQL_INIT_MODE: never
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
