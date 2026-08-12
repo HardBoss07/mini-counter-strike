@@ -3,6 +3,12 @@ import type { MatchStateResponse } from '../types/match';
 import type { UserProfile, LeaderboardEntry } from '../types/user';
 import type { Loadout } from '../types/loadout';
 import type { UserCaseInstance, OpenCaseResponse } from '../types/case';
+import type {
+  PlayerStatsSummary,
+  EloHistoryPoint,
+  WeaponUsageStat,
+  EloHistoryQueryFilters,
+} from '../types/stats';
 
 const BASE_URL = ''; // Proxied by Vite in development
 
@@ -140,6 +146,26 @@ export const api = {
    * handlers must be synchronous. Auth header assembly is intentionally
    * duplicated here to keep this self-contained.
    */
+  // --- Stats ---
+
+  getPlayerStatsSummary: (userId: number): Promise<PlayerStatsSummary> =>
+    apiFetch<PlayerStatsSummary>(`/api/stats/user/${userId}/summary`, { method: 'GET' }),
+
+  getEloHistory: (userId: number, filters?: EloHistoryQueryFilters): Promise<EloHistoryPoint[]> => {
+    const params = new URLSearchParams();
+    if (filters?.days !== undefined) params.set('days', String(filters.days));
+    if (filters?.limit !== undefined) params.set('limit', String(filters.limit));
+    const query = params.size > 0 ? `?${params.toString()}` : '';
+    return apiFetch<EloHistoryPoint[]>(`/api/stats/user/${userId}/elo-history${query}`, {
+      method: 'GET',
+    });
+  },
+
+  getTopWeapons: (userId: number, limit = 5): Promise<WeaponUsageStat[]> =>
+    apiFetch<WeaponUsageStat[]>(`/api/stats/user/${userId}/top-weapons?limit=${limit}`, {
+      method: 'GET',
+    }),
+
   keepaliveSurrender: (matchId: string | number): void => {
     const token = localStorage.getItem('token');
     fetch(`/api/match/${matchId}/surrender`, {
