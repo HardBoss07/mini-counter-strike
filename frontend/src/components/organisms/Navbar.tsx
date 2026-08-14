@@ -34,6 +34,9 @@ const Navbar: React.FC = () => {
         <NavLink to="/leaderboard" className={NAV_LINK_CLASS}>
           Ranking
         </NavLink>
+        <NavLink to="/stats" className={NAV_LINK_CLASS}>
+          Stats
+        </NavLink>
       </div>
 
       <div className="flex items-center gap-6">

@@ -9,6 +9,7 @@ import CasesView from './views/CasesView';
 import LeaderboardView from './views/LeaderboardView';
 import MatchmakingView from './views/MatchmakingView';
 import BattleView from './views/BattleView';
+import StatsView from './views/StatsView';
 import { AuthProvider } from './contexts/AuthContext';
 
 const AuthWrapper: React.FC<{ mode: 'login' | 'register' }> = ({ mode }) => {
@@ -33,6 +34,7 @@ const AppContent: React.FC = () => {
         <Route path="inventory" element={<InventoryView />} />
         <Route path="cases" element={<CasesView />} />
         <Route path="leaderboard" element={<LeaderboardView />} />
+        <Route path="stats/:userId?" element={<StatsView />} />
       </Route>
 
       <Route path="/matchmaking" element={<MatchmakingView />} />
