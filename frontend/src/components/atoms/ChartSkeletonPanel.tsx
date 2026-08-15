@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ChartSkeletonPanelProps {
-  /** Height in pixels — should match the chart it is replacing. */
+  /** Height in pixels - should match the chart it is replacing. */
   height?: number;
   className?: string;
 }

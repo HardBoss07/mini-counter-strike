@@ -62,7 +62,7 @@ const WeaponSection: React.FC<WeaponSectionProps> = ({ weapons, loading, error }
           <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-600">
             Weapon Efficiency Index
             <span className="ml-2 font-normal normal-case tracking-normal text-gray-700">
-              — X: Damage &nbsp;|&nbsp; Y: Kills &nbsp;|&nbsp; Size: Crits
+              - X: Damage &nbsp;|&nbsp; Y: Kills &nbsp;|&nbsp; Size: Crits
             </span>
           </p>
           <WeaponEfficiencyScatter data={weapons} height={SCATTER_HEIGHT} />
@@ -74,17 +74,17 @@ const WeaponSection: React.FC<WeaponSectionProps> = ({ weapons, loading, error }
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <ComingSoonPanel
         chartName="Weapon Combat Profile"
-        description="Radar spider chart across 5 metrics — requires weapon_template join."
+        description="Radar spider chart across 5 metrics - requires weapon_template join."
         height={STUB_HEIGHT}
       />
       <ComingSoonPanel
         chartName="Side-Specific Weapon Win Rate"
-        description="T vs. CT win % per weapon — requires match_player_stats join."
+        description="T vs. CT win % per weapon - requires match_player_stats join."
         height={STUB_HEIGHT}
       />
       <ComingSoonPanel
         chartName="Damage per Energy Cost"
-        description="Eco-effectiveness ratio — requires weapon_template energy_cost join."
+        description="Eco-effectiveness ratio - requires weapon_template energy_cost join."
         height={STUB_HEIGHT}
       />
     </div>

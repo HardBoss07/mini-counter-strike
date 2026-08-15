@@ -58,17 +58,17 @@ const CombatSection: React.FC<CombatSectionProps> = ({ summary, loading, error }
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <ComingSoonPanel
         chartName="K/D & Damage per Match"
-        description="Dual-axis bars + lines — requires per-match time-series endpoint."
+        description="Dual-axis bars + lines - requires per-match time-series endpoint."
         height={STUB_HEIGHT}
       />
       <ComingSoonPanel
         chartName="Damage Dealt vs. Taken"
-        description="Overlapping area paths — requires per-match time-series endpoint."
+        description="Overlapping area paths - requires per-match time-series endpoint."
         height={STUB_HEIGHT}
       />
       <ComingSoonPanel
         chartName="Crit Rate vs. Win Rate"
-        description="Bar + line overlay — requires per-match time-series endpoint."
+        description="Bar + line overlay - requires per-match time-series endpoint."
         height={STUB_HEIGHT}
       />
     </div>

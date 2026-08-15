@@ -91,12 +91,12 @@ const EloSection: React.FC<EloSectionProps> = ({
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ComingSoonPanel
           chartName="Elo Volatility vs. Side Bias"
-          description="T vs. CT Elo change per match — requires per-match time-series endpoint."
+          description="T vs. CT Elo change per match - requires per-match time-series endpoint."
           height={180}
         />
         <ComingSoonPanel
           chartName="Rolling Win Rate"
-          description="10-match moving window win percentage — requires per-match time-series endpoint."
+          description="10-match moving window win percentage - requires per-match time-series endpoint."
           height={180}
         />
       </div>

@@ -23,7 +23,7 @@ export const ComingSoonPanel: React.FC<ComingSoonPanelProps> = ({
   <div
     className={`flex w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-white/10 bg-white/[0.02] ${className}`}
     style={{ height }}
-    aria-label={`${chartName} — coming soon`}
+    aria-label={`${chartName} - coming soon`}
   >
     <Lock size={18} className="text-gray-600" />
     <div className="text-center">

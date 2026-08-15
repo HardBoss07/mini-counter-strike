@@ -15,7 +15,7 @@ interface WeaponBarDatum {
 /**
  * Horizontal bar chart listing weapons sorted descending by usage.
  * Assembled from recharts primitives directly because recharts' horizontal
- * layout requires <BarChart layout="vertical"> with swapped axis types —
+ * layout requires <BarChart layout="vertical"> with swapped axis types -
  * a configuration that ComposedMetricChart does not expose.
  *
  * Data sorting and slicing is memoized.
@@ -59,7 +59,7 @@ export const TopWeaponsBarChart: React.FC<TopWeaponsBarChartProps> = ({ data, he
               fontSize: 12,
             }}
             formatter={(value: any) => [
-              value !== undefined && value !== null ? `${value} uses` : '—',
+              value !== undefined && value !== null ? `${value} uses` : '-',
               'Times Used',
             ]}
           />
