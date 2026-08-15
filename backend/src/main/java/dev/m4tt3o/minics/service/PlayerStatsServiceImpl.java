@@ -4,6 +4,7 @@ import dev.m4tt3o.minics.dto.stats.EloHistoryPointDTO;
 import dev.m4tt3o.minics.dto.stats.PlayerStatsSummaryDTO;
 import dev.m4tt3o.minics.dto.stats.WeaponUsageStatDTO;
 import dev.m4tt3o.minics.entity.Match;
+import dev.m4tt3o.minics.entity.User;
 import dev.m4tt3o.minics.entity.UserStatsSummary;
 import dev.m4tt3o.minics.repository.*;
 import java.time.LocalDateTime;
@@ -121,10 +122,15 @@ public class PlayerStatsServiceImpl implements PlayerStatsService {
     }
 
     private UserStatsSummary createInitialSummary(Long userId) {
-        var user = userRepository
+        User user = userRepository
+
             .findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
         UserStatsSummary summary = new UserStatsSummary(user);
-        return summaryRepository.save(summary);
+
+        // Using saveAndFlush guarantees Hibernate executes the insert immediately
+        // and binds the @MapsId key to the persistence context before returning.
+        return summaryRepository.saveAndFlush(summary);
     }
 }

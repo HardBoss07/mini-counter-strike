@@ -28,4 +28,7 @@ public class User {
     private int credits = 0;
 
     private java.time.LocalDateTime nextCaseAvailableAt;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
+    private UserStatsSummary statsSummary;
 }

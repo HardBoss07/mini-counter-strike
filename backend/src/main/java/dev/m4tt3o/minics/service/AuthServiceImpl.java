@@ -19,6 +19,7 @@ public class AuthServiceImpl implements AuthService {
     private final LoadoutRepository loadoutRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final UserStatsSummaryRepository userStatsSummaryRepository;
 
     @Override
     @Transactional
@@ -32,6 +33,9 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(password));
         user = userRepository.save(user);
+
+        UserStatsSummary stats = new UserStatsSummary(user);
+        userStatsSummaryRepository.save(stats);
 
         // 2. Provision Starter Weapons
         if (loadoutRepository.findByUser_Id(user.getId()).isEmpty()) {

@@ -37,7 +37,7 @@ public class UserStatsSummary {
 
     public UserStatsSummary(User user) {
         this.user = user;
-        this.userId = user.getId();
+        // this.userId = user.getId(); !!! DON'T CHANGE !!!
     }
 
     // Getters and Setters
