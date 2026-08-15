@@ -120,3 +120,44 @@ VALUES
   (3, 1),
   (3, 2),
   (3, 2);
+
+-- ==========================================================
+-- 7. USER STATS SUMMARY
+-- ==========================================================
+INSERT INTO
+  user_stats_summary (
+    user_id,
+    matches_played,
+    matches_won,
+    matches_lost,
+    matches_drawn,
+    total_kills,
+    total_deaths,
+    total_damage_dealt,
+    total_damage_taken,
+    total_crits_landed,
+    cases_opened,
+    updated_at
+  )
+SELECT
+  id,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  NOW ()
+FROM
+  app_user
+WHERE
+  id NOT IN (
+    SELECT
+      user_id
+    FROM
+      user_stats_summary
+  );
