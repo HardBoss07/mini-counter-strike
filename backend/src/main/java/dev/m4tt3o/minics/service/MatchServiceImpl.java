@@ -31,6 +31,7 @@ public class MatchServiceImpl implements MatchService {
     private final GameConfig gameConfig;
     private final MatchStateMapper matchStateMapper;
     private final CombatRoundProcessor combatRoundProcessor;
+    private final PlayerStatsService playerStatsService;
     private final ConcurrentHashMap<Long, Map<String, SseEmitter>> emitters = new ConcurrentHashMap<>();
 
     @Override
@@ -195,6 +196,10 @@ public class MatchServiceImpl implements MatchService {
         matchStateMapper.writeToMatch(match, updatedState);
         matchRepository.save(match);
 
+        if ("COMPLETED".equals(nextStatus)) {
+            playerStatsService.recordMatchStats(match);
+        }
+
         // Broadcast to SSE Emitters
         broadcastMatchState(matchId, match);
     }
@@ -295,6 +300,8 @@ public class MatchServiceImpl implements MatchService {
         }
 
         matchRepository.save(match);
+
+        playerStatsService.recordMatchStats(match);
 
         broadcastMatchState(matchId, match);
     }

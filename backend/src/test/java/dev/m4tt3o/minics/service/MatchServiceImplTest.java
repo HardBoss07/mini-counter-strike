@@ -50,6 +50,9 @@ class MatchServiceImplTest {
     @Mock
     private MatchStateMapper matchStateMapper;
 
+    @Mock
+    private PlayerStatsService playerStatsService;
+
     private GameConfig gameConfig;
     private MatchServiceImpl matchService;
 
@@ -75,7 +78,8 @@ class MatchServiceImplTest {
             matchEngine,
             gameConfig,
             matchStateMapper,
-            combatRoundProcessor
+            combatRoundProcessor,
+            playerStatsService
         );
 
         playerA = TestFixtures.user(1L, "Alpha");

@@ -3,6 +3,7 @@ package dev.m4tt3o.minics.service;
 import dev.m4tt3o.minics.dto.stats.EloHistoryPointDTO;
 import dev.m4tt3o.minics.dto.stats.PlayerStatsSummaryDTO;
 import dev.m4tt3o.minics.dto.stats.WeaponUsageStatDTO;
+import dev.m4tt3o.minics.entity.EloHistory;
 import dev.m4tt3o.minics.entity.Match;
 import dev.m4tt3o.minics.entity.User;
 import dev.m4tt3o.minics.entity.UserStatsSummary;
@@ -118,7 +119,35 @@ public class PlayerStatsServiceImpl implements PlayerStatsService {
     @Override
     @Transactional
     public void recordMatchStats(Match match) {
-        // Implementation called by MatchServiceImpl post-match
+        if (match == null || match.getPlayerA() == null || match.getPlayerB() == null) {
+            return;
+        }
+
+        // Process both players involved in the match
+        updateStatsForPlayer(match.getPlayerA(), match);
+        updateStatsForPlayer(match.getPlayerB(), match);
+    }
+
+    private void updateStatsForPlayer(User player, Match match) {
+        UserStatsSummary stats = summaryRepository
+            .findById(player.getId())
+            .orElseGet(() -> createInitialSummary(player.getId()));
+
+        stats.setMatchesPlayed(stats.getMatchesPlayed() + 1);
+
+        boolean isWinner = match.getWinner() != null && match.getWinner().getId().equals(player.getId());
+        boolean isDraw = match.getWinner() == null;
+
+        if (isWinner) {
+            stats.setMatchesWon(stats.getMatchesWon() + 1);
+        } else if (isDraw) {
+            stats.setMatchesDrawn(stats.getMatchesDrawn() + 1);
+        } else {
+            stats.setMatchesLost(stats.getMatchesLost() + 1);
+        }
+
+        stats.setUpdatedAt(LocalDateTime.now());
+        summaryRepository.save(stats);
     }
 
     private UserStatsSummary createInitialSummary(Long userId) {
