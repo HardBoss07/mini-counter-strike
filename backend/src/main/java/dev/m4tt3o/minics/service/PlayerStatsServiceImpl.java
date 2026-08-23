@@ -17,6 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PlayerStatsServiceImpl implements PlayerStatsService {
 
+    private static final int FLAT_ELO_WIN = 25;
+    private static final int FLAT_ELO_LOSS = -25;
+    private static final int FLAT_ELO_DRAW = 0;
+
     private final UserStatsSummaryRepository summaryRepository;
     private final EloHistoryRepository eloHistoryRepository;
     private final MatchWeaponStatsRepository weaponStatsRepository;
@@ -148,6 +152,26 @@ public class PlayerStatsServiceImpl implements PlayerStatsService {
 
         stats.setUpdatedAt(LocalDateTime.now());
         summaryRepository.save(stats);
+
+        processEloUpdate(player, match, isWinner, isDraw);
+    }
+
+    private void processEloUpdate(User player, Match match, boolean isWinner, boolean isDraw) {
+        int eloBefore = player.getElo();
+        int eloChange = calculateEloChange(isWinner, isDraw);
+        int eloAfter = Math.max(0, eloBefore + eloChange);
+
+        player.setElo(eloAfter);
+        userRepository.save(player);
+
+        EloHistory eloHistory = new EloHistory(player, match, eloBefore, eloAfter, eloChange);
+        eloHistoryRepository.save(eloHistory);
+    }
+
+    private int calculateEloChange(boolean isWinner, boolean isDraw) {
+        if (isDraw) return FLAT_ELO_DRAW;
+
+        return isWinner ? FLAT_ELO_WIN : FLAT_ELO_LOSS;
     }
 
     private UserStatsSummary createInitialSummary(Long userId) {
